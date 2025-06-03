@@ -53,12 +53,7 @@ const RestrictedBlock = Node.create<RestrictedBlockOptions>({
           style: 'background:#233779;padding:8px;border:1px dashed #c00;',
         }
       ),
-      [
-        'div', { style: 'display:flex;align-items:center;gap:8px;' },
-        ['span', { style: 'font-weight:bold;' }, node.attrs.title],
-        ['span', { 'data-restricted-button': 'true' }],
-      ],
-      0,
+      0, // content hole as the only child
     ];
   },
 });
