@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import RestrictedBlockEditorView from './RestrictedBlockEditorView';
 
 export interface RestrictedBlockOptions {
   HTMLAttributes: Record<string, any>;
@@ -53,8 +55,11 @@ const RestrictedBlock = Node.create<RestrictedBlockOptions>({
           style: 'background:#233779;padding:8px;border:1px dashed #c00;',
         }
       ),
-      0 // content hole as the only child
+      0,
     ];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(RestrictedBlockEditorView);
   },
 });
 

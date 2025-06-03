@@ -67,21 +67,16 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         const { empty, from, to } = editor.state.selection;
         const title = window.prompt('Restricted Block Title', 'Restricted Block') || 'Restricted Block';
         if (!empty) {
-          let selectedContent = editor.state.doc.cut(from, to).toJSON().content;
+          // Get the JSON content of the selected blocks
+          const slice = editor.state.doc.cut(from, to);
+          let selectedContent = slice.toJSON().content;
+          // Defensive: If selection is not valid, insert a default paragraph
           if (!Array.isArray(selectedContent) || selectedContent.length === 0) {
             selectedContent = [
               { type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] }
             ];
-          } else {
-            selectedContent = selectedContent.filter(
-              (node: any) => node.type === 'paragraph' || node.type === 'heading' || node.type === 'bulletList' || node.type === 'orderedList' || node.type === 'image' || node.type === 'horizontalRule'
-            );
-            if (selectedContent.length === 0) {
-              selectedContent = [
-                { type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] }
-              ];
-            }
           }
+          // Replace the selection with a restrictedBlock containing the selected content
           editor.chain().focus().deleteSelection().insertContent({
             type: 'restrictedBlock',
             attrs: {
@@ -91,6 +86,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             content: selectedContent,
           }).run();
         } else {
+          // Insert a new restricted block with a paragraph
           editor.chain().focus().insertContent({
             type: 'restrictedBlock',
             attrs: {
