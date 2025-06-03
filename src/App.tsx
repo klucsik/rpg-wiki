@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, useParams, Navigate } from 'react-router-dom'
 import './App.css'
-import { samplePage } from './samplePage'
 import { useUserStore } from './userStore';
+import { usePageStore } from './pageStore';
+import { TiptapEditor } from './TiptapEditor';
+import RestrictedBlockView from './RestrictedBlockView';
 
 function Home() {
   const { user, users, groups, login, logout, addGroup, assignUserToGroup } = useUserStore();
@@ -56,12 +58,13 @@ function Home() {
   );
 }
 
-function RestrictedBlock({ children, allowedGroups, userGroups }: { children: React.ReactNode; allowedGroups: string[]; userGroups: string[] }) {
-  const hasAccess = allowedGroups.some(g => userGroups.includes(g));
-  const [revealed, setRevealed] = useState(false);
-  if (!hasAccess) return <div><button disabled>Hidden</button></div>;
-  if (!revealed) return <div><button onClick={() => setRevealed(true)}>Reveal</button></div>;
-  return <div>{children}</div>;
+function RestrictedBlock({ children, allowedGroups, userGroups, title }: { children: React.ReactNode; allowedGroups: string[]; userGroups: string[]; title: string }) {
+  // userGroups is passed to RestrictedBlockView as usergroups
+  return (
+    <RestrictedBlockView title={title} usergroups={allowedGroups}>
+      {children}
+    </RestrictedBlockView>
+  );
 }
 
 function parseHtmlWithRestrictedBlocks(html: string, userGroups: string[]) {
@@ -72,8 +75,9 @@ function parseHtmlWithRestrictedBlocks(html: string, userGroups: string[]) {
       const el = node as HTMLElement;
       if (el.dataset.blockType === 'restricted') {
         const allowedGroups = JSON.parse(el.dataset.usergroups || '[]');
+        const title = el.getAttribute('data-title') || 'Restricted Block';
         return (
-          <RestrictedBlock allowedGroups={allowedGroups} userGroups={userGroups}>
+          <RestrictedBlock allowedGroups={allowedGroups} userGroups={userGroups} title={title}>
             {Array.from(el.childNodes).map((child, i) => <span key={i}>{walk(child)}</span>)}
           </RestrictedBlock>
         );
@@ -130,8 +134,75 @@ function PageViewer({ page }: { page: { title: string; content: string } }) {
 }
 
 function Pages() {
-  // In a real app, this would be a list and a router param
-  return <PageViewer page={samplePage} />;
+  const { pages, addPage, deletePage, updatePage } = usePageStore();
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+
+  function startEdit(page: { id: string; title: string; content: string }) {
+    setEditId(page.id);
+    setEditTitle(page.title);
+    setEditContent(page.content);
+  }
+
+  function saveEdit() {
+    if (editId && editTitle && editContent) {
+      updatePage(editId, { title: editTitle, content: editContent });
+      setEditId(null);
+      setEditTitle('');
+      setEditContent('');
+    }
+  }
+
+  return (
+    <div>
+      <h2>Pages</h2>
+      <div style={{ display: 'flex', gap: 32 }}>
+        <div>
+          <h3>All Pages</h3>
+          <ul>
+            {pages.map(p => (
+              <li key={p.id}>
+                <Link to={`/pages/${encodeURIComponent(p.id)}`} style={{ fontWeight: undefined }}>{p.title}</Link>
+                <button onClick={() => deletePage(p.id)} style={{ marginLeft: 8, color: 'red' }}>Delete</button>
+                <button onClick={() => startEdit(p)} style={{ marginLeft: 8 }}>Edit</button>
+              </li>
+            ))}
+          </ul>
+          <h4>Add New Page</h4>
+          <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Title" />
+          <TiptapEditor value={newContent} onChange={setNewContent} />
+          <button onClick={() => {
+            if (newTitle && newContent) {
+              addPage({ id: newTitle.toLowerCase().replace(/\s+/g, '-'), title: newTitle, content: newContent });
+              setNewTitle('');
+              setNewContent('');
+            }
+          }}>Add Page</button>
+        </div>
+        <div style={{ flex: 1 }}>
+          {editId ? (
+            <div>
+              <h3>Edit Page</h3>
+              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title" />
+              <TiptapEditor value={editContent} onChange={setEditContent} />
+              <button onClick={saveEdit}>Save</button>
+              <button onClick={() => setEditId(null)} style={{ marginLeft: 8 }}>Cancel</button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PageRoute() {
+  const { slug } = useParams();
+  const page = usePageStore(state => state.pages.find(p => p.id === slug));
+  if (!page) return <Navigate to="/pages" replace />;
+  return <PageViewer page={page} />;
 }
 
 function Editor() {
@@ -149,6 +220,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pages" element={<Pages />} />
+        <Route path="/pages/:slug" element={<PageRoute />} />
         <Route path="/editor" element={<Editor />} />
       </Routes>
     </Router>
