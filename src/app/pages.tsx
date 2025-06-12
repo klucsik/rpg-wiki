@@ -1,21 +1,22 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { TiptapEditor } from "../TiptapEditor";
-import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import PageList from "../PageList";
+import PageViewer from "../PageViewer";
 import { WikiPage } from "../types";
 
 export default function Pages() {
 	const [pages, setPages] = useState<WikiPage[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [newTitle, setNewTitle] = useState("");
-	const [newContent, setNewContent] = useState("");
+	const [selectedId, setSelectedId] = useState<number | null>(null);
 	const [editId, setEditId] = useState<number | null>(null);
+	const [showCreate, setShowCreate] = useState(false);
 	const [editTitle, setEditTitle] = useState("");
 	const [editContent, setEditContent] = useState("");
 	const [saving, setSaving] = useState(false);
+	const [newTitle, setNewTitle] = useState("");
+	const [newContent, setNewContent] = useState("");
 
-	// Fetch all pages from API
 	useEffect(() => {
 		setLoading(true);
 		setError(null);
@@ -29,10 +30,28 @@ export default function Pages() {
 			.finally(() => setLoading(false));
 	}, []);
 
-	function startEdit(page: WikiPage) {
-		setEditId(page.id);
+	const selectedPage = pages.find((p) => p.id === selectedId) || null;
+
+	function handleSelect(id: number) {
+		setSelectedId(id);
+		setEditId(null);
+		setShowCreate(false);
+	}
+
+	function handleEdit(id: number) {
+		const page = pages.find((p) => p.id === id);
+		if (!page) return;
+		setEditId(id);
 		setEditTitle(page.title);
 		setEditContent(page.content);
+		setShowCreate(false);
+	}
+
+	function handleCreate() {
+		setShowCreate(true);
+		setEditId(null);
+		setEditTitle("");
+		setEditContent("");
 	}
 
 	async function saveEdit() {
@@ -58,7 +77,7 @@ export default function Pages() {
 		}
 	}
 
-	async function addPage() {
+	async function saveCreate() {
 		if (!newTitle || !newContent) return;
 		setSaving(true);
 		setError(null);
@@ -73,6 +92,8 @@ export default function Pages() {
 			setPages((pages) => [...pages, created]);
 			setNewTitle("");
 			setNewContent("");
+			setShowCreate(false);
+			setSelectedId(created.id);
 		} catch (err: any) {
 			setError(err.message);
 		} finally {
@@ -87,6 +108,8 @@ export default function Pages() {
 			const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
 			if (!res.ok) throw new Error("Failed to delete page");
 			setPages((pages) => pages.filter((p) => p.id !== id));
+			if (selectedId === id) setSelectedId(null);
+			if (editId === id) setEditId(null);
 		} catch (err: any) {
 			setError(err.message);
 		} finally {
@@ -95,65 +118,24 @@ export default function Pages() {
 	}
 
 	return (
-		<div>
-			<h2>Pages</h2>
-			{loading && <div>Loading...</div>}
-			{error && <div style={{ color: "red" }}>{error}</div>}
-			<div style={{ display: "flex", gap: 32 }}>
-				<div>
-					<h3>All Pages</h3>
-					<ul>
-						{pages.map((p) => (
-							<li key={p.id}>
-								<Link href={`/pages/${encodeURIComponent(p.id)}`}>{p.title}</Link>
-								<button
-									onClick={() => deletePage(p.id)}
-									style={{ marginLeft: 8, color: "red" }}
-									disabled={saving}
-								>
-									Delete
-								</button>
-								<button onClick={() => startEdit(p)} style={{ marginLeft: 8 }} disabled={saving}>
-									Edit
-								</button>
-							</li>
-						))}
-					</ul>
-					<h4>Add New Page</h4>
-					<input
-						value={newTitle}
-						onChange={(e) => setNewTitle(e.target.value)}
-						placeholder="Title"
-						disabled={saving}
-					/>
-					<TiptapEditor value={newContent} onChange={setNewContent} />
-					<button onClick={addPage} disabled={saving}>
-						Add Page
-					</button>
+		<div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-10 px-4 flex">
+			<PageList
+				pages={pages}
+				onSelect={handleSelect}
+				selectedId={selectedId}
+				onDelete={deletePage}
+				onEdit={handleEdit}
+				saving={saving}
+			/>
+			<main className="flex-1 flex flex-col items-center justify-start p-8">
+				<div className="w-full max-w-2xl">
+					{loading && <div className="text-indigo-400">Loading...</div>}
+					{error && (
+						<div className="text-red-400 font-semibold mb-2">{error}</div>
+					)}
+					<PageViewer page={selectedPage} />
 				</div>
-				<div style={{ flex: 1 }}>
-					{editId ? (
-						<div>
-							<h3>Edit Page</h3>
-							<input
-								value={editTitle}
-								onChange={(e) => setEditTitle(e.target.value)}
-								placeholder="Title"
-								disabled={saving}
-							/>
-							<TiptapEditor value={editContent} onChange={setEditContent} />
-							<button onClick={saveEdit} disabled={saving}>Save</button>
-							<button
-								onClick={() => setEditId(null)}
-								style={{ marginLeft: 8 }}
-								disabled={saving}
-							>
-								Cancel
-							</button>
-						</div>
-					) : null}
-				</div>
-			</div>
+			</main>
 		</div>
 	);
 }
