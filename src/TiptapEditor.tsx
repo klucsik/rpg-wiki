@@ -15,7 +15,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   // Only set initial content on first mount
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3, 4, 5, 6],
+        },
+      }),
       Image,
       TipTapLink,
       Placeholder.configure({ placeholder: 'Start typing your wiki content...' }),
@@ -52,6 +56,20 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     { label: 'Restricted Block', value: 'restricted' },
   ];
 
+  // Update blockType state to reflect current selection in the editor
+  React.useEffect(() => {
+    if (!editor) return;
+    const { state } = editor;
+    const { $from } = state.selection;
+    const parent = $from.node($from.depth);
+    if (parent.type.name === 'heading') {
+      setBlockType(`heading-${parent.attrs.level}`);
+    } else if (parent.type.name === 'paragraph') {
+      setBlockType('paragraph');
+    }
+    // Do not update for restricted block, as it's an insert action only
+  }, [editor && editor.state.selection]);
+
   const handleBlockTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (!editor) return;
     const value = e.target.value;
@@ -60,7 +78,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       editor.chain().focus().setParagraph().run();
     } else if (value.startsWith('heading-')) {
       const level = Number(value.split('-')[1]) as 1|2|3|4|5|6;
-      editor.chain().focus().toggleHeading({ level }).run();
+      editor.chain().focus().setHeading({ level }).run();
     } else if (value === 'restricted') {
       // Insert a new restricted block with default title and group, no popups
       editor.chain().focus().insertContent({
@@ -108,7 +126,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         }} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">Link</button>
         <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">Unlink</button>
       </nav>
-      <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => editor?.commands.focus() }>
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <EditorContent editor={editor} className="h-full w-full bg-transparent px-4 py-2 text-indigo-100 cursor-text" />
       </div>
     </div>
