@@ -62,44 +62,17 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       const level = Number(value.split('-')[1]) as 1|2|3|4|5|6;
       editor.chain().focus().toggleHeading({ level }).run();
     } else if (value === 'restricted') {
-      const group = window.prompt('Enter allowed usergroups (comma separated)', 'admins,editors') || '';
-      const groups = group.split(',').map(g => g.trim()).filter(Boolean);
-      if (groups.length) {
-        const { empty, from, to } = editor.state.selection;
-        const title = window.prompt('Restricted Block Title', 'Restricted Block') || 'Restricted Block';
-        if (!empty) {
-          // Get the JSON content of the selected blocks
-          const slice = editor.state.doc.cut(from, to);
-          let selectedContent = slice.toJSON().content;
-          // Defensive: If selection is not valid, insert a default paragraph
-          if (!Array.isArray(selectedContent) || selectedContent.length === 0) {
-            selectedContent = [
-              { type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] }
-            ];
-          }
-          // Replace the selection with a restrictedBlock containing the selected content
-          editor.chain().focus().deleteSelection().insertContent({
-            type: 'restrictedBlock',
-            attrs: {
-              usergroups: JSON.stringify(groups),
-              title,
-            },
-            content: selectedContent,
-          }).run();
-        } else {
-          // Insert a new restricted block with a paragraph
-          editor.chain().focus().insertContent({
-            type: 'restrictedBlock',
-            attrs: {
-              usergroups: JSON.stringify(groups),
-              title,
-            },
-            content: [
-              { type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] },
-            ],
-          }).run();
-        }
-      }
+      // Insert a new restricted block with default title and group, no popups
+      editor.chain().focus().insertContent({
+        type: 'restrictedBlock',
+        attrs: {
+          usergroups: JSON.stringify(['public']),
+          title: 'Restricted Block',
+        },
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] },
+        ],
+      }).run();
       setBlockType('paragraph');
     }
   };

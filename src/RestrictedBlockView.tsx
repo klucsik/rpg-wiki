@@ -5,12 +5,12 @@ interface RestrictedBlockViewProps {
   title: string;
   usergroups: string[];
   children: React.ReactNode;
-  user?: { groups: string[] } | null;
+  user: { group: string };
 }
 
 const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergroups, children, user }) => {
   const [revealed, setRevealed] = useState(false);
-  const hasAccess = user && usergroups.some((g) => user.groups.includes(g));
+  const hasAccess = usergroups.includes(user.group);
 
   return (
     <div style={{ background: RESTRICTED_BLOCK_BG, padding: 12, borderRadius: 6, margin: '12px 0' }}>
@@ -23,7 +23,9 @@ const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergr
           {revealed && <div>{children}</div>}
         </>
       ) : (
-        <button disabled style={{ opacity: 0.5 }}>Restricted</button>
+        <div style={{ opacity: 0.7, color: '#bbb', marginTop: 8 }}>
+          <span>Restricted</span>
+        </div>
       )}
     </div>
   );
