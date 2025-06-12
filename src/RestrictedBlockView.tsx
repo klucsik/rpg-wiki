@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { RESTRICTED_BLOCK_BG } from './RestrictedBlock';
-import { useUserStore } from './userStore';
 
 interface RestrictedBlockViewProps {
   title: string;
   usergroups: string[];
   children: React.ReactNode;
+  user?: { groups: string[] } | null;
 }
 
-const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergroups, children }) => {
+const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergroups, children, user }) => {
   const [revealed, setRevealed] = useState(false);
-  const user = useUserStore((state) => state.user);
   const hasAccess = user && usergroups.some((g) => user.groups.includes(g));
 
   return (

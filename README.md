@@ -1,25 +1,32 @@
-# RPG Wiki
+# RPG Wiki Next.js
 
-A wiki-like webapp for RPGs with usergroup-based content restriction, rich text editing, image support, crosslinking, and full-text search.
+A full-stack wiki app for RPGs using Next.js (App Router, TypeScript, Tailwind CSS, PostgreSQL, TipTap).
 
 ## Features
-- User authentication with usergroups
-- Restrict content blocks to usergroups (reveal/hidden button)
-- Page editor with formatting, image upload, and crosslinking ([[PageName]])
-- Full-text search across all pages
-
-## Tech Stack
-- Vite + React + TypeScript
-- TipTap (rich text editor)
-- React Router
-- Zustand (state management)
-- Fuse.js (full-text search)
+- Rich text editing with TipTap
+- Usergroup-based content restriction
+- Image support
+- Crosslinking ([[PageName]])
+- Full-text search (planned)
+- PostgreSQL persistence via API routes
 
 ## Getting Started
-```bash
-npm install
-npm run dev
-```
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Copy `.env.example` to `.env.local` and set your PostgreSQL connection string.
+3. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+
+## Tech Stack
+- Next.js (App Router, SSR/SSG)
+- TypeScript
+- Tailwind CSS
+- TipTap (editor)
+- PostgreSQL
 
 ## License
 MIT

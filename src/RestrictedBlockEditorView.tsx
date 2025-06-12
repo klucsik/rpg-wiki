@@ -1,11 +1,10 @@
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
-import React from 'react';
 
 const RestrictedBlockEditorView = (props: any) => {
   const { editor, node, getPos } = props;
   const removeRestriction = () => {
     if (typeof getPos === 'function') {
-      editor.commands.command(({ tr }) => {
+      editor.commands.command(({ tr }: { tr: any }) => {
         const pos = getPos();
         const node = tr.doc.nodeAt(pos);
         if (!node) return false;
