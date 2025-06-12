@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import PageList from "../PageList";
-import PageViewer from "../PageViewer";
 import { WikiPage } from "../types";
 
 export default function Pages() {
@@ -118,7 +117,7 @@ export default function Pages() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-10 px-4 flex">
+		<div className="min-h-screen min-w-0 w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex">
 			<PageList
 				pages={pages}
 				onSelect={handleSelect}
@@ -127,13 +126,38 @@ export default function Pages() {
 				onEdit={handleEdit}
 				saving={saving}
 			/>
-			<main className="flex-1 flex flex-col items-center justify-start p-8">
-				<div className="w-full max-w-2xl">
+			<main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-full w-full">
+				<div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">
 					{loading && <div className="text-indigo-400">Loading...</div>}
 					{error && (
 						<div className="text-red-400 font-semibold mb-2">{error}</div>
 					)}
-					<PageViewer page={selectedPage} />
+					{selectedPage && (
+						<div className="prose prose-invert w-full h-full flex-1 mx-0 bg-gray-900/80 rounded-none p-8 shadow-lg border border-gray-800 flex flex-col min-h-0 min-w-0 overflow-auto">
+							<div className="flex items-center justify-between mb-4">
+								<h2 className="text-2xl font-bold text-indigo-200">
+									{selectedPage.title}
+								</h2>
+								<button
+									onClick={() => handleEdit(selectedPage.id)}
+									className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
+								>
+									Edit
+								</button>
+							</div>
+							<div className="flex-1 overflow-auto min-h-0 min-w-0">
+								<div
+									dangerouslySetInnerHTML={{ __html: selectedPage.content || "" }}
+								/>
+							</div>
+							<div className="mt-6 text-xs text-gray-500">
+								Last updated:{" "}
+								{selectedPage.updated_at
+									? new Date(selectedPage.updated_at).toLocaleString()
+									: ""}
+							</div>
+						</div>
+					)}
 				</div>
 			</main>
 		</div>

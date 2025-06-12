@@ -26,9 +26,9 @@ export default function PageEditor({
   const router = useRouter();
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-900 flex flex-col h-screen w-screen">
+    <>
       {/* Header with Save/Cancel and Title */}
-      <header className="flex items-center justify-between gap-4 px-8 py-4 bg-gray-800 border-b border-gray-700">
+      <header className="flex items-center justify-between gap-4 px-8 py-4 bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
         <div className="flex items-center gap-4 flex-1">
           <input
             value={title}
@@ -45,6 +45,8 @@ export default function PageEditor({
             {mode === "edit" ? "Edit Page" : "Create New Page"}
           </span>
         </div>
+        {/* Global menu actions can go here */}
+        <div></div>
         <div className="flex gap-2">
           <button
             onClick={onSave}
@@ -71,6 +73,6 @@ export default function PageEditor({
           <TiptapEditor value={content} onChange={setContent} />
         </div>
       </main>
-    </div>
+    </>
   );
 }
