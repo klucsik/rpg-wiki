@@ -141,7 +141,7 @@ export default function PageEditor({
       {/* Editor area maximized */}
       <main className="flex-1 flex flex-col overflow-hidden p-0 m-0">
         <div className="flex-1 flex flex-col min-h-0">
-          <TiptapEditor value={content} onChange={setContent} />
+          <TiptapEditor value={content} onChange={setContent} pageEditGroups={editGroups} />
         </div>
       </main>
     </>

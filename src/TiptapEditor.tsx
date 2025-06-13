@@ -11,7 +11,7 @@ interface TiptapEditorProps {
   onChange: (val: string) => void;
 }
 
-export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
+export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorProps & { pageEditGroups?: string[] }) {
   // Only set initial content on first mount
   const editor = useEditor({
     extensions: [
@@ -80,11 +80,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       const level = Number(value.split('-')[1]) as 1|2|3|4|5|6;
       editor.chain().focus().setHeading({ level }).run();
     } else if (value === 'restricted') {
-      // Insert a new restricted block with default title and group, no popups
+      // Insert a new restricted block with default title and group, using pageEditGroups if available
       editor.chain().focus().insertContent({
         type: 'restrictedBlock',
         attrs: {
-          usergroups: JSON.stringify(['public']),
+          usergroups: JSON.stringify(pageEditGroups && pageEditGroups.length > 0 ? pageEditGroups : ['public']),
           title: 'Restricted Block',
         },
         content: [

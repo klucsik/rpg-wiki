@@ -4,11 +4,14 @@ import { useUser } from './userContext';
 import { useGroups } from "./groupsContext";
 
 const RestrictedBlockEditorView = (props: any) => {
-  const { editor, node, getPos, updateAttributes } = props;
+  const { editor, node, getPos, updateAttributes, pageEditGroups } = props;
   const { groups } = useGroups();
-  // Parse groups from node.attrs.usergroups (stringified array)
+  // Use pageEditGroups as default if present, else fallback to node.attrs.usergroups
   const initialGroups = (() => {
     try {
+      if (pageEditGroups && Array.isArray(pageEditGroups) && pageEditGroups.length > 0) {
+        return pageEditGroups;
+      }
       return JSON.parse(node.attrs.usergroups || '[]');
     } catch {
       return [];
