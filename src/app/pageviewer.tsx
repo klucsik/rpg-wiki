@@ -84,3 +84,5 @@ export default function PageViewer({ pageId }: { pageId: string }) {
     </div>
   );
 }
+
+export { parseHtmlWithRestrictedBlocks };

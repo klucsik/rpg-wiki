@@ -3,6 +3,8 @@ import PageList from "./PageList";
 import { useRouter } from "next/navigation";
 import { WikiPage } from "../types";
 import { useUser } from "./userContext";
+import RestrictedBlockView from "./RestrictedBlockView";
+import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 
 export default function PageViewerLayout({ page }: { page: any }) {
   const router = useRouter();
@@ -49,7 +51,12 @@ export default function PageViewerLayout({ page }: { page: any }) {
                 </button>
               )}
             </div>
-            <div dangerouslySetInnerHTML={{ __html: page?.content || "" }} />
+            {/* Render restricted blocks if present, else fallback to normal content */}
+            {page?.content ? (
+              parseHtmlWithRestrictedBlocks(page.content, user)
+            ) : (
+              <div>No content</div>
+            )}
             <div className="mt-6 text-xs text-gray-500">
               Last updated: {page?.updated_at ? new Date(page.updated_at).toLocaleString() : ""}
             </div>
