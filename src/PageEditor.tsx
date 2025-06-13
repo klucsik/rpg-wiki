@@ -1,7 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { TiptapEditor } from "./TiptapEditor";
 import { useRouter } from "next/navigation";
 import { useUser } from "./userContext";
+import { useGroups } from "./groupsContext";
+
+// Extract shared style constants for use in both PageEditor and GroupsAdminPage
+export const styleTokens = {
+  card: "bg-gray-900/80 rounded-lg p-8 shadow-lg border border-gray-800 max-w-2xl mx-auto",
+  header: "flex items-center justify-between gap-4 px-8 py-4 bg-gray-800 border-b border-gray-700 sticky top-0 z-40",
+  label: "text-xs text-indigo-200 font-semibold mb-1",
+  input: "px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1",
+  button: "bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-50 text-lg border border-indigo-700",
+  tag: "bg-indigo-700 text-white px-2 py-0.5 rounded text-xs flex items-center gap-1",
+  tagRemove: "ml-1 text-red-200 hover:text-red-400",
+  groupList: "flex flex-wrap gap-1 mb-1",
+  groupButton: "bg-gray-700 text-indigo-100 px-2 py-0.5 rounded text-xs hover:bg-indigo-800",
+};
 
 export default function PageEditor({
   mode,
@@ -13,6 +27,8 @@ export default function PageEditor({
   onCancel,
   saving,
   slug,
+  editGroups = ["admin", "editor"],
+  setEditGroups,
 }: {
   mode: "edit" | "create";
   title: string;
@@ -23,15 +39,20 @@ export default function PageEditor({
   onCancel: () => void;
   saving: boolean;
   slug?: string;
+  editGroups?: string[];
+  setEditGroups?: (groups: string[]) => void;
 }) {
   const router = useRouter();
   const { user } = useUser();
   const isDisabled = user.group === "public";
+  const { groups } = useGroups();
+  const [search, setSearch] = useState("");
+  const filteredGroups = groups.filter((g) => g.includes(search));
 
   return (
     <>
       {/* Header with Save/Cancel and Title */}
-      <header className="flex items-center justify-between gap-4 px-8 py-4 bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
+      <header className={styleTokens.header}>
         <div className="flex items-center gap-4 flex-1">
           <input
             value={title}
@@ -48,13 +69,60 @@ export default function PageEditor({
             {mode === "edit" ? "Edit Page" : "Create New Page"}
           </span>
         </div>
-        {/* Global menu actions can go here */}
-        <div></div>
+        <div className="flex flex-col gap-1 min-w-[220px]">
+          <label className={styleTokens.label}>Who can edit?</label>
+          <input
+            type="text"
+            placeholder="Search groups..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={styleTokens.input}
+            disabled={isDisabled}
+          />
+          <div className={styleTokens.groupList}>
+            {editGroups?.map((g) => (
+              <span key={g} className={styleTokens.tag}>
+                {g}
+                {!isDisabled && (
+                  <button
+                    type="button"
+                    className={styleTokens.tagRemove}
+                    onClick={() =>
+                      setEditGroups &&
+                      setEditGroups(
+                        editGroups.filter((eg) => eg !== g)
+                      )
+                    }
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {filteredGroups
+              .filter((g) => !editGroups?.includes(g))
+              .map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className={styleTokens.groupButton}
+                  disabled={isDisabled}
+                  onClick={() =>
+                    setEditGroups && setEditGroups([...editGroups, g])
+                  }
+                >
+                  {g}
+                </button>
+              ))}
+          </div>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={onSave}
             disabled={saving || isDisabled}
-            className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-50 text-lg border border-indigo-700"
+            className={styleTokens.button}
           >
             {mode === "edit" ? "Save" : "Create"}
           </button>

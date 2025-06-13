@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import { useUser } from './userContext';
-
-const ALL_GROUPS = ["admin", "editor", "viewer", "public"];
+import { useGroups } from "./groupsContext";
 
 const RestrictedBlockEditorView = (props: any) => {
   const { editor, node, getPos, updateAttributes } = props;
+  const { groups } = useGroups();
   // Parse groups from node.attrs.usergroups (stringified array)
   const initialGroups = (() => {
     try {
@@ -65,7 +65,7 @@ const RestrictedBlockEditorView = (props: any) => {
           {editingGroups ? (
             <div style={{ position: 'relative', zIndex: 10, background: '#232b4a', border: '1px solid #4f5b93', borderRadius: 4, padding: 8, minWidth: 120, boxShadow: '0 2px 8px #1a1a2a44' }}>
               <div style={{ marginBottom: 8, color: '#e0e7ff', fontWeight: 500 }}>Allowed Groups</div>
-              {ALL_GROUPS.map((g) => (
+              {groups.map((g: string) => (
                 <label key={g} style={{ display: 'block', color: '#e0e7ff', fontSize: 13, marginBottom: 2 }}>
                   <input
                     type="checkbox"

@@ -12,7 +12,8 @@ async function ensureSchema() {
       title TEXT NOT NULL,
       content TEXT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      edit_groups TEXT[] DEFAULT ARRAY['admin','editor']
     );
   `);
 }

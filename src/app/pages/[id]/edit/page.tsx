@@ -14,7 +14,9 @@ export default function EditPage() {
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [editGroups, setEditGroups] = useState<string[]>(["admin", "editor"]);
   const [saving, setSaving] = useState(false);
+  const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (user.group === "public") {
@@ -33,10 +35,18 @@ export default function EditPage() {
       .then((data: WikiPage) => {
         setTitle(data.title);
         setContent(data.content);
+        setEditGroups(data.edit_groups || ["admin", "editor"]);
+        setAllowed(Array.isArray(data.edit_groups) ? data.edit_groups.includes(user.group) : true);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, user.group]);
+
+  useEffect(() => {
+    if (allowed === false) {
+      router.replace(`/pages/${slug}`);
+    }
+  }, [allowed, router, slug]);
 
   async function saveEdit() {
     if (!title || !content) return;
@@ -46,7 +56,7 @@ export default function EditPage() {
       const res = await fetch(`/api/pages/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, edit_groups: editGroups }),
       });
       if (!res.ok) throw new Error("Failed to update page");
       router.push(`/pages/${slug}`);
@@ -59,6 +69,7 @@ export default function EditPage() {
 
   if (loading) return <div className="text-indigo-400 p-8">Loading...</div>;
   if (error) return <div className="text-red-400 p-8">{error}</div>;
+  if (allowed === false) return null;
 
   return (
     <PageEditor
@@ -71,6 +82,8 @@ export default function EditPage() {
       onCancel={() => router.push(`/pages/${slug}`)}
       saving={saving}
       slug={slug}
+      editGroups={editGroups}
+      setEditGroups={setEditGroups}
     />
   );
 }

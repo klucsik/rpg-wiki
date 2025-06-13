@@ -18,10 +18,10 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const { title, content } = await req.json();
+  const { title, content, edit_groups } = await req.json();
   const result = await query(
-    'UPDATE pages SET title = $1, content = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
-    [title, content, id]
+    'UPDATE pages SET title = $1, content = $2, edit_groups = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
+    [title, content, edit_groups || ['admin', 'editor'], id]
   );
   if (result.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(result.rows[0] as WikiPage);

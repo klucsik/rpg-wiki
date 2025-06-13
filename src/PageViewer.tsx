@@ -33,10 +33,17 @@ export default function PageViewerLayout({ page }: { page: any }) {
           <div className="prose prose-invert max-w-2xl mx-auto bg-gray-900/80 rounded-lg p-8 shadow-lg border border-gray-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-indigo-200">{page?.title}</h2>
-              {user.group !== "public" && (
+              {user.group !== "public" && Array.isArray(page?.edit_groups) && page.edit_groups.includes(user.group) && (
                 <button
-                  onClick={() => router.push(`/pages/${page?.id}/edit`)}
+                  onClick={() => {
+                    if (!page?.id) {
+                      console.warn("No page id for edit navigation", page);
+                      return;
+                    }
+                    router.push(`/pages/${page.id}/edit`);
+                  }}
                   className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
+                  disabled={!page?.id}
                 >
                   Edit
                 </button>

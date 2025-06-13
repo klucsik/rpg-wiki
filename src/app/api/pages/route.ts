@@ -10,10 +10,10 @@ export async function GET() {
 
 // POST create new page
 export async function POST(req: NextRequest) {
-  const { title, content } = await req.json();
+  const { title, content, edit_groups } = await req.json();
   const result = await query(
-    'INSERT INTO pages (title, content) VALUES ($1, $2) RETURNING *',
-    [title, content]
+    'INSERT INTO pages (title, content, edit_groups) VALUES ($1, $2, $3) RETURNING *',
+    [title, content, edit_groups || ['admin', 'editor']]
   );
   return NextResponse.json(result.rows[0] as WikiPage);
 }

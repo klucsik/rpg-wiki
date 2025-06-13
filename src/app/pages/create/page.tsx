@@ -8,6 +8,7 @@ export default function CreatePage() {
   const { user } = useUser();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [editGroups, setEditGroups] = useState<string[]>(["admin", "editor"]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function CreatePage() {
       const res = await fetch("/api/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, edit_groups: editGroups }),
       });
       if (!res.ok) throw new Error("Failed to add page");
       const created = await res.json();
@@ -48,6 +49,8 @@ export default function CreatePage() {
       onSave={saveCreate}
       onCancel={() => router.push("/pages")}
       saving={saving}
+      editGroups={editGroups}
+      setEditGroups={setEditGroups}
     />
   );
 }
