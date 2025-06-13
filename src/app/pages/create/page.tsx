@@ -2,13 +2,21 @@
 import React, { useState } from "react";
 import PageEditor from "../../../PageEditor";
 import { useRouter } from "next/navigation";
+import { useUser } from "../../../userContext";
 
 export default function CreatePage() {
+  const { user } = useUser();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  React.useEffect(() => {
+    if (user.group === "public") {
+      router.replace("/pages");
+    }
+  }, [user, router]);
 
   async function saveCreate() {
     if (!title || !content) return;

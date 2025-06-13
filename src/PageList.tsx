@@ -1,6 +1,7 @@
 import React from "react";
 import { WikiPage } from "../types";
 import { useRouter } from "next/navigation";
+import { useUser } from "./userContext";
 
 export default function PageList({
   pages,
@@ -18,16 +19,19 @@ export default function PageList({
   saving: boolean;
 }) {
   const router = useRouter();
+  const { user } = useUser();
   return (
     <aside className="w-64 min-w-56 max-w-xs bg-gray-900/80 border-r border-gray-800 h-full overflow-y-auto p-4 flex flex-col">
       <h3 className="text-lg font-bold text-indigo-200 mb-4 flex items-center justify-between">
         Pages
-        <button
-          onClick={() => router.push("/pages/create")}
-          className="bg-green-700 text-white px-2 py-1 rounded text-xs font-semibold shadow hover:bg-green-800 transition"
-        >
-          + New
-        </button>
+        {user.group !== "public" && (
+          <button
+            onClick={() => router.push("/pages/create")}
+            className="bg-green-700 text-white px-2 py-1 rounded text-xs font-semibold shadow hover:bg-green-800 transition"
+          >
+            + New
+          </button>
+        )}
       </h3>
       <ul className="space-y-1 flex-1">
         {pages.map((p) => (
@@ -42,22 +46,6 @@ export default function PageList({
             >
               {p.title}
             </button>
-            <div className="flex gap-1 mt-1">
-              <button
-                onClick={() => onEdit(p.id)}
-                className="text-xs px-2 py-1 rounded bg-indigo-900/60 text-indigo-200 hover:bg-indigo-800 transition disabled:opacity-50"
-                disabled={saving}
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(p.id)}
-                className="text-xs px-2 py-1 rounded bg-red-900/60 text-red-300 hover:bg-red-800 transition disabled:opacity-50"
-                disabled={saving}
-              >
-                Delete
-              </button>
-            </div>
           </li>
         ))}
       </ul>

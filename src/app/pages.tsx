@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import PageList from "../PageList";
 import { WikiPage } from "../types";
+import { useUser } from "../userContext";
 
 export default function Pages() {
+	const { user } = useUser();
 	const [pages, setPages] = useState<WikiPage[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -138,12 +140,14 @@ export default function Pages() {
 								<h2 className="text-2xl font-bold text-indigo-200">
 									{selectedPage.title}
 								</h2>
-								<button
-									onClick={() => handleEdit(selectedPage.id)}
-									className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
-								>
-									Edit
-								</button>
+								{user.group !== "public" && (
+									<button
+										onClick={() => handleEdit(selectedPage.id)}
+										className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
+									>
+										Edit
+									</button>
+								)}
 							</div>
 							<div className="flex-1 overflow-auto min-h-0 min-w-0">
 								<div

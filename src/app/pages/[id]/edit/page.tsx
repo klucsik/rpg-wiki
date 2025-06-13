@@ -3,8 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PageEditor from "../../../../PageEditor";
 import { WikiPage } from "../../../../types";
+import { useUser } from "../../../../userContext";
 
 export default function EditPage() {
+  const { user } = useUser();
   const params = useParams();
   const router = useRouter();
   const slug = params?.id as string;
@@ -13,6 +15,12 @@ export default function EditPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user.group === "public") {
+      router.replace(`/pages/${slug}`);
+    }
+  }, [user, router, slug]);
 
   useEffect(() => {
     setLoading(true);
@@ -35,7 +43,7 @@ export default function EditPage() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/pages/${slug}` , {
+      const res = await fetch(`/api/pages/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, content }),

@@ -1,6 +1,7 @@
 import React from "react";
 import { TiptapEditor } from "./TiptapEditor";
 import { useRouter } from "next/navigation";
+import { useUser } from "./userContext";
 
 export default function PageEditor({
   mode,
@@ -24,6 +25,8 @@ export default function PageEditor({
   slug?: string;
 }) {
   const router = useRouter();
+  const { user } = useUser();
+  const isDisabled = user.group === "public";
 
   return (
     <>
@@ -34,7 +37,7 @@ export default function PageEditor({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title"
-            disabled={saving}
+            disabled={saving || isDisabled}
             className="flex-1 px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-2xl font-bold shadow-sm min-w-0"
           />
           <span
@@ -50,7 +53,7 @@ export default function PageEditor({
         <div className="flex gap-2">
           <button
             onClick={onSave}
-            disabled={saving}
+            disabled={saving || isDisabled}
             className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-50 text-lg border border-indigo-700"
           >
             {mode === "edit" ? "Save" : "Create"}
