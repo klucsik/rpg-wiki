@@ -22,6 +22,7 @@ model Page {
   updated_at DateTime @updatedAt
   edit_groups String[]
   view_groups String[] // groups allowed to view this page
+  path       String   @unique // hierarchical path, e.g. /lore/dragons
 }
 
 model Group {

@@ -23,7 +23,7 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const { title, content, edit_groups, view_groups } = await req.json();
+  const { title, content, edit_groups, view_groups, path } = await req.json();
   const updated = await prisma.page.update({
     where: { id: Number(id) },
     data: {
@@ -31,6 +31,7 @@ export async function PUT(
       content,
       edit_groups: edit_groups || ['admin', 'editor'],
       view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+      path,
       updated_at: new Date(),
     },
   });

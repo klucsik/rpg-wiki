@@ -16,13 +16,14 @@ export async function GET() {
 
 // POST create new page
 export async function POST(req: NextRequest) {
-  const { title, content, edit_groups, view_groups } = await req.json();
+  const { title, content, edit_groups, view_groups, path } = await req.json();
   const created = await prisma.page.create({
     data: {
       title,
       content,
       edit_groups: edit_groups || ['admin', 'editor'],
       view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+      path,
     },
   });
   // Convert date fields to string for API response

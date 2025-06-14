@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import PageList from "./PageList";
 import { WikiPage } from "./types";
@@ -5,27 +7,7 @@ import { useUser } from "./userContext";
 import { canUserViewPage } from "./accessControl";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { useRouter } from "next/navigation";
-
-function ShareButton({ pageId }: { pageId: number }) {
-  const [copied, setCopied] = useState(false);
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/pages/${pageId}` : "";
-  const handleCopy = async () => {
-    if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-  return (
-    <button
-      onClick={handleCopy}
-      className="bg-blue-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-blue-800 transition text-sm ml-2"
-      title="Copy link to this page"
-      type="button"
-    >
-      {copied ? "Link copied!" : "Share"}
-    </button>
-  );
-}
+import PageEditor from "./PageEditor";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
   const { user } = useUser();
@@ -41,6 +23,9 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   const [saving, setSaving] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [editGroups, setEditGroups] = useState<string[]>([]);
+  const [viewGroups, setViewGroups] = useState<string[]>([]);
+  const [editPath, setEditPath] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -82,6 +67,9 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
     setEditId(id);
     setEditTitle(page.title);
     setEditContent(page.content);
+    setEditGroups(page.edit_groups || []);
+    setViewGroups(page.view_groups || []);
+    setEditPath(page.path || "");
     setShowCreate(false);
   }
 
@@ -100,7 +88,13 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
       const res = await fetch(`/api/pages/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: editTitle, content: editContent }),
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+          edit_groups: editGroups,
+          view_groups: viewGroups,
+          path: editPath,
+        }),
       });
       if (!res.ok) throw new Error("Failed to update page");
       const updated = await res.json();
@@ -108,6 +102,9 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
       setEditId(null);
       setEditTitle("");
       setEditContent("");
+      setEditGroups([]);
+      setViewGroups([]);
+      setEditPath("");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -171,12 +168,40 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           {error && (
             <div className="text-red-400 font-semibold mb-2">{error}</div>
           )}
-          {selectedPage && canViewSelected && (
+          {/* EDIT FORM USING PageEditor */}
+          {selectedPage && editId === selectedPage.id && (
+            <PageEditor
+              mode="edit"
+              title={editTitle}
+              content={editContent}
+              setTitle={setEditTitle}
+              setContent={setEditContent}
+              onSave={saveEdit}
+              onCancel={() => setEditId(null)}
+              saving={saving}
+              slug={selectedPage.id.toString()}
+              editGroups={editGroups}
+              setEditGroups={setEditGroups}
+              viewGroups={viewGroups}
+              setViewGroups={setViewGroups}
+              path={editPath}
+              setPath={setEditPath}
+            />
+          )}
+          {/* VIEW PAGE */}
+          {selectedPage && canViewSelected && editId !== selectedPage.id && (
             <div className="prose prose-invert w-full h-full flex-1 mx-0 bg-gray-900/80 rounded-none p-8 shadow-lg border border-gray-800 flex flex-col min-h-0 min-w-0 overflow-auto">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-indigo-200">
-                  {selectedPage.title}
-                </h2>
+                <div>
+                  {selectedPage.path && (
+                    <div className="text-xs text-gray-400 mb-1">
+                      <span className="font-mono bg-gray-800 px-2 py-0.5 rounded">{selectedPage.path}</span>
+                    </div>
+                  )}
+                  <h2 className="text-2xl font-bold text-indigo-200">
+                    {selectedPage.title}
+                  </h2>
+                </div>
                 <div className="flex items-center gap-2">
                   {user.group !== "public" &&
                     Array.isArray(selectedPage.edit_groups) &&
@@ -188,7 +213,6 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                         Edit
                       </button>
                     )}
-                  <ShareButton pageId={selectedPage.id} />
                 </div>
               </div>
               <div className="flex-1 overflow-auto min-h-0 min-w-0">
@@ -208,6 +232,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
               </div>
             </div>
           )}
+          {/* NO ACCESS */}
           {selectedPage && !canViewSelected && (
             <div className="flex items-center justify-center min-h-full">
               <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">

@@ -27,6 +27,8 @@ export default function PageEditor({
   onCancel,
   saving,
   slug,
+  path = "",
+  setPath = () => {},
   editGroups = ["admin", "editor"],
   setEditGroups,
   viewGroups = ["admin", "editor", "viewer", "public"],
@@ -41,6 +43,8 @@ export default function PageEditor({
   onCancel: () => void;
   saving: boolean;
   slug?: string;
+  path?: string;
+  setPath?: (p: string) => void;
   editGroups?: string[];
   setEditGroups?: (groups: string[]) => void;
   viewGroups?: string[];
@@ -59,7 +63,16 @@ export default function PageEditor({
     <>
       {/* Header with Save/Cancel and Title */}
       <header className={styleTokens.header}>
-        <div className="flex items-center gap-4 flex-1">
+        <div className="flex flex-col gap-2 flex-1">
+          <label className={styleTokens.label}>Path</label>
+          <input
+            type="text"
+            placeholder="/lore/dragons"
+            value={path}
+            onChange={(e) => setPath(e.target.value)}
+            className="flex-1 px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 font-mono text-base shadow-sm min-w-0 mb-2"
+            disabled={saving || isDisabled}
+          />
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -67,13 +80,6 @@ export default function PageEditor({
             disabled={saving || isDisabled}
             className="flex-1 px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-2xl font-bold shadow-sm min-w-0"
           />
-          <span
-            className={`text-lg font-semibold ${
-              mode === "edit" ? "text-yellow-300" : "text-green-300"
-            }`}
-          >
-            {mode === "edit" ? "Edit Page" : "Create New Page"}
-          </span>
         </div>
         <div className="flex flex-col gap-1 min-w-[220px]">
           <label className={styleTokens.label}>Who can edit?</label>
