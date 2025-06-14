@@ -98,12 +98,12 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
   const [blockType, setBlockType] = React.useState('paragraph');
   const blockOptions = [
     { label: 'Paragraph', value: 'paragraph' },
-    { label: 'Heading 1', value: 'heading-1' },
-    { label: 'Heading 2', value: 'heading-2' },
-    { label: 'Heading 3', value: 'heading-3' },
-    { label: 'Heading 4', value: 'heading-4' },
-    { label: 'Heading 5', value: 'heading-5' },
-    { label: 'Heading 6', value: 'heading-6' },
+    { label: 'Heading 1', value: 'heading', level: 1 },
+    { label: 'Heading 2', value: 'heading', level: 2 },
+    { label: 'Heading 3', value: 'heading', level: 3 },
+    { label: 'Heading 4', value: 'heading', level: 4 },
+    { label: 'Heading 5', value: 'heading', level: 5 },
+    { label: 'Heading 6', value: 'heading', level: 6 },
     { label: 'Restricted Block', value: 'restricted' },
   ];
 
@@ -118,19 +118,18 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     } else if (parent.type.name === 'paragraph') {
       setBlockType('paragraph');
     }
-    // Do not update for restricted block, as it's an insert action only
   }, [editor && editor.state.selection]);
 
   const handleBlockTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (!editor) return;
-    const value = e.target.value;
-    setBlockType(value);
-    if (value === 'paragraph') {
+    const selected = e.target.value;
+    setBlockType(selected);
+    if (selected === 'paragraph') {
       editor.chain().focus().setParagraph().run();
-    } else if (value.startsWith('heading-')) {
-      const level = Number(value.split('-')[1]) as 1|2|3|4|5|6;
+    } else if (selected.startsWith('heading-')) {
+      const level = Number(selected.split('-')[1]) as 1|2|3|4|5|6;
       editor.chain().focus().setHeading({ level }).run();
-    } else if (value === 'restricted') {
+    } else if (selected === 'restricted') {
       // Insert a new restricted block with default title and group, using pageEditGroups if available
       editor.chain().focus().insertContent({
         type: 'restrictedBlock',
@@ -232,9 +231,13 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           onChange={handleBlockTypeChange}
           className="min-w-[140px] px-2 py-1 rounded bg-gray-900 text-indigo-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-700"
         >
-          {blockOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
+          {blockOptions.map(opt =>
+            opt.value === 'heading' ? (
+              <option key={`heading-${opt.level}`} value={`heading-${opt.level}`}>{opt.label}</option>
+            ) : (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            )
+          )}
         </select>
         <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={`px-2 py-1 rounded font-bold ${editor.isActive('bold') ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>B</button>
         <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={`px-2 py-1 rounded italic ${editor.isActive('italic') ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>I</button>
