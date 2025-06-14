@@ -169,32 +169,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
             <div className="text-red-400 font-semibold mb-2">{error}</div>
           )}
           {/* EDIT FORM USING PageEditor */}
-          {selectedPage && editId === selectedPage.id && (
-            <PageEditor
-              mode="edit"
-              title={editTitle}
-              content={editContent}
-              setTitle={setEditTitle}
-              setContent={setEditContent}
-              onSave={saveEdit}
-              onCancel={() => setEditId(null)}
-              saving={saving}
-              slug={selectedPage.id.toString()}
-              editGroups={editGroups}
-              setEditGroups={setEditGroups}
-              viewGroups={viewGroups}
-              setViewGroups={setViewGroups}
-              path={editPath}
-              setPath={setEditPath}
-              onDelete={async () => {
-                if (!editId) return;
-                await deletePage(editId);
-                setEditId(null);
-                setSelectedId(null);
-                router.push("/pages");
-              }}
-            />
-          )}
+          {selectedPage && editId === selectedPage.id && null}
           {/* VIEW PAGE */}
           {selectedPage && canViewSelected && editId !== selectedPage.id && (
             <div className="prose prose-invert w-full h-full flex-1 mx-0 bg-gray-900/80 rounded-none p-8 shadow-lg border border-gray-800 flex flex-col min-h-0 min-w-0 overflow-auto">
