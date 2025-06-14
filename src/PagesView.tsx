@@ -118,8 +118,8 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                   <div>No content</div>
                 )}
               </div>
-              <div className={styles.lastUpdated}>
-                Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""}
+              <div className={styles.pageFooter}>
+                Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""} &nbsp;|&nbsp; View groups: {Array.isArray(selectedPage.view_groups) ? selectedPage.view_groups.join(', ') : ''} &nbsp;|&nbsp; Edit groups: {Array.isArray(selectedPage.edit_groups) ? selectedPage.edit_groups.join(', ') : ''}
               </div>
             </div>
           )}
