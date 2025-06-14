@@ -10,7 +10,12 @@ export async function GET(
   const { id } = await context.params;
   const page = await prisma.page.findUnique({ where: { id: Number(id) } });
   if (!page) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(page as WikiPage);
+  // Convert date fields to string for API response
+  return NextResponse.json({
+    ...page,
+    created_at: page.created_at.toISOString(),
+    updated_at: page.updated_at.toISOString(),
+  });
 }
 
 export async function PUT(
@@ -18,17 +23,23 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const { title, content, edit_groups } = await req.json();
+  const { title, content, edit_groups, view_groups } = await req.json();
   const updated = await prisma.page.update({
     where: { id: Number(id) },
     data: {
       title,
       content,
       edit_groups: edit_groups || ['admin', 'editor'],
+      view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
       updated_at: new Date(),
     },
   });
-  return NextResponse.json(updated as WikiPage);
+  // Convert date fields to string for API response
+  return NextResponse.json({
+    ...updated,
+    created_at: updated.created_at.toISOString(),
+    updated_at: updated.updated_at.toISOString(),
+  });
 }
 
 export async function DELETE(

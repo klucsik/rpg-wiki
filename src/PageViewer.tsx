@@ -1,12 +1,23 @@
 import React from "react";
 import PageList from "./PageList";
 import { useRouter } from "next/navigation";
-import { WikiPage } from "../types";
+import { WikiPage } from "./types";
 import { useUser } from "./userContext";
 import RestrictedBlockView from "./RestrictedBlockView";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 
-export default function PageViewerLayout({ page }: { page: any }) {
+function NoAccessPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center min-h-screen">
+      <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
+        <h1 className="text-3xl font-bold text-red-400 mb-4">No Access</h1>
+        <p className="text-indigo-100 mb-2">You do not have permission to view this page.</p>
+      </div>
+    </div>
+  );
+}
+
+export default function PageViewerLayout({ page }: { page: WikiPage }) {
   const router = useRouter();
   const { user } = useUser();
   // We'll need to fetch all pages for the sidebar
@@ -20,6 +31,18 @@ export default function PageViewerLayout({ page }: { page: any }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Restriction logic: user must be in view_groups or edit_groups
+  const canView = Array.isArray(page?.view_groups)
+    ? page.view_groups.includes(user.group)
+    : true;
+  const canEdit = Array.isArray(page?.edit_groups)
+    ? page.edit_groups.includes(user.group)
+    : false;
+  if (!canView && !canEdit) {
+    return <NoAccessPage />;
+  }
+
+  // For parseHtmlWithRestrictedBlocks, pass user as { groups: [user.group] }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-10 px-4 flex">
       <PageList
@@ -53,7 +76,7 @@ export default function PageViewerLayout({ page }: { page: any }) {
             </div>
             {/* Render restricted blocks if present, else fallback to normal content */}
             {page?.content ? (
-              parseHtmlWithRestrictedBlocks(page.content, user)
+              parseHtmlWithRestrictedBlocks(page.content, { groups: [user.group] })
             ) : (
               <div>No content</div>
             )}

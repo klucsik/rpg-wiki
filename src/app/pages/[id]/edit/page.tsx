@@ -15,6 +15,7 @@ export default function EditPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [editGroups, setEditGroups] = useState<string[]>(["admin", "editor"]);
+  const [viewGroups, setViewGroups] = useState<string[]>(["admin", "editor", "viewer", "public"]);
   const [saving, setSaving] = useState(false);
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
@@ -36,6 +37,7 @@ export default function EditPage() {
         setTitle(data.title);
         setContent(data.content);
         setEditGroups(data.edit_groups || ["admin", "editor"]);
+        setViewGroups(data.view_groups || ["admin", "editor", "viewer", "public"]);
         setAllowed(Array.isArray(data.edit_groups) ? data.edit_groups.includes(user.group) : true);
       })
       .catch((err) => setError(err.message))
@@ -56,7 +58,7 @@ export default function EditPage() {
       const res = await fetch(`/api/pages/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, edit_groups: editGroups }),
+        body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups }),
       });
       if (!res.ok) throw new Error("Failed to update page");
       router.push(`/pages/${slug}`);
@@ -84,6 +86,8 @@ export default function EditPage() {
       slug={slug}
       editGroups={editGroups}
       setEditGroups={setEditGroups}
+      viewGroups={viewGroups}
+      setViewGroups={setViewGroups}
     />
   );
 }

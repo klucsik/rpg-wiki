@@ -21,6 +21,7 @@ model Page {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   edit_groups String[]
+  view_groups String[] // groups allowed to view this page
 }
 
 model Group {

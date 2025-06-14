@@ -29,6 +29,8 @@ export default function PageEditor({
   slug,
   editGroups = ["admin", "editor"],
   setEditGroups,
+  viewGroups = ["admin", "editor", "viewer", "public"],
+  setViewGroups,
 }: {
   mode: "edit" | "create";
   title: string;
@@ -41,13 +43,17 @@ export default function PageEditor({
   slug?: string;
   editGroups?: string[];
   setEditGroups?: (groups: string[]) => void;
+  viewGroups?: string[];
+  setViewGroups?: (groups: string[]) => void;
 }) {
   const router = useRouter();
   const { user } = useUser();
   const isDisabled = user.group === "public";
   const { groups } = useGroups();
   const [search, setSearch] = useState("");
+  const [viewSearch, setViewSearch] = useState("");
   const filteredGroups = groups.filter((g) => g.includes(search));
+  const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
 
   return (
     <>
@@ -111,6 +117,56 @@ export default function PageEditor({
                   disabled={isDisabled}
                   onClick={() =>
                     setEditGroups && setEditGroups([...editGroups, g])
+                  }
+                >
+                  {g}
+                </button>
+              ))}
+          </div>
+        </div>
+        {/* Who can see? block */}
+        <div className="flex flex-col gap-1 min-w-[220px]">
+          <label className={styleTokens.label}>Who can see?</label>
+          <input
+            type="text"
+            placeholder="Search groups..."
+            value={viewSearch}
+            onChange={(e) => setViewSearch(e.target.value)}
+            className={styleTokens.input}
+            disabled={isDisabled}
+          />
+          <div className={styleTokens.groupList}>
+            {viewGroups?.map((g) => (
+              <span key={g} className={styleTokens.tag}>
+                {g}
+                {!isDisabled && (
+                  <button
+                    type="button"
+                    className={styleTokens.tagRemove}
+                    onClick={() =>
+                      setViewGroups &&
+                      setViewGroups(
+                        viewGroups.filter((vg) => vg !== g)
+                      )
+                    }
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {filteredViewGroups
+              .filter((g) => !viewGroups?.includes(g))
+              .map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className={styleTokens.groupButton}
+                  disabled={isDisabled}
+                  onClick={() =>
+                    setViewGroups && setViewGroups([...viewGroups, g])
                   }
                 >
                   {g}
