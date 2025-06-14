@@ -1,5 +1,5 @@
 import React from "react";
-import { WikiPage } from "../types";
+import { WikiPage } from "./types";
 import { useRouter } from "next/navigation";
 import { useUser } from "./userContext";
 
@@ -42,7 +42,7 @@ export default function PageList({
                   ? "bg-indigo-800 text-indigo-100"
                   : "bg-gray-800 text-indigo-300 hover:bg-gray-700"
               }`}
-              onClick={() => onSelect(p.id)}
+              onClick={() => router.push(`/pages/${p.id}`)}
             >
               {p.title}
             </button>
