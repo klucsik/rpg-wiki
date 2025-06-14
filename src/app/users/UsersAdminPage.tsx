@@ -1,12 +1,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
+type Group = { id: number; name: string };
+type User = { id: number; name: string; groups: Group[] };
+
 export default function UsersAdminPage() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
-  const [newUser, setNewUser] = useState({ name: "", password: "", groupIds: [] as number[] });
+  const [users, setUsers] = useState<User[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [newUser, setNewUser] = useState<{ name: string; password: string; groupIds: number[] }>({ name: "", password: "", groupIds: [] });
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editUser, setEditUser] = useState({ name: "", password: "", groupIds: [] as number[] });
+  const [editUser, setEditUser] = useState<{ name: string; password: string; groupIds: number[] }>({ name: "", password: "", groupIds: [] });
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   useEffect(() => {
@@ -45,12 +48,12 @@ export default function UsersAdminPage() {
     setConfirmDelete(null);
   };
 
-  const handleEdit = (user: any) => {
+  const handleEdit = (user: User) => {
     setEditingId(user.id);
     setEditUser({
       name: user.name,
       password: "",
-      groupIds: user.groups.map((g: any) => g.id),
+      groupIds: user.groups.map((g: Group) => g.id),
     });
   };
 
@@ -74,8 +77,10 @@ export default function UsersAdminPage() {
       <div className="mb-6">
         <input className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2" placeholder="Username" value={newUser.name} onChange={e => setNewUser(u => ({ ...u, name: e.target.value }))} />
         <input className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2" placeholder="Password" type="password" value={newUser.password} onChange={e => setNewUser(u => ({ ...u, password: e.target.value }))} />
-        <select multiple className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2" value={newUser.groupIds} onChange={e => setNewUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
-          {groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        <select multiple className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2"
+          value={newUser.groupIds.map(String)}
+          onChange={e => setNewUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
+          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
         <button className="bg-green-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-green-800 transition text-sm" onClick={handleCreate}>Add User</button>
       </div>
@@ -94,10 +99,10 @@ export default function UsersAdminPage() {
                 <input className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.name} onChange={e => setEditUser(u => ({ ...u, name: e.target.value }))} />
               ) : user.name}</td>
               <td>{editingId === user.id ? (
-                <select multiple className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.groupIds} onChange={e => setEditUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
-                  {groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                <select multiple className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.groupIds.map(String)} onChange={e => setEditUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
+                  {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
-              ) : user.groups.map((g: any) => g.name).join(", ")}</td>
+              ) : user.groups.map((g) => g.name).join(", ")}</td>
               <td>
                 {editingId === user.id ? (
                   <>

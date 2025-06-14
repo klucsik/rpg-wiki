@@ -5,7 +5,7 @@ import { useUser } from "../../userContext";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const { setUser, users } = useUser();
+  const { setUser } = useUser();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function LoginPage() {
       window.localStorage.setItem("rpgwiki_user", JSON.stringify(user));
       window.localStorage.setItem("rpgwiki_user_expiry", (Date.now() + 86400000).toString());
       router.replace("/pages");
-    } catch (err) {
+    } catch {
       setError("Login failed");
     }
   }
@@ -63,7 +63,7 @@ export default function LoginPage() {
           Login
         </button>
         <div className="text-center mt-2">
-          <span className="text-indigo-300">Don't have an account? </span>
+          <span className="text-indigo-300">Don&apos;t have an account? </span>
           <Link href="/register" className="text-indigo-400 hover:underline">Register</Link>
         </div>
       </form>

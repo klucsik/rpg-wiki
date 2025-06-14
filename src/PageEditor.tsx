@@ -77,8 +77,8 @@ export default function PageEditor({
       if (onSuccess) onSuccess(saved);
       else if (mode === "edit" && page) router.push(`/pages/${page.id}`);
       else router.push(`/pages/${saved.id}`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -93,8 +93,8 @@ export default function PageEditor({
       if (!res.ok) throw new Error("Failed to delete page");
       if (onSuccess) onSuccess(undefined); // Signal parent to refresh page list
       else router.push("/pages");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }

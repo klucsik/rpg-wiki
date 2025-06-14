@@ -1,14 +1,14 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PageEditor from "../../../../PageEditor";
 import { WikiPage } from "../../../../types";
-import { useUser } from "../../../../userContext";
 
-export default function EditPage({ params }: { params: { id: string } }) {
-  const { user } = useUser();
+export default function EditPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
   const [page, setPage] = useState<WikiPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export default function EditPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`/api/pages/${params.id}`)
+    fetch(`/api/pages/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch page");
         return res.json();
@@ -24,7 +24,7 @@ export default function EditPage({ params }: { params: { id: string } }) {
       .then((data) => setPage(data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [params.id]);
+  }, [id]);
 
   if (loading) return <div className="text-indigo-400 p-8">Loading...</div>;
   if (error) return <div className="text-red-400 p-8">{error}</div>;
@@ -37,8 +37,8 @@ export default function EditPage({ params }: { params: { id: string } }) {
           <PageEditor
             mode="edit"
             page={page}
-            onSuccess={() => router.push(`/pages/${params.id}`)}
-            onCancel={() => router.push(`/pages/${params.id}`)}
+            onSuccess={() => router.push(`/pages/${id}`)}
+            onCancel={() => router.push(`/pages/${id}`)}
           />
         </div>
       </main>

@@ -3,7 +3,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react';
 import RestrictedBlockEditorView from './RestrictedBlockEditorView';
 
 export interface RestrictedBlockOptions {
-  HTMLAttributes: Record<string, any>;
+  HTMLAttributes: Record<string, unknown>;
 }
 
 const RestrictedBlock = Node.create<RestrictedBlockOptions>({

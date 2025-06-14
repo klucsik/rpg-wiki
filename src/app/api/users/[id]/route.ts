@@ -4,10 +4,11 @@ import { prisma } from '../../../../db';
 // GET, PUT, DELETE for a single user by id
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   const user = await prisma.user.findUnique({
-    where: { id: Number(params.id) },
+    where: { id: Number(id) },
     include: { groups: true },
   });
   if (!user) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -16,12 +17,13 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   const { name, password, groupIds } = await req.json();
   try {
     const user = await prisma.user.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: {
         name,
         password,
@@ -32,20 +34,20 @@ export async function PUT(
       include: { groups: true },
     });
     return NextResponse.json(user);
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
   try {
     await prisma.user.delete({ where: { id: Number(id) } });
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }

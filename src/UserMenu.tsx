@@ -4,7 +4,7 @@ import { useUser } from "./userContext";
 import Link from "next/link";
 
 export default function UserMenu() {
-  const { user, setUser, logout } = useUser();
+  const { user, logout } = useUser();
   const [open, setOpen] = useState(false);
 
   return (

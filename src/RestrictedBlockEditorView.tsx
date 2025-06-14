@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
-import { useUser } from './userContext';
+import { NodeViewWrapper, NodeViewContent, type ReactNodeViewProps } from '@tiptap/react';
 import { useGroups } from "./groupsContext";
 import styles from './RestrictedBlock.module.css';
 
-const RestrictedBlockEditorView = (props: any) => {
-  const { editor, node, getPos, updateAttributes, pageEditGroups } = props;
+// Remove custom props interface and use the generic ReactNodeViewProps from @tiptap/react
+const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
+  const { editor, node, getPos, updateAttributes } = props;
   const { groups } = useGroups();
-  // Use pageEditGroups as default if present, else fallback to node.attrs.usergroups
+  // Remove pageEditGroups logic, fallback to node.attrs.usergroups for group logic
   const initialGroups = (() => {
     try {
-      if (pageEditGroups && Array.isArray(pageEditGroups) && pageEditGroups.length > 0) {
-        return pageEditGroups;
-      }
       return JSON.parse(node.attrs.usergroups || '[]');
     } catch {
       return [];
@@ -25,7 +22,8 @@ const RestrictedBlockEditorView = (props: any) => {
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
-    updateAttributes && updateAttributes({ title: e.target.value });
+    // Fix unused expression: setTitle(...)
+    if (updateAttributes) updateAttributes({ title: e.target.value });
   };
 
   const handleGroupToggle = (group: string) => {
@@ -38,13 +36,14 @@ const RestrictedBlockEditorView = (props: any) => {
 
   const handleSaveGroups = () => {
     setSelectedGroups(pendingGroups);
-    updateAttributes && updateAttributes({ usergroups: JSON.stringify(pendingGroups) });
+    // Fix unused expression: setSelectedGroups(...)
+    if (updateAttributes) updateAttributes({ usergroups: JSON.stringify(pendingGroups) });
     setEditingGroups(false);
   };
 
   const removeRestriction = () => {
     if (typeof getPos === 'function') {
-      editor.commands.command(({ tr }: { tr: any }) => {
+      editor.commands.command(({ tr }) => {
         const pos = getPos();
         const node = tr.doc.nodeAt(pos);
         if (!node) return false;
@@ -96,7 +95,7 @@ const RestrictedBlockEditorView = (props: any) => {
           ) : (
             <>
               <span style={{ color: '#e0e7ff', fontSize: 13, marginRight: 8 }}>
-                {selectedGroups.length > 0 ? selectedGroups.join(', ') : <span style={{ opacity: 0.7 }}>No groups</span>}
+                {selectedGroups.join(', ')}
               </span>
               <button
                 type="button"

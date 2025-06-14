@@ -9,10 +9,13 @@ export default function CreatePage() {
   const router = useRouter();
   if (user.group === "public") return null;
   return (
-        <PageEditor
-          mode="create"
-          onSuccess={(page) => router.push(`/pages/${page.id}`)}
-          onCancel={() => router.push("/pages")}
-        />
+    <PageEditor
+      mode="create"
+      onSuccess={(page) => {
+        if (page && page.id) router.push(`/pages/${page.id}`);
+        else router.push("/pages");
+      }}
+      onCancel={() => router.push("/pages")}
+    />
   );
 }

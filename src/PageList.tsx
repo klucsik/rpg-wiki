@@ -7,18 +7,10 @@ import { useUser } from "./userContext";
 
 export default function PageList({
   pages,
-  onSelect,
   selectedId,
-  onDelete,
-  onEdit,
-  saving,
 }: {
   pages: WikiPage[];
-  onSelect: (id: number) => void;
   selectedId: number | null;
-  onDelete: (id: number) => void;
-  onEdit: (id: number) => void;
-  saving: boolean;
 }) {
   const router = useRouter();
   const { user } = useUser();

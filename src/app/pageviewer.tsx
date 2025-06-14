@@ -3,8 +3,10 @@ import React from "react";
 import RestrictedBlockView from "../RestrictedBlockView";
 
 function RestrictedBlock({ children, allowedGroups, title, user }: { children: React.ReactNode; allowedGroups: string[]; title: string; user?: { groups: string[] } | null }) {
+  // Always pass a valid user object to RestrictedBlockView
+  const safeUser = user && user.groups ? { group: user.groups[0] ?? "public", groups: user.groups } : { group: "public", groups: ["public"] };
   return (
-    <RestrictedBlockView title={title} usergroups={allowedGroups} user={user}>
+    <RestrictedBlockView title={title} usergroups={allowedGroups} user={safeUser}>
       {children}
     </RestrictedBlockView>
   );

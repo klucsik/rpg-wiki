@@ -16,6 +16,7 @@
     "@tiptap/extension-text-align": "^2.14.0",
     "@tiptap/react": "^2.14.0",
     "@tiptap/starter-kit": "^2.14.0",
+    "bcryptjs": "^3.0.2",
     "next": "15.3.3",
     "pg": "^8.16.0",
     "react": "^19.0.0",

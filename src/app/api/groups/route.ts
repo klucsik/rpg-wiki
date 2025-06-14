@@ -9,15 +9,16 @@ export async function GET() {
 
 // POST create new group
 export async function POST(req: NextRequest) {
-  const { name } = await req.json();
+  const groupData: unknown = await req.json();
+  const { name } = groupData as { name: string };
   if (!name || typeof name !== 'string') {
     return NextResponse.json({ error: 'Invalid group name' }, { status: 400 });
   }
   try {
     const created = await prisma.group.create({ data: { name } });
     return NextResponse.json(created);
-  } catch (err: any) {
-    if (err.code === 'P2002') {
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Group already exists' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to create group' }, { status: 500 });
@@ -34,7 +35,7 @@ export async function DELETE(req: NextRequest) {
   try {
     await prisma.group.delete({ where: { name } });
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete group' }, { status: 500 });
   }
 }

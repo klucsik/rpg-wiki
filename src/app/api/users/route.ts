@@ -12,7 +12,13 @@ export async function GET() {
 
 // POST create new user
 export async function POST(req: NextRequest) {
-  const { name, password, groupIds } = await req.json();
+  // Replace 'any' with 'unknown' for userData parameter
+  const userData: unknown = await req.json();
+  const { name, password, groupIds } = userData as {
+    name: string;
+    password: string;
+    groupIds?: number[];
+  };
   if (!name || !password) {
     return NextResponse.json({ error: 'Missing name or password' }, { status: 400 });
   }
@@ -28,8 +34,8 @@ export async function POST(req: NextRequest) {
       include: { groups: true },
     });
     return NextResponse.json(user);
-  } catch (err: any) {
-    if (err.code === 'P2002') {
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'P2002') {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });

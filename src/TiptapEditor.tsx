@@ -15,7 +15,7 @@ interface TiptapEditorProps {
 }
 
 // Custom Image extension with resizable and alignment attributes
-import { Node, mergeAttributes } from '@tiptap/core';
+import { mergeAttributes } from '@tiptap/core';
 
 const ResizableImage = Image.extend({
   addAttributes() {
@@ -178,7 +178,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
   // Image resizing and alignment controls
   function setImageWidth(width: string) {
     if (!editor) return;
-    const { state, view } = editor;
+    const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
     if (node && node.type.name === 'image') {
@@ -190,15 +190,14 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     const { state } = editor;
     const { selection } = state;
     // Try to find the image node in the selection or its parent
-    let pos = selection.from;
+    const pos = selection.from;
     let node = state.doc.nodeAt(pos);
     if (!node || node.type.name !== 'image') {
       // Try to find an image node in the selection range
       let found = false;
-      state.doc.nodesBetween(selection.from, selection.to, (n, p, parent, index) => {
+      state.doc.nodesBetween(selection.from, selection.to, (n) => {
         if (n.type.name === 'image' && !found) {
           node = n;
-          pos = p;
           found = true;
         }
       });
@@ -213,15 +212,17 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
 
   // Check if image is selected
   const isImageSelected = editor.isActive('image');
-  let currentImageAttrs: any = {};
+  // Add type for currentImageAttrs
+  let imageNode: { attrs?: { width?: string; align?: string } } = {};
   if (isImageSelected) {
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
     if (node && node.type.name === 'image') {
-      currentImageAttrs = node.attrs;
+      imageNode = node as { attrs?: { width?: string; align?: string } };
     }
   }
+  const currentImageAttrs = imageNode.attrs || {};
 
   return (
     <div className={styles.editorRoot}>

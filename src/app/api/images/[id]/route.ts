@@ -3,13 +3,14 @@ import { prisma } from '../../../../db';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(params.id);
-  if (!id) {
+  const { id } = await context.params;
+  const numId = Number(id);
+  if (!numId) {
     return new NextResponse('Invalid image id', { status: 400 });
   }
-  const image = await prisma.image.findUnique({ where: { id } });
+  const image = await prisma.image.findUnique({ where: { id: numId } });
   if (!image) {
     return new NextResponse('Image not found', { status: 404 });
   }

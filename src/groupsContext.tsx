@@ -17,7 +17,7 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetch("/api/groups")
       .then((res) => res.json())
-      .then((data) => setGroups(data.map((g: any) => g.name)));
+      .then((data) => setGroups(data.map((g: { name: string }) => g.name)));
   }, []);
 
   const addGroup = async (group: Group) => {

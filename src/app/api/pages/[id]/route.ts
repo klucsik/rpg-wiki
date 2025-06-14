@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../db';
-import { WikiPage } from '../../../../types';
 
 // GET, PUT, DELETE for a single page by id
 export async function GET(

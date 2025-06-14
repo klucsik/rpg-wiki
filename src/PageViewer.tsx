@@ -3,7 +3,6 @@ import PageList from "./PageList";
 import { useRouter } from "next/navigation";
 import { WikiPage } from "./types";
 import { useUser } from "./userContext";
-import RestrictedBlockView from "./RestrictedBlockView";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { canUserViewPage, canUserEditPage } from "./accessControl";
 import styles from "./PageView.module.css";
@@ -23,14 +22,11 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
   const router = useRouter();
   const { user } = useUser();
   // We'll need to fetch all pages for the sidebar
-  const [pages, setPages] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [pages, setPages] = React.useState<WikiPage[]>([]);
   React.useEffect(() => {
-    setLoading(true);
     fetch("/api/pages")
       .then((res) => res.json())
-      .then((data) => setPages(data))
-      .finally(() => setLoading(false));
+      .then((data) => setPages(data));
   }, []);
 
   // Restriction logic: user must be in view_groups or edit_groups
@@ -45,11 +41,7 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
     <div className={styles.container}>
       <PageList
         pages={pages}
-        onSelect={(id: number) => router.push(`/pages/${id}`)}
         selectedId={page?.id || null}
-        onDelete={() => {}}
-        onEdit={(id: number) => router.push(`/pages/${id}/edit`)}
-        saving={false}
       />
       <main className={styles.main + " flex-col items-center justify-start p-8"}>
         <div className="w-full max-w-2xl">

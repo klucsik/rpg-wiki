@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { RESTRICTED_BLOCK_BG } from './RestrictedBlock';
 import styles from './RestrictedBlock.module.css';
 
 interface RestrictedBlockViewProps {

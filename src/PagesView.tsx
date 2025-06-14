@@ -39,44 +39,20 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
     if (initialId !== undefined && initialId !== selectedId) {
       setSelectedId(initialId);
     }
-  }, [initialId]);
+  }, [initialId, selectedId]);
 
   const selectedPage = pages.find((p) => p.id === selectedId) || null;
   const canViewSelected = selectedPage && canUserViewPage(user, selectedPage);
 
-  function handleSelect(id: number) {
-    setSelectedId(id);
-    router.push(`/pages/${id}`);
-  }
-
   function handleEdit(id: number) {
     router.push(`/pages/${id}/edit`);
-  }
-
-  async function deletePage(id: number) {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete page");
-      setPages((pages) => pages.filter((p) => p.id !== id));
-      if (selectedId === id) setSelectedId(null);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
     <div className={styles.container}>
       <PageList
         pages={pages}
-        onSelect={handleSelect}
         selectedId={selectedId}
-        onDelete={deletePage}
-        onEdit={handleEdit}
-        saving={false}
       />
       <main className={styles.main}>
         <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">

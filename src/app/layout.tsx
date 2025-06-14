@@ -1,11 +1,9 @@
 "use client";
 
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
-import React, { useState } from "react";
-import UserMenu from "../UserMenu";
-import { UserProvider, useUser } from "../userContext";
+import React from "react";
+import { UserProvider } from "../userContext";
 import { GroupsProvider } from "../groupsContext";
 import HeaderNav from "../HeaderNav";
 
