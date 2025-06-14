@@ -9,7 +9,18 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
       await prisma.$connect();
       // Optionally, check a table exists (throws if not migrated)
       await prisma.page.findFirst();
-      console.log('Database connection established and schema is up to date.');
+      // Seed default groups if not present
+      await prisma.group.upsert({
+        where: { name: 'admin' },
+        update: {},
+        create: { name: 'admin' },
+      });
+      await prisma.group.upsert({
+        where: { name: 'public' },
+        update: {},
+        create: { name: 'public' },
+      });
+      console.log('Database connection established, schema is up to date, and default groups are seeded.');
     } catch (err) {
       console.error('Database connection or schema check failed at startup:', err);
       if (typeof process.exit === 'function') process.exit(1);

@@ -22,3 +22,12 @@ model Page {
   updated_at DateTime @updatedAt
   edit_groups String[]
 }
+
+model Group {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+}
+
+// Add this block at the end for seeding
+// Run with: npx prisma db seed
+// See: https://www.prisma.io/docs/guides/database/seed-database

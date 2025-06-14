@@ -1,24 +1,38 @@
 // Central place for group definitions and context
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type Group = string;
 
 interface GroupsContextType {
   groups: Group[];
-  addGroup: (group: Group) => void;
+  addGroup: (group: Group) => Promise<void>;
   removeGroup: (group: Group) => void;
   renameGroup: (oldName: Group, newName: Group) => void;
 }
 
-const DEFAULT_GROUPS: Group[] = ["admin", "editor", "viewer", "public"];
-
 const GroupsContext = createContext<GroupsContextType | undefined>(undefined);
 
 export function GroupsProvider({ children }: { children: ReactNode }) {
-  const [groups, setGroups] = useState<Group[]>(DEFAULT_GROUPS);
+  const [groups, setGroups] = useState<Group[]>([]);
 
-  const addGroup = (group: Group) => {
-    setGroups((prev) => (prev.includes(group) ? prev : [...prev, group]));
+  useEffect(() => {
+    fetch("/api/groups")
+      .then((res) => res.json())
+      .then((data) => setGroups(data.map((g: any) => g.name)));
+  }, []);
+
+  const addGroup = async (group: Group) => {
+    if (!group) return;
+    const res = await fetch("/api/groups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: group }),
+    });
+    if (res.ok) {
+      setGroups((prev) => (prev.includes(group) ? prev : [...prev, group]));
+    } else {
+      // Optionally handle error
+    }
   };
   const removeGroup = (group: Group) => {
     setGroups((prev) => prev.filter((g) => g !== group));
