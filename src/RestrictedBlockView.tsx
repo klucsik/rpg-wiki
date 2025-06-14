@@ -16,14 +16,22 @@ const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergr
   const hasAccess = userGroupList.some((g) => usergroups.includes(g));
 
   return (
-    <div className={styles.restrictedBlock}>
+    <div className={styles.restrictedBlock} style={{ position: 'relative' }}>
       <div className={styles.restrictedTitle}>{title}</div>
       {hasAccess ? (
         <>
-          <button onClick={() => setRevealed((r) => !r)} className={styles.revealButton}>
+          <button
+            onClick={() => setRevealed((r) => !r)}
+            className={
+              revealed
+                ? `${styles.revealButton} ${styles.revealButtonActive}`
+                : styles.revealButton
+            }
+            aria-label={revealed ? 'Hide restricted content' : 'Reveal restricted content'}
+          >
             {revealed ? 'Hide' : 'Reveal'}
           </button>
-          {revealed && <div>{children}</div>}
+          <div style={{ minHeight: 32, marginTop: 16 }}>{revealed && <div>{children}</div>}</div>
         </>
       ) : (
         <div className={styles.restrictedNoAccess}>
