@@ -7,3 +7,6 @@
 - All persistence should go through API routes.
 - SSR/SSG should be used for wiki pages where appropriate.
 - Make the code modular and easy to extend for user/group/auth features.
+- Dont ask for continue to write code, just write it.
+- Use `prisma` for database access.
+- Use `next-auth` for authentication.
