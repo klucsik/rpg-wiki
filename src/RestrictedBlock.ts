@@ -52,7 +52,7 @@ const RestrictedBlock = Node.create<RestrictedBlockOptions>({
           'data-block-type': 'restricted',
           'data-usergroups': node.attrs.usergroups,
           'data-title': node.attrs.title,
-          style: 'background:#233779;padding:8px;border:1px dashed #c00;',
+          class: 'restricted-block-html',
         }
       ),
       0,

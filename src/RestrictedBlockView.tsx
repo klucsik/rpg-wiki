@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { RESTRICTED_BLOCK_BG } from './RestrictedBlock';
+import styles from './RestrictedBlock.module.css';
 
 interface RestrictedBlockViewProps {
   title: string;
@@ -15,17 +16,17 @@ const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergr
   const hasAccess = userGroupList.some((g) => usergroups.includes(g));
 
   return (
-    <div style={{ background: RESTRICTED_BLOCK_BG, padding: 12, borderRadius: 6, margin: '12px 0' }}>
-      <div style={{ fontWeight: 600, marginBottom: 6 }}>{title}</div>
+    <div className={styles.restrictedBlock}>
+      <div className={styles.restrictedTitle}>{title}</div>
       {hasAccess ? (
         <>
-          <button onClick={() => setRevealed((r) => !r)} style={{ marginBottom: 8 }}>
+          <button onClick={() => setRevealed((r) => !r)} className={styles.revealButton}>
             {revealed ? 'Hide' : 'Reveal'}
           </button>
           {revealed && <div>{children}</div>}
         </>
       ) : (
-        <div style={{ opacity: 0.7, color: '#bbb', marginTop: 8 }}>
+        <div className={styles.restrictedNoAccess}>
           <span>Restricted</span>
         </div>
       )}

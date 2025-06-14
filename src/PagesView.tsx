@@ -7,6 +7,7 @@ import { useUser } from "./userContext";
 import { canUserViewPage } from "./accessControl";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { useRouter } from "next/navigation";
+import styles from "./PageView.module.css";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
   const { user } = useUser();
@@ -68,7 +69,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   }
 
   return (
-    <div className="min-h-screen min-w-0 w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex">
+    <div className={styles.container}>
       <PageList
         pages={pages}
         onSelect={handleSelect}
@@ -77,7 +78,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
         onEdit={handleEdit}
         saving={false}
       />
-      <main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-full w-full">
+      <main className={styles.main}>
         <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">
           {loading && <div className="text-indigo-400">Loading...</div>}
           {error && (
@@ -85,13 +86,11 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           )}
           {/* VIEW PAGE */}
           {selectedPage && canViewSelected && (
-            <div className="prose prose-invert w-full h-full flex-1 mx-0 bg-gray-900/80 rounded-none p-8 shadow-lg border border-gray-800 flex flex-col min-h-0 min-w-0 overflow-auto">
-              <div className="flex items-center justify-between mb-4">
+            <div className={`prose prose-invert ${styles.proseBox}`}>
+              <div className={styles.header}>
                 <div>
                   {selectedPage.path && (
-                    <div className="text-xs text-gray-400 mb-1">
-                      <span className="font-mono bg-gray-800 px-2 py-0.5 rounded">{selectedPage.path}</span>
-                    </div>
+                    <div className={styles.path}>{selectedPage.path}</div>
                   )}
                   <h2 className="text-2xl font-bold text-indigo-200">
                     {selectedPage.title}
@@ -103,7 +102,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                     selectedPage.edit_groups.includes(user.group) && (
                       <button
                         onClick={() => handleEdit(selectedPage.id)}
-                        className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
+                        className={styles.editButton}
                       >
                         Edit
                       </button>
@@ -119,15 +118,15 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                   <div>No content</div>
                 )}
               </div>
-              <div className="mt-6 text-xs text-gray-500">
+              <div className={styles.lastUpdated}>
                 Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""}
               </div>
             </div>
           )}
           {/* NO ACCESS */}
           {selectedPage && !canViewSelected && (
-            <div className="flex items-center justify-center min-h-full">
-              <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
+            <div className={styles.noAccess}>
+              <div className={styles.noAccessBox}>
                 <h1 className="text-3xl font-bold text-red-400 mb-4">No Access</h1>
                 <p className="text-indigo-100 mb-2">
                   You do not have permission to view this page.

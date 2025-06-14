@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import RestrictedBlock from './RestrictedBlock';
 import TextAlign from '@tiptap/extension-text-align';
 import { useUser } from "./userContext";
+import styles from './Editor.module.css';
 
 interface TiptapEditorProps {
   value: string;
@@ -223,13 +224,13 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
   }
 
   return (
-    <div className="flex flex-col h-full w-full min-h-0">
+    <div className={styles.editorRoot}>
       {/* Toolbar pinned below the main navbar, right of sidebar */}
-      <nav className="flex flex-wrap items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700 fixed left-[320px] right-0 z-20 w-auto top-[56px]">
+      <nav className={styles.toolbar}>
         <select
           value={blockType}
           onChange={handleBlockTypeChange}
-          className="min-w-[140px] px-2 py-1 rounded bg-gray-900 text-indigo-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-700"
+          className={styles.toolbarSelect}
         >
           {blockOptions.map(opt =>
             opt.value === 'heading' ? (
@@ -239,13 +240,13 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
             )
           )}
         </select>
-        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={`px-2 py-1 rounded font-bold ${editor.isActive('bold') ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>B</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={`px-2 py-1 rounded italic ${editor.isActive('italic') ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>I</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={`px-2 py-1 rounded ${editor.isActive('strike') ? 'bg-indigo-600 text-white line-through' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>S</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">• List</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">1. List</button>
-        <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">―</button>
-        <button type="button" onClick={() => fileInputRef.current?.click()} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">Img</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonBold} ${editor.isActive('bold') ? styles.toolbarButtonActive : ''}`}>B</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonItalic} ${editor.isActive('italic') ? styles.toolbarButtonActive : ''}`}>I</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonStrike} ${editor.isActive('strike') ? styles.toolbarButtonActive : ''}`}>S</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className={styles.toolbarButton}>• List</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className={styles.toolbarButton}>1. List</button>
+        <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={styles.toolbarButton}>―</button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.toolbarButton}>Img</button>
         <input
           type="file"
           accept="image/*"
@@ -256,19 +257,19 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
         <button type="button" onClick={() => {
           const url = window.prompt('Link URL');
           if (url) editor.chain().focus().toggleLink({ href: url }).run();
-        }} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">Link</button>
-        <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className="px-2 py-1 rounded bg-gray-700 text-indigo-100 hover:bg-indigo-700 transition">Unlink</button>
+        }} className={styles.toolbarButton}>Link</button>
+        <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className={styles.toolbarButton}>Unlink</button>
         {/* Image controls: only show if image is selected */}
         {isImageSelected && (
-          <div className="flex items-center gap-2 ml-4">
-            <label className="text-indigo-200 text-xs">Width:</label>
+          <div className={styles.imageControls}>
+            <label className={styles.imageAlignLabel}>Width:</label>
             <input
               type="range"
               min="50"
               max="800"
               value={parseInt(currentImageAttrs.width || '300', 10)}
               onChange={e => setImageWidth(e.target.value + 'px')}
-              className="w-32"
+              className={styles.imageWidthRange}
             />
             <input
               type="number"
@@ -276,27 +277,22 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
               max="800"
               value={parseInt(currentImageAttrs.width || '300', 10)}
               onChange={e => setImageWidth(e.target.value + 'px')}
-              className="w-16 px-1 py-0.5 rounded bg-gray-900 text-indigo-100 border border-gray-700 text-xs"
+              className={styles.imageWidthInput}
             />
-            <label className="text-indigo-200 text-xs ml-2">Align:</label>
-            <button type="button" onClick={() => setImageAlign('left')} className={`px-2 py-1 rounded ${currentImageAttrs.align === 'left' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>Left</button>
-            <button type="button" onClick={() => setImageAlign('center')} className={`px-2 py-1 rounded ${currentImageAttrs.align === 'center' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>Center</button>
-            <button type="button" onClick={() => setImageAlign('right')} className={`px-2 py-1 rounded ${currentImageAttrs.align === 'right' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-indigo-100'} hover:bg-indigo-700 transition`}>Right</button>
+            <label className={styles.imageAlignLabel}>Align:</label>
+            <button type="button" onClick={() => setImageAlign('left')} className={`${styles.toolbarButton} ${currentImageAttrs.align === 'left' ? styles.toolbarButtonActive : ''}`}>Left</button>
+            <button type="button" onClick={() => setImageAlign('center')} className={`${styles.toolbarButton} ${currentImageAttrs.align === 'center' ? styles.toolbarButtonActive : ''}`}>Center</button>
+            <button type="button" onClick={() => setImageAlign('right')} className={`${styles.toolbarButton} ${currentImageAttrs.align === 'right' ? styles.toolbarButtonActive : ''}`}>Right</button>
           </div>
         )}
       </nav>
       {/* Offset for  toolbar (48px) */}
-      <div className="flex-1 min-h-0 overflow-y-auto pt-[48px]">
+      <div className={styles.editorOffset}>
         <EditorContent 
           editor={editor} 
-          className="h-full w-full bg-transparent px-4 py-2 text-indigo-100 cursor-text"
+          className={styles.editorContent}
         />
       </div>
-      <style jsx global>{`
-        .ProseMirror, .is-empty.is-editor-empty {
-          min-height: 500px;
-        }
-      `}</style>
     </div>
   );
 }

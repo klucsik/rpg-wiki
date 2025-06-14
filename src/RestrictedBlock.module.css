@@ -1,0 +1,100 @@
+.restrictedBlock {
+  background: #233779;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 12px 0;
+}
+.restrictedTitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.revealButton {
+  margin-bottom: 8px;
+}
+.restrictedNoAccess {
+  opacity: 0.7;
+  color: #bbb;
+  margin-top: 8px;
+}
+
+/* Editor styles */
+.restrictedBlockEditor {
+  background: #233779;
+  padding: 8px;
+  border: 1px dashed #c00;
+  position: relative;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+.restrictedBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.restrictedTitleInput {
+  font-weight: bold;
+  color: #fff;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid #c00;
+  border-radius: 4px;
+  padding: 2px 8px;
+  min-width: 120px;
+}
+.restrictedGroupsPanel {
+  position: relative;
+  z-index: 10;
+  background: #232b4a;
+  border: 1px solid #4f5b93;
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 120px;
+  box-shadow: 0 2px 8px #1a1a2a44;
+}
+.restrictedGroupsLabel {
+  display: block;
+  color: #e0e7ff;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.restrictedGroupsSave {
+  margin-top: 8px;
+  background: #4f5b93;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 80px;
+  height: 32px;
+  font-size: 14px;
+  box-shadow: 0 1px 2px #1a1a2a22;
+}
+.restrictedGroupsEdit {
+  background: #4f5b93;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 80px;
+  height: 32px;
+  font-size: 14px;
+  box-shadow: 0 1px 2px #1a1a2a22;
+  margin-right: 8px;
+}
+.restrictedRemove {
+  background: #2d3748;
+  color: #e0e7ff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 80px;
+  height: 32px;
+  font-size: 14px;
+  box-shadow: 0 1px 2px #1a1a2a22;
+}
