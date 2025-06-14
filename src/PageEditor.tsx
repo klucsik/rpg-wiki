@@ -33,6 +33,7 @@ export default function PageEditor({
   setEditGroups,
   viewGroups = ["admin", "editor", "viewer", "public"],
   setViewGroups,
+  onDelete, // optional: only for edit mode
 }: {
   mode: "edit" | "create";
   title: string;
@@ -49,6 +50,7 @@ export default function PageEditor({
   setEditGroups?: (groups: string[]) => void;
   viewGroups?: string[];
   setViewGroups?: (groups: string[]) => void;
+  onDelete?: () => void;
 }) {
   const router = useRouter();
   const { user } = useUser();
@@ -58,6 +60,21 @@ export default function PageEditor({
   const [viewSearch, setViewSearch] = useState("");
   const filteredGroups = groups.filter((g) => g.includes(search));
   const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Validation state for create mode
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  function handleSave() {
+    if (mode === "create") {
+      if (!title || !content || !path) {
+        setValidationError("Title, Content, and Path are required.");
+        return;
+      }
+    }
+    setValidationError(null);
+    onSave();
+  }
 
   return (
     <>
@@ -182,7 +199,7 @@ export default function PageEditor({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={onSave}
+            onClick={handleSave}
             disabled={saving || isDisabled}
             className={styleTokens.button}
           >
@@ -199,6 +216,9 @@ export default function PageEditor({
             Cancel
           </button>
         </div>
+        {validationError && (
+          <div className="text-red-400 font-semibold mt-2">{validationError}</div>
+        )}
       </header>
       {/* Editor area maximized */}
       <main className="flex-1 flex flex-col overflow-hidden p-0 m-0">
@@ -206,6 +226,42 @@ export default function PageEditor({
           <TiptapEditor value={content} onChange={setContent} pageEditGroups={editGroups} />
         </div>
       </main>
+      {/* Delete button for edit mode */}
+      {mode === "edit" && onDelete && (
+        <div className="flex flex-col items-center mt-8">
+          <button
+            className="bg-red-700 hover:bg-red-800 text-white font-bold px-6 py-2 rounded-lg shadow border border-red-900 transition text-lg"
+            onClick={() => setShowDeleteModal(true)}
+            disabled={saving}
+          >
+            Delete Page
+          </button>
+        </div>
+      )}
+      {/* Are you sure? modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
+            <h2 className="text-2xl font-bold text-red-400 mb-4">Are you sure you want to delete this page?</h2>
+            <div className="flex gap-4 justify-center mt-4">
+              <button
+                className="px-6 py-2 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900 text-lg"
+                onClick={() => { setShowDeleteModal(false); onDelete && onDelete(); }}
+                disabled={saving}
+              >
+                Yes, Delete
+              </button>
+              <button
+                className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

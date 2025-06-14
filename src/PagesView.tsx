@@ -186,6 +186,13 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
               setViewGroups={setViewGroups}
               path={editPath}
               setPath={setEditPath}
+              onDelete={async () => {
+                if (!editId) return;
+                await deletePage(editId);
+                setEditId(null);
+                setSelectedId(null);
+                router.push("/pages");
+              }}
             />
           )}
           {/* VIEW PAGE */}
