@@ -7,7 +7,6 @@ interface GroupsContextType {
   groups: Group[];
   addGroup: (group: Group) => Promise<void>;
   removeGroup: (group: Group) => void;
-  renameGroup: (oldName: Group, newName: Group) => void;
 }
 
 const GroupsContext = createContext<GroupsContextType | undefined>(undefined);
@@ -30,19 +29,18 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     });
     if (res.ok) {
       setGroups((prev) => (prev.includes(group) ? prev : [...prev, group]));
-    } else {
-      // Optionally handle error
     }
   };
-  const removeGroup = (group: Group) => {
+  const removeGroup = async (group: Group) => {
+    // Prevent deletion of 'admin' and 'public' groups
+    if (group === 'admin' || group === 'public') return;
+    // Call API to delete group by name
+    await fetch(`/api/groups?name=${encodeURIComponent(group)}`, { method: "DELETE" });
     setGroups((prev) => prev.filter((g) => g !== group));
-  };
-  const renameGroup = (oldName: Group, newName: Group) => {
-    setGroups((prev) => prev.map((g) => (g === oldName ? newName : g)));
   };
 
   return (
-    <GroupsContext.Provider value={{ groups, addGroup, removeGroup, renameGroup }}>
+    <GroupsContext.Provider value={{ groups, addGroup, removeGroup }}>
       {children}
     </GroupsContext.Provider>
   );

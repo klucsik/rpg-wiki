@@ -23,3 +23,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create group' }, { status: 500 });
   }
 }
+
+// DELETE group by name
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url!);
+  const name = searchParams.get('name');
+  if (!name) {
+    return NextResponse.json({ error: 'Missing group name' }, { status: 400 });
+  }
+  try {
+    await prisma.group.delete({ where: { name } });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to delete group' }, { status: 500 });
+  }
+}

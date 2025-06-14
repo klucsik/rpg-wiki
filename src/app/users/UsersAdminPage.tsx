@@ -7,6 +7,7 @@ export default function UsersAdminPage() {
   const [newUser, setNewUser] = useState({ name: "", password: "", groupIds: [] as number[] });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editUser, setEditUser] = useState({ name: "", password: "", groupIds: [] as number[] });
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/users").then(res => res.json()).then(data => {
@@ -30,8 +31,18 @@ export default function UsersAdminPage() {
   };
 
   const handleDelete = async (id: number) => {
+    setConfirmDelete(id);
+  };
+  const confirmDeleteUser = async (id: number) => {
+    // Prevent deletion of admin user (by name)
+    const user = users.find(u => u.id === id);
+    if (user && user.name === 'admin') {
+      setConfirmDelete(null);
+      return;
+    }
     await fetch(`/api/users/${id}`, { method: "DELETE" });
     setUsers(users.filter(u => u.id !== id));
+    setConfirmDelete(null);
   };
 
   const handleEdit = (user: any) => {
@@ -96,7 +107,40 @@ export default function UsersAdminPage() {
                 ) : (
                   <>
                     <button className="bg-yellow-700 text-white px-2 py-1 rounded mr-2" onClick={() => handleEdit(user)}>Edit</button>
-                    <button className="bg-red-700 text-white px-2 py-1 rounded" onClick={() => handleDelete(user.id)}>Delete</button>
+                    <button
+                      className="px-2 py-1 text-xs rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900"
+                      style={{ minWidth: 0 }}
+                      onClick={() => handleDelete(user.id)}
+                    >
+                      Delete
+                    </button>
+                    {confirmDelete === user.id && (
+                      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                        <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 shadow-lg text-center">
+                          <h2 className="text-lg font-bold text-red-400 mb-4">
+                            {user.name === 'admin'
+                              ? 'The admin user cannot be deleted.'
+                              : `Are you sure you want to delete user "${user.name}"?`}
+                          </h2>
+                          <div className="flex gap-4 justify-center">
+                            {user.name !== 'admin' && (
+                              <button
+                                className="px-4 py-1 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900"
+                                onClick={() => confirmDeleteUser(user.id)}
+                              >
+                                Yes, Delete
+                              </button>
+                            )}
+                            <button
+                              className="px-4 py-1 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900"
+                              onClick={() => setConfirmDelete(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </td>
