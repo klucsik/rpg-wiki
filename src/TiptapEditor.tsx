@@ -6,6 +6,7 @@ import TipTapLink from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import RestrictedBlock from './RestrictedBlock';
 import TextAlign from '@tiptap/extension-text-align';
+import { useUser } from "./userContext";
 
 interface TiptapEditorProps {
   value: string;
@@ -60,6 +61,7 @@ const ResizableImage = Image.extend({
 });
 
 export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorProps & { pageEditGroups?: string[] }) {
+  const { user } = useUser();
   // Only set initial content on first mount
   const editor = useEditor({
     extensions: [
@@ -151,7 +153,9 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     if (!file) return;
     const formData = new FormData();
     formData.append("file", file);
-    // You may need to adjust the endpoint below to match your backend
+    if (user && user.id) {
+      formData.append("userId", String(user.id));
+    }
     const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,

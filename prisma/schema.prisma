@@ -36,6 +36,17 @@ model User {
   name     String   @unique
   password String
   groups   Group[]  @relation("UserGroups")
+  images   Image[]  // Images uploaded by this user
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  filename  String
+  mimetype  String
+  data      Bytes
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 // Add this block at the end for seeding
