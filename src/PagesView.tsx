@@ -189,7 +189,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                     Array.isArray(selectedPage.edit_groups) &&
                     selectedPage.edit_groups.includes(user.group) && (
                       <button
-                        onClick={() => handleEdit(selectedPage.id)}
+                        onClick={() => router.push(`/pages/${selectedPage.id}/edit`)}
                         className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
                       >
                         Edit
