@@ -1,6 +1,6 @@
 "use client";
-import Home from "./home";
+import Pages from "./pages";
 
 export default function Page() {
-  return <Home />;
+  return <Pages />;
 }
