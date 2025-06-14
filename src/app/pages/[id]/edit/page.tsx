@@ -21,7 +21,7 @@ export default function EditPage() {
 
   useEffect(() => {
     if (user.group === "public") {
-      router.replace(`/pages/${slug}`);
+      router.replace("/login");
     }
   }, [user, router, slug]);
 

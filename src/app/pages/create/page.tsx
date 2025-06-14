@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageEditor from "../../../PageEditor";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../userContext";
@@ -14,9 +14,9 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user.group === "public") {
-      router.replace("/pages");
+      router.replace("/login");
     }
   }, [user, router]);
 

@@ -5,6 +5,7 @@ import { WikiPage } from "./types";
 import { useUser } from "./userContext";
 import RestrictedBlockView from "./RestrictedBlockView";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
+import { canUserViewPage, canUserEditPage } from "./accessControl";
 
 function NoAccessPage() {
   return (
@@ -32,12 +33,8 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
   }, []);
 
   // Restriction logic: user must be in view_groups or edit_groups
-  const canView = Array.isArray(page?.view_groups)
-    ? page.view_groups.includes(user.group)
-    : true;
-  const canEdit = Array.isArray(page?.edit_groups)
-    ? page.edit_groups.includes(user.group)
-    : false;
+  const canView = canUserViewPage(user, page);
+  const canEdit = canUserEditPage(user, page);
   if (!canView && !canEdit) {
     return <NoAccessPage />;
   }

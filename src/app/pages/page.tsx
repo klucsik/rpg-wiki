@@ -3,6 +3,29 @@ import React, { useEffect, useState } from "react";
 import PageList from "../../PageList";
 import { WikiPage } from "../../types";
 import { useUser } from "../../userContext";
+import { canUserViewPage } from "../../accessControl";
+import { parseHtmlWithRestrictedBlocks } from "../pageviewer";
+
+function ShareButton({ pageId }: { pageId: number }) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/pages/${pageId}` : "";
+  const handleCopy = async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="bg-blue-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-blue-800 transition text-sm ml-2"
+      title="Copy link to this page"
+      type="button"
+    >
+      {copied ? "Link copied!" : "Share"}
+    </button>
+  );
+}
 
 export default function Pages() {
   const { user } = useUser();
@@ -32,10 +55,7 @@ export default function Pages() {
   }, []);
 
   const selectedPage = pages.find((p) => p.id === selectedId) || null;
-  const canViewSelected = selectedPage && (
-    (Array.isArray(selectedPage.view_groups) ? selectedPage.view_groups.includes(user.group) : true) ||
-    (Array.isArray(selectedPage.edit_groups) ? selectedPage.edit_groups.includes(user.group) : false)
-  );
+  const canViewSelected = selectedPage && canUserViewPage(user, selectedPage);
 
   function handleSelect(id: number) {
     setSelectedId(id);
@@ -144,19 +164,28 @@ export default function Pages() {
                 <h2 className="text-2xl font-bold text-indigo-200">
                   {selectedPage.title}
                 </h2>
-                {user.group !== "public" && (
-                  <button
-                    onClick={() => handleEdit(selectedPage.id)}
-                    className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
-                  >
-                    Edit
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {user.group !== "public" &&
+                    Array.isArray(selectedPage.edit_groups) &&
+                    selectedPage.edit_groups.includes(user.group) && (
+                      <button
+                        onClick={() => handleEdit(selectedPage.id)}
+                        className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  <ShareButton pageId={selectedPage.id} />
+                </div>
               </div>
               <div className="flex-1 overflow-auto min-h-0 min-w-0">
-                <div
-                  dangerouslySetInnerHTML={{ __html: selectedPage.content || "" }}
-                />
+                {selectedPage.content ? (
+                  parseHtmlWithRestrictedBlocks(selectedPage.content, {
+                    groups: user.groups || [user.group],
+                  })
+                ) : (
+                  <div>No content</div>
+                )}
               </div>
               <div className="mt-6 text-xs text-gray-500">
                 Last updated:{" "}
@@ -170,7 +199,9 @@ export default function Pages() {
             <div className="flex items-center justify-center min-h-full">
               <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
                 <h1 className="text-3xl font-bold text-red-400 mb-4">No Access</h1>
-                <p className="text-indigo-100 mb-2">You do not have permission to view this page.</p>
+                <p className="text-indigo-100 mb-2">
+                  You do not have permission to view this page.
+                </p>
               </div>
             </div>
           )}
