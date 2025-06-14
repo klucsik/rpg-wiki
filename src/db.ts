@@ -1,28 +1,21 @@
-import { Pool } from 'pg';
+import { PrismaClient } from './generated/prisma';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const prisma = new PrismaClient();
 
-// Ensures the pages table exists (idempotent)
-async function ensureSchema() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS pages (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      content TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-      edit_groups TEXT[] DEFAULT ARRAY['admin','editor']
-    );
-  `);
+// On cold start, test DB connection and fail fast if not available
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  (async () => {
+    try {
+      await prisma.$connect();
+      // Optionally, check a table exists (throws if not migrated)
+      await prisma.page.findFirst();
+      console.log('Database connection established and schema is up to date.');
+    } catch (err) {
+      console.error('Database connection or schema check failed at startup:', err);
+      if (typeof process.exit === 'function') process.exit(1);
+      throw err;
+    }
+  })();
 }
 
-let schemaReady: Promise<void> | null = null;
-
-export async function query(text: string, params?: any[]) {
-  if (!schemaReady) schemaReady = ensureSchema();
-  await schemaReady;
-  const res = await pool.query(text, params);
-  return res;
-}
+export { prisma };

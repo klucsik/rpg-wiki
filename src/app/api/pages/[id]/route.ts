@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '../../../../db';
+import { prisma } from '../../../../db';
 import { WikiPage } from '../../../../types';
 
 // GET, PUT, DELETE for a single page by id
@@ -8,9 +8,9 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const result = await query('SELECT * FROM pages WHERE id = $1', [id]);
-  if (result.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(result.rows[0] as WikiPage);
+  const page = await prisma.page.findUnique({ where: { id: Number(id) } });
+  if (!page) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(page as WikiPage);
 }
 
 export async function PUT(
@@ -19,12 +19,16 @@ export async function PUT(
 ) {
   const { id } = await context.params;
   const { title, content, edit_groups } = await req.json();
-  const result = await query(
-    'UPDATE pages SET title = $1, content = $2, edit_groups = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
-    [title, content, edit_groups || ['admin', 'editor'], id]
-  );
-  if (result.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(result.rows[0] as WikiPage);
+  const updated = await prisma.page.update({
+    where: { id: Number(id) },
+    data: {
+      title,
+      content,
+      edit_groups: edit_groups || ['admin', 'editor'],
+      updated_at: new Date(),
+    },
+  });
+  return NextResponse.json(updated as WikiPage);
 }
 
 export async function DELETE(
@@ -32,6 +36,6 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  await query('DELETE FROM pages WHERE id = $1', [id]);
+  await prisma.page.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
 }
