@@ -1,3 +1,5 @@
+// This page has been moved to the Admin page. You can safely delete this file.
+
 "use client";
 
 import React, { useState } from "react";
