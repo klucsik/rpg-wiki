@@ -278,10 +278,18 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           </div>
         )}
       </nav>
-      {/* Offset for navbar (56px) + toolbar (48px) */}
-      <div className="flex-1 min-h-0 overflow-y-auto pt-[104px]">
-        <EditorContent editor={editor} className="h-full w-full bg-transparent px-4 py-2 text-indigo-100 cursor-text" />
+      {/* Offset for  toolbar (48px) */}
+      <div className="flex-1 min-h-0 overflow-y-auto pt-[48px]">
+        <EditorContent 
+          editor={editor} 
+          className="h-full w-full bg-transparent px-4 py-2 text-indigo-100 cursor-text"
+        />
       </div>
+      <style jsx global>{`
+        .ProseMirror, .is-empty.is-editor-empty {
+          min-height: 500px;
+        }
+      `}</style>
     </div>
   );
 }

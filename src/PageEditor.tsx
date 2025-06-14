@@ -3,6 +3,7 @@ import { TiptapEditor } from "./TiptapEditor";
 import { useRouter } from "next/navigation";
 import { useUser } from "./userContext";
 import { useGroups } from "./groupsContext";
+import { WikiPage } from "./types";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {
@@ -19,65 +20,88 @@ export const styleTokens = {
 
 export default function PageEditor({
   mode,
-  title,
-  content,
-  setTitle,
-  setContent,
-  onSave,
+  page,
+  onSuccess,
   onCancel,
-  saving,
-  slug,
-  path = "",
-  setPath = () => {},
-  editGroups = ["admin", "editor"],
-  setEditGroups,
-  viewGroups = ["admin", "editor", "viewer", "public"],
-  setViewGroups,
-  onDelete, // optional: only for edit mode
 }: {
   mode: "edit" | "create";
-  title: string;
-  content: string;
-  setTitle: (t: string) => void;
-  setContent: (c: string) => void;
-  onSave: () => void;
+  page?: WikiPage;
+  onSuccess?: (page?: WikiPage) => void;
   onCancel: () => void;
-  saving: boolean;
-  slug?: string;
-  path?: string;
-  setPath?: (p: string) => void;
-  editGroups?: string[];
-  setEditGroups?: (groups: string[]) => void;
-  viewGroups?: string[];
-  setViewGroups?: (groups: string[]) => void;
-  onDelete?: () => void;
 }) {
   const router = useRouter();
   const { user } = useUser();
   const isDisabled = user.group === "public";
   const { groups } = useGroups();
+  const [title, setTitle] = useState(page?.title || "");
+  const [content, setContent] = useState(page?.content || "");
+  const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || (user.group ? [user.group] : []));
+  const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || (user.group ? [user.group] : []));
+  const [path, setPath] = useState(page?.path || "");
+  const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [viewSearch, setViewSearch] = useState("");
   const filteredGroups = groups.filter((g) => g.includes(search));
   const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Validation state for create mode
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  function handleSave() {
-    if (mode === "create") {
-      if (!title || !content || !path) {
-        setValidationError("Title, Content, and Path are required.");
-        return;
-      }
+  async function handleSave() {
+    if (!title || !content || !path) {
+      setValidationError("Title, Content, and Path are required.");
+      return;
     }
     setValidationError(null);
-    onSave();
+    setSaving(true);
+    setError(null);
+    try {
+      let res, saved;
+      if (mode === "edit" && page) {
+        res = await fetch(`/api/pages/${page.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups, path }),
+        });
+        if (!res.ok) throw new Error("Failed to update page");
+        saved = await res.json();
+      } else {
+        res = await fetch("/api/pages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups, path }),
+        });
+        if (!res.ok) throw new Error("Failed to add page");
+        saved = await res.json();
+      }
+      if (onSuccess) onSuccess(saved);
+      else if (mode === "edit" && page) router.push(`/pages/${page.id}`);
+      else router.push(`/pages/${saved.id}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!page) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/pages/${page.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete page");
+      if (onSuccess) onSuccess(undefined); // Signal parent to refresh page list
+      else router.push("/pages");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <div className="flex flex-row w-full h-full min-h-screen">
+    <div className="flex flex-row w-full h-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       {/* Sidebar pinned below the main navbar */}
       <aside className="fixed left-0 top-[56px] h-[calc(100vh-56px)] w-full max-w-xs min-w-[320px] bg-gray-800 border-r border-gray-700 flex flex-col gap-4 p-6 z-30 overflow-y-auto">
         {/* Path */}
@@ -213,27 +237,54 @@ export default function PageEditor({
             {mode === "edit" ? "Save" : "Create"}
           </button>
           <button
-            onClick={() => {
-              if (slug) router.push(`/pages/${slug}`);
-              else onCancel();
-            }}
+            onClick={onCancel}
             disabled={saving}
             className="bg-gray-700 text-gray-200 font-bold px-6 py-2 rounded-lg shadow hover:bg-gray-600 transition disabled:opacity-50 text-lg border border-gray-600"
           >
             Cancel
           </button>
-          {mode === "edit" && onDelete && (
+        </div>
+        {validationError && (
+          <div className="text-red-400 font-semibold mt-2">{validationError}</div>
+        )}
+        {error && (
+          <div className="text-red-400 font-semibold mt-2">{error}</div>
+        )}
+        {/* Delete button at the bottom */}
+        {mode === "edit" && page && (
+          <div className="mt-auto pt-8">
             <button
-              className="bg-red-700 hover:bg-red-800 text-white font-bold px-6 py-2 rounded-lg shadow border border-red-900 transition text-lg"
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold px-6 py-2 rounded-lg shadow border border-red-900 transition text-lg"
               onClick={() => setShowDeleteModal(true)}
               disabled={saving}
             >
               Delete Page
             </button>
-          )}
-        </div>
-        {validationError && (
-          <div className="text-red-400 font-semibold mt-2">{validationError}</div>
+          </div>
+        )}
+        {/* Are you sure? modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
+              <h2 className="text-2xl font-bold text-red-400 mb-4">Are you sure you want to delete this page?</h2>
+              <div className="flex gap-4 justify-center mt-4">
+                <button
+                  className="px-6 py-2 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900 text-lg"
+                  onClick={() => { setShowDeleteModal(false); handleDelete(); }}
+                  disabled={saving}
+                >
+                  Yes, Delete
+                </button>
+                <button
+                  className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </aside>
       {/* Main content area: Tiptap toolbar and editor */}
@@ -244,30 +295,6 @@ export default function PageEditor({
           </div>
         </main>
       </div>
-      {/* Are you sure? modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
-            <h2 className="text-2xl font-bold text-red-400 mb-4">Are you sure you want to delete this page?</h2>
-            <div className="flex gap-4 justify-center mt-4">
-              <button
-                className="px-6 py-2 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900 text-lg"
-                onClick={() => { setShowDeleteModal(false); onDelete && onDelete(); }}
-                disabled={saving}
-              >
-                Yes, Delete
-              </button>
-              <button
-                className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

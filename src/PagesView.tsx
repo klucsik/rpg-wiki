@@ -7,7 +7,6 @@ import { useUser } from "./userContext";
 import { canUserViewPage } from "./accessControl";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { useRouter } from "next/navigation";
-import PageEditor from "./PageEditor";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
   const { user } = useUser();
@@ -16,16 +15,6 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(initialId ?? null);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [editGroups, setEditGroups] = useState<string[]>([]);
-  const [viewGroups, setViewGroups] = useState<string[]>([]);
-  const [editPath, setEditPath] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -56,99 +45,25 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
 
   function handleSelect(id: number) {
     setSelectedId(id);
-    setEditId(null);
-    setShowCreate(false);
     router.push(`/pages/${id}`);
   }
 
   function handleEdit(id: number) {
-    const page = pages.find((p) => p.id === id);
-    if (!page) return;
-    setEditId(id);
-    setEditTitle(page.title);
-    setEditContent(page.content);
-    setEditGroups(page.edit_groups || []);
-    setViewGroups(page.view_groups || []);
-    setEditPath(page.path || "");
-    setShowCreate(false);
-  }
-
-  function handleCreate() {
-    setShowCreate(true);
-    setEditId(null);
-    setEditTitle("");
-    setEditContent("");
-  }
-
-  async function saveEdit() {
-    if (!editId || !editTitle || !editContent) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/pages/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: editTitle,
-          content: editContent,
-          edit_groups: editGroups,
-          view_groups: viewGroups,
-          path: editPath,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to update page");
-      const updated = await res.json();
-      setPages((pages) => pages.map((p) => (p.id === editId ? updated : p)));
-      setEditId(null);
-      setEditTitle("");
-      setEditContent("");
-      setEditGroups([]);
-      setViewGroups([]);
-      setEditPath("");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function saveCreate() {
-    if (!newTitle || !newContent) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/pages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle, content: newContent }),
-      });
-      if (!res.ok) throw new Error("Failed to add page");
-      const created = await res.json();
-      setPages((pages) => [...pages, created]);
-      setNewTitle("");
-      setNewContent("");
-      setShowCreate(false);
-      setSelectedId(created.id);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+    router.push(`/pages/${id}/edit`);
   }
 
   async function deletePage(id: number) {
-    setSaving(true);
+    setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete page");
       setPages((pages) => pages.filter((p) => p.id !== id));
       if (selectedId === id) setSelectedId(null);
-      if (editId === id) setEditId(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
@@ -160,7 +75,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
         selectedId={selectedId}
         onDelete={deletePage}
         onEdit={handleEdit}
-        saving={saving}
+        saving={false}
       />
       <main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-full w-full">
         <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">
@@ -168,10 +83,8 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           {error && (
             <div className="text-red-400 font-semibold mb-2">{error}</div>
           )}
-          {/* EDIT FORM USING PageEditor */}
-          {selectedPage && editId === selectedPage.id && null}
           {/* VIEW PAGE */}
-          {selectedPage && canViewSelected && editId !== selectedPage.id && (
+          {selectedPage && canViewSelected && (
             <div className="prose prose-invert w-full h-full flex-1 mx-0 bg-gray-900/80 rounded-none p-8 shadow-lg border border-gray-800 flex flex-col min-h-0 min-w-0 overflow-auto">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -189,7 +102,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                     Array.isArray(selectedPage.edit_groups) &&
                     selectedPage.edit_groups.includes(user.group) && (
                       <button
-                        onClick={() => router.push(`/pages/${selectedPage.id}/edit`)}
+                        onClick={() => handleEdit(selectedPage.id)}
                         className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"
                       >
                         Edit
@@ -207,10 +120,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                 )}
               </div>
               <div className="mt-6 text-xs text-gray-500">
-                Last updated:{" "}
-                {selectedPage.updated_at
-                  ? new Date(selectedPage.updated_at).toLocaleString()
-                  : ""}
+                Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""}
               </div>
             </div>
           )}
