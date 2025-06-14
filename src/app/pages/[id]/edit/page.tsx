@@ -14,8 +14,8 @@ export default function EditPage() {
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [editGroups, setEditGroups] = useState<string[]>(["admin", "editor"]);
-  const [viewGroups, setViewGroups] = useState<string[]>(["admin", "editor", "viewer", "public"]);
+  const [editGroups, setEditGroups] = useState<string[]>(user.group ? [user.group] : []);
+  const [viewGroups, setViewGroups] = useState<string[]>(user.group ? [user.group] : []);
   const [saving, setSaving] = useState(false);
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
@@ -36,8 +36,8 @@ export default function EditPage() {
       .then((data: WikiPage) => {
         setTitle(data.title);
         setContent(data.content);
-        setEditGroups(data.edit_groups || ["admin", "editor"]);
-        setViewGroups(data.view_groups || ["admin", "editor", "viewer", "public"]);
+        setEditGroups(data.edit_groups || (user.group ? [user.group] : []));
+        setViewGroups(data.view_groups || (user.group ? [user.group] : []));
         setAllowed(Array.isArray(data.edit_groups) ? data.edit_groups.includes(user.group) : true);
       })
       .catch((err) => setError(err.message))

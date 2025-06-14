@@ -8,8 +8,8 @@ export default function CreatePage() {
   const { user } = useUser();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [editGroups, setEditGroups] = useState<string[]>(["admin", "editor"]);
-  const [viewGroups, setViewGroups] = useState<string[]>(["admin", "editor", "viewer", "public"]);
+  const [editGroups, setEditGroups] = useState<string[]>(user.group ? [user.group] : []);
+  const [viewGroups, setViewGroups] = useState<string[]>(user.group ? [user.group] : []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
