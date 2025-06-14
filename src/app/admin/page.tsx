@@ -2,6 +2,7 @@
 import { useUser } from "../../userContext";
 import React from "react";
 import GroupsAdminPage from "../groups/page";
+import UsersAdminPage from "../users/UsersAdminPage";
 
 function AdminSidebar() {
   return (
@@ -36,7 +37,7 @@ export default function AdminPage() {
       <main className="flex-1 p-8">
         <section id="users" className="mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">User Management</h1>
-          <p className="text-indigo-100 mb-4">(Coming soon: manage users here.)</p>
+          <UsersAdminPage />
         </section>
         <section id="groups" className="mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Group Management</h1>

@@ -24,8 +24,16 @@ model Page {
 }
 
 model Group {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  users User[]  @relation("UserGroups")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  name     String   @unique
+  password String
+  groups   Group[]  @relation("UserGroups")
 }
 
 // Add this block at the end for seeding
