@@ -30,3 +30,25 @@ A full-stack wiki app for RPGs using Next.js (App Router, TypeScript, Tailwind C
 
 ## License
 MIT
+
+## Docker Build & Push
+
+### 1. Build the Docker image
+```bash
+docker build -t registry.klusik.hu/rpg-wiki:latest .
+```
+
+### 2. Login to the registry
+```bash
+docker login registry.klusik.hu
+```
+
+### 3. Push the image
+```bash
+docker push registry.klusik.hu/rpg-wiki:latest
+```
+
+### 4. (Optional) Run the image locally
+```bash
+docker run --env-file .env.local -p 3000:3000 registry.klusik.hu/rpg-wiki:latest
+```

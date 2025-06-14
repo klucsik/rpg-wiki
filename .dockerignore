@@ -1,0 +1,8 @@
+# .dockerignore
+node_modules
+.next
+.env
+.env.*
+dist
+*.log
+/uploads
