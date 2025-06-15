@@ -1,0 +1,123 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rpg-wiki-demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rpg-wiki-postgres
+  namespace: rpg-wiki-demo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: rpg-wiki-postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpg-wiki-postgres
+  namespace: rpg-wiki-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rpg-wiki-postgres
+  template:
+    metadata:
+      labels:
+        app: rpg-wiki-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_DB
+              value: rpgwiki
+            - name: POSTGRES_USER
+              value: rpgwiki
+            - name: POSTGRES_PASSWORD
+              value: rpgwiki
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rpg-wiki
+  namespace: rpg-wiki-demo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: rpg-wiki
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpg-wiki
+  namespace: rpg-wiki-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rpg-wiki
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: rpg-wiki
+    spec:
+      containers:
+        - name: rpg-wiki
+          image: registry.klucsik.hu/rpg-wiki:latest
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              value: postgres://rpgwiki:rpgwiki@rpg-wiki-postgres.rpg-wiki-demo.svc.cluster.local:5432/rpgwiki
+          ports:
+            - containerPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rpg-wiki
+  namespace: rpg-wiki-demo
+  labels:
+    app.kubernetes.io/instance: rpg-wiki
+    app.kubernetes.io/name: rpg-wiki
+  annotations:
+    nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+    nginx.ingress.kubernetes.io/auth-signin: https://foundry.klucsik.hu/oauth2/start
+    nginx.ingress.kubernetes.io/auth-url: http://foundry-oauth2-proxy.auth-system.svc.cluster.local/oauth2/auth
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 512k
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - "rpg-wiki-demo.klucsik.hu"
+      secretName: "wildcard.klucsik.hu-tls"
+  rules:
+    - host: "rpg-wiki-demo.klucsik.hu"
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: rpg-wiki
+                port:
+                  number: 3000

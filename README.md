@@ -35,17 +35,17 @@ MIT
 
 ### 1. Build the Docker image
 ```bash
-docker build -t registry.klusik.hu/rpg-wiki:latest .
+docker build -t registry.klucsik.hu/rpg-wiki:latest .
 ```
 
 ### 2. Login to the registry
 ```bash
-docker login registry.klusik.hu
+docker login registry.klucsik.hu
 ```
 
 ### 3. Push the image
 ```bash
-docker push registry.klusik.hu/rpg-wiki:latest
+docker push registry.klucsik.hu/rpg-wiki:latest
 ```
 
 ### 4. (Optional) Run the image locally

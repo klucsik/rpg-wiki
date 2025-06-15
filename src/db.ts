@@ -30,8 +30,12 @@ async function seedDefaults() {
   });
 }
 
-// On cold start, test DB connection and fail fast if not available
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+// Only connect and seed if running in a real server environment (not build)
+if (
+  typeof process !== 'undefined' &&
+  process.env.NODE_ENV !== 'test' &&
+  process.env.PRISMA_SKIP_DB_INIT !== '1'
+) {
   (async () => {
     try {
       await prisma.$connect();
