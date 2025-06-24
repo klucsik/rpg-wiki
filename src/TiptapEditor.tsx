@@ -296,7 +296,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       <div className={styles.editorOffset}>
         <EditorContent 
           editor={editor} 
-          className={styles.editorContent}
+          className={`${styles.editorContent} prose prose-invert max-w-none`}
         />
       </div>
     </div>
