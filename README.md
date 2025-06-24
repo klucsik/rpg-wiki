@@ -21,6 +21,49 @@ A full-stack wiki app for RPGs using Next.js (App Router, TypeScript, Tailwind C
    npm run dev
    ```
 
+## Wiki Import
+
+### Complete Import (Recommended)
+For a complete wiki import from existing sources (supports HTML, Markdown, and AsciiDoc):
+
+```bash
+# Import everything with default settings
+npm run import:all
+
+# Import with custom source and update existing pages
+npx tsx scripts/import-all.ts /path/to/wiki --update-existing
+
+# Dry run to see what would happen
+npx tsx scripts/import-all.ts --dry-run
+
+# Skip certain steps if already done
+npx tsx scripts/import-all.ts --skip-images --update-existing
+```
+
+The complete import process includes:
+1. **Image Import**: Uploads all images and creates database mappings
+2. **Page Import**: Imports wiki pages with proper AsciiDoc/HTML processing  
+3. **Link Fixing**: Updates all image links to use correct `/api/images/:id` URLs
+
+### Individual Import Scripts
+If you need more control, you can run individual steps:
+
+```bash
+# Import images only
+npm run import:images /path/to/wiki
+
+# Import pages only  
+npm run import:wikijs /path/to/wiki --update-existing
+
+# Fix image links only
+npm run fix:image-links
+```
+
+### Supported Formats
+- **HTML**: Wiki.js HTML exports with frontmatter metadata
+- **Markdown**: Standard Markdown with YAML frontmatter
+- **AsciiDoc**: AsciiDoc files with proper header/list/image processing
+
 ## Tech Stack
 - Next.js (App Router, SSR/SSG)
 - TypeScript

@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "import:all": "tsx scripts/import-all.ts",
+    "import:wikijs": "tsx scripts/import-wikijs.ts",
+    "import:images": "tsx scripts/import-images.ts",
+    "fix:image-links": "tsx scripts/fix-image-links.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
@@ -33,6 +37,7 @@
     "eslint-config-next": "15.3.3",
     "prisma": "^6.9.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }
