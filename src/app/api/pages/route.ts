@@ -13,8 +13,15 @@ export async function GET() {
   return NextResponse.json(pagesWithDates);
 }
 
-// POST create new page
+// POST create new page - requires authentication
 export async function POST(req: NextRequest) {
+  // Simple authentication check - look for user credentials in request
+  const authHeader = req.headers.get('x-user-group');
+  
+  if (!authHeader || authHeader === 'public') {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   const { title, content, edit_groups, view_groups, path } = await req.json();
   const created = await prisma.page.create({
     data: {

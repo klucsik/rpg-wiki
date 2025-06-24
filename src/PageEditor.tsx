@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "./userContext";
 import { useGroups } from "./groupsContext";
 import { WikiPage } from "./types";
+import { authenticatedFetch, createAuthHeaders } from "./apiHelpers";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {
@@ -58,20 +59,24 @@ export default function PageEditor({
     try {
       let res, saved;
       if (mode === "edit" && page) {
-        res = await fetch(`/api/pages/${page.id}`, {
+        res = await authenticatedFetch(`/api/pages/${page.id}`, user, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups, path }),
         });
-        if (!res.ok) throw new Error("Failed to update page");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to update page");
+        }
         saved = await res.json();
       } else {
-        res = await fetch("/api/pages", {
+        res = await authenticatedFetch("/api/pages", user, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups, path }),
         });
-        if (!res.ok) throw new Error("Failed to add page");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to add page");
+        }
         saved = await res.json();
       }
       if (onSuccess) onSuccess(saved);
@@ -89,8 +94,11 @@ export default function PageEditor({
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/pages/${page.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete page");
+      const res = await authenticatedFetch(`/api/pages/${page.id}`, user, { method: "DELETE" });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete page");
+      }
       if (onSuccess) onSuccess(undefined); // Signal parent to refresh page list
       else router.push("/pages");
     } catch (err) {

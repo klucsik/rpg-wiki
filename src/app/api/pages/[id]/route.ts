@@ -21,7 +21,27 @@ export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  // Simple authentication check
+  const authHeader = req.headers.get('x-user-group');
+  const userGroups = req.headers.get('x-user-groups')?.split(',') || [];
+  
+  if (!authHeader || authHeader === 'public') {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   const { id } = await context.params;
+  
+  // Check if user has edit permissions for this page
+  const existingPage = await prisma.page.findUnique({ where: { id: Number(id) } });
+  if (!existingPage) {
+    return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+  }
+
+  const canEdit = userGroups.some(g => existingPage.edit_groups.includes(g));
+  if (!canEdit) {
+    return NextResponse.json({ error: 'Insufficient permissions to edit this page' }, { status: 403 });
+  }
+
   const { title, content, edit_groups, view_groups, path } = await req.json();
   const updated = await prisma.page.update({
     where: { id: Number(id) },
@@ -46,7 +66,27 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  // Simple authentication check
+  const authHeader = req.headers.get('x-user-group');
+  const userGroups = req.headers.get('x-user-groups')?.split(',') || [];
+  
+  if (!authHeader || authHeader === 'public') {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   const { id } = await context.params;
+  
+  // Check if user has edit permissions for this page
+  const existingPage = await prisma.page.findUnique({ where: { id: Number(id) } });
+  if (!existingPage) {
+    return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+  }
+
+  const canEdit = userGroups.some(g => existingPage.edit_groups.includes(g));
+  if (!canEdit) {
+    return NextResponse.json({ error: 'Insufficient permissions to delete this page' }, { status: 403 });
+  }
+
   await prisma.page.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
 }
