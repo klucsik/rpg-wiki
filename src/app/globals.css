@@ -47,11 +47,119 @@ img[data-align="right"] {
 }
 
 /* =========================
-   Typography Fix for .prose
+   Typography Styles for .prose
    ========================= */
-.prose :is(h1, h2, h3, h4, h5, h6) {
-  font-size: unset !important;
-  font-weight: unset !important;
+.prose h1 {
+  font-size: 2.25rem !important; /* 36px */
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.prose h2 {
+  font-size: 1.875rem !important; /* 30px */
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  margin-top: 1.75rem !important;
+  margin-bottom: 0.875rem !important;
+}
+
+.prose h3 {
+  font-size: 1.5rem !important; /* 24px */
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.prose h4 {
+  font-size: 1.25rem !important; /* 20px */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.625rem !important;
+}
+
+.prose h5 {
+  font-size: 1.125rem !important; /* 18px */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose h6 {
+  font-size: 1rem !important; /* 16px */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Additional prose typography improvements */
+.prose p {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+  line-height: 1.6 !important;
+}
+
+.prose ul, .prose ol {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+  padding-left: 1.5rem !important;
+}
+
+.prose li {
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.prose blockquote {
+  border-left: 4px solid #6b7280 !important;
+  padding-left: 1rem !important;
+  font-style: italic !important;
+  margin: 1rem 0 !important;
+}
+
+.prose-invert blockquote {
+  border-left-color: #9ca3af !important;
+}
+
+.prose code {
+  background-color: #f3f4f6 !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875rem !important;
+}
+
+.prose-invert code {
+  background-color: #374151 !important;
+  color: #e5e7eb !important;
+}
+
+.prose pre {
+  background-color: #1f2937 !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  overflow-x: auto !important;
+  margin: 1rem 0 !important;
+}
+
+.prose pre code {
+  background-color: transparent !important;
+  padding: 0 !important;
+  color: #e5e7eb !important;
+}
+
+/* Ensure headers have proper color */
+.prose-invert h1,
+.prose-invert h2,
+.prose-invert h3,
+.prose-invert h4,
+.prose-invert h5,
+.prose-invert h6 {
+  color: #ffffff !important;
 }
 
 .restricted-block-html {
