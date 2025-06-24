@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import PageList from "./PageList";
 import { WikiPage } from "./types";
 import { useUser } from "./userContext";
-import { canUserViewPage } from "./accessControl";
+import { canUserViewPage, canUserEditPage } from "./accessControl";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { useRouter } from "next/navigation";
 import styles from "./PageView.module.css";
@@ -74,8 +74,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                 </div>
                 <div className="flex items-center gap-2">
                   {user.group !== "public" &&
-                    Array.isArray(selectedPage.edit_groups) &&
-                    selectedPage.edit_groups.includes(user.group) && (
+                    canUserEditPage(user, selectedPage) && (
                       <button
                         onClick={() => handleEdit(selectedPage.id)}
                         className={styles.editButton}

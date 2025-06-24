@@ -48,7 +48,7 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
           <div className={`prose prose-invert ${styles.proseBox}`}>
             <div className={styles.header}>
               <h2 className="text-2xl font-bold text-indigo-200">{page?.title}</h2>
-              {user.group !== "public" && Array.isArray(page?.edit_groups) && page.edit_groups.includes(user.group) && (
+              {user.group !== "public" && canUserEditPage(user, page) && (
                 <button
                   onClick={() => {
                     if (!page?.id) {
