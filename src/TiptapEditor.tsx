@@ -131,16 +131,21 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       const level = Number(selected.split('-')[1]) as 1|2|3|4|5|6;
       editor.chain().focus().setHeading({ level }).run();
     } else if (selected === 'restricted') {
-      // Insert a new restricted block with default title and group, using pageEditGroups if available
+      // Get the current selection and extract content
+      const { state } = editor;
+      const { selection } = state;
+      const selectedContent = selection.empty 
+        ? [{ type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] }]
+        : state.doc.slice(selection.from, selection.to).content.toJSON();
+      
+      // Insert a new restricted block with the selected content or default content
       editor.chain().focus().insertContent({
         type: 'restrictedBlock',
         attrs: {
           usergroups: JSON.stringify(pageEditGroups && pageEditGroups.length > 0 ? pageEditGroups : ['public']),
           title: 'Restricted Block',
         },
-        content: [
-          { type: 'paragraph', content: [{ type: 'text', text: 'Restricted content here' }] },
-        ],
+        content: selectedContent,
       }).run();
       setBlockType('paragraph');
     }
