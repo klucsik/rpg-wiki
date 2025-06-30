@@ -9,14 +9,34 @@ datasource db {
 }
 
 model Page {
-  id          Int      @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   title       String
   content     String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
   edit_groups String[]
   view_groups String[]
-  path        String   @unique
+  path        String        @unique
+  versions    PageVersion[]
+}
+
+model PageVersion {
+  id             Int      @id @default(autoincrement())
+  page_id        Int
+  version        Int
+  title          String
+  content        String   @db.Text
+  path           String
+  edit_groups    String[]
+  view_groups    String[]
+  edited_by      String
+  edited_at      DateTime @default(now())
+  change_summary String?
+
+  page Page @relation(fields: [page_id], references: [id], onDelete: Cascade)
+
+  @@unique([page_id, version])
+  @@map("page_versions")
 }
 
 model Group {

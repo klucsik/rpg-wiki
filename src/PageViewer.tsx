@@ -5,6 +5,7 @@ import { WikiPage } from "./types";
 import { useUser } from "./userContext";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { canUserViewPage, canUserEditPage } from "./accessControl";
+import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
 
 function NoAccessPage() {
@@ -21,8 +22,10 @@ function NoAccessPage() {
 export default function PageViewerLayout({ page }: { page: WikiPage }) {
   const router = useRouter();
   const { user } = useUser();
+  const [showHistory, setShowHistory] = React.useState(false);
   // We'll need to fetch all pages for the sidebar
   const [pages, setPages] = React.useState<WikiPage[]>([]);
+  
   React.useEffect(() => {
     fetch("/api/pages")
       .then((res) => res.json())
@@ -32,6 +35,7 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
   // Restriction logic: user must be in view_groups or edit_groups
   const canView = canUserViewPage(user, page);
   const canEdit = canUserEditPage(user, page);
+  
   if (!canView && !canEdit) {
     return <NoAccessPage />;
   }
@@ -44,26 +48,55 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
         selectedId={page?.id || null}
       />
       <main className={styles.main + " flex-col items-center justify-start p-8"}>
+        {/* Very visible debug banner */}
+        <div className="w-full bg-red-900 text-white p-4 mb-4 rounded border-2 border-red-500">
+          <h3 className="font-bold">DEBUG INFO:</h3>
+          <div>User: {JSON.stringify(user)}</div>
+          <div>CanEdit: {canEdit ? 'TRUE' : 'FALSE'}</div>
+          <div>Page ID: {page?.id}</div>
+          <div>Edit Groups: {JSON.stringify(page?.edit_groups)}</div>
+        </div>
+        
         <div className="w-full max-w-2xl">
           <div className={`prose prose-invert ${styles.proseBox}`}>
             <div className={styles.header}>
               <h2 className="text-2xl font-bold text-indigo-200">{page?.title}</h2>
-              {user.group !== "public" && canUserEditPage(user, page) && (
+              <div className="flex gap-2">
+                {/* Always show the View History button for testing */}
                 <button
-                  onClick={() => {
-                    if (!page?.id) {
-                      console.warn("No page id for edit navigation", page);
-                      return;
-                    }
-                    router.push(`/pages/${page.id}/edit`);
-                  }}
-                  className={styles.editButton}
-                  disabled={!page?.id}
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg transition border border-blue-800"
                 >
-                  Edit
+                  {showHistory ? 'Hide History' : 'View History'}
                 </button>
-              )}
+                
+                {user.group !== "public" && canEdit && (
+                  <button
+                    onClick={() => {
+                      if (!page?.id) {
+                        return;
+                      }
+                      router.push(`/pages/${page.id}/edit`);
+                    }}
+                    className={styles.editButton}
+                    disabled={!page?.id}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
             </div>
+            
+            {/* Show version history if requested */}
+            {showHistory && page?.id && (
+              <div className="mb-6">
+                <VersionHistory 
+                  pageId={page.id} 
+                  onClose={() => setShowHistory(false)}
+                />
+              </div>
+            )}
+            
             {/* Render restricted blocks if present, else fallback to normal content */}
             {page?.content ? (
               parseHtmlWithRestrictedBlocks(page.content, { groups: [user.group] })

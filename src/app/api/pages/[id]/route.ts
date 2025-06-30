@@ -24,6 +24,7 @@ export async function PUT(
   // Simple authentication check
   const authHeader = req.headers.get('x-user-group');
   const userGroups = req.headers.get('x-user-groups')?.split(',') || [];
+  const userUsername = req.headers.get('x-user-name') || 'Unknown User';
   
   if (!authHeader || authHeader === 'public') {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -32,7 +33,16 @@ export async function PUT(
   const { id } = await context.params;
   
   // Check if user has edit permissions for this page
-  const existingPage = await prisma.page.findUnique({ where: { id: Number(id) } });
+  const existingPage = await prisma.page.findUnique({ 
+    where: { id: Number(id) },
+    include: {
+      versions: {
+        orderBy: { version: 'desc' },
+        take: 1
+      }
+    }
+  });
+  
   if (!existingPage) {
     return NextResponse.json({ error: 'Page not found' }, { status: 404 });
   }
@@ -42,7 +52,28 @@ export async function PUT(
     return NextResponse.json({ error: 'Insufficient permissions to edit this page' }, { status: 403 });
   }
 
-  const { title, content, edit_groups, view_groups, path } = await req.json();
+  const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
+  
+  // Get the next version number
+  const currentVersion = existingPage.versions.length > 0 ? existingPage.versions[0].version : 0;
+  const nextVersion = currentVersion + 1;
+
+  // Create new version entry
+  await prisma.pageVersion.create({
+    data: {
+      page_id: Number(id),
+      version: nextVersion,
+      title,
+      content,
+      path,
+      edit_groups: edit_groups || ['admin', 'editor'],
+      view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+      edited_by: userUsername,
+      change_summary: change_summary || null,
+    },
+  });
+
+  // Update the main page record
   const updated = await prisma.page.update({
     where: { id: Number(id) },
     data: {
@@ -54,6 +85,7 @@ export async function PUT(
       updated_at: new Date(),
     },
   });
+  
   // Convert date fields to string for API response
   return NextResponse.json({
     ...updated,

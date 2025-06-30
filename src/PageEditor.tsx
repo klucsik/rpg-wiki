@@ -39,6 +39,7 @@ export default function PageEditor({
   const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || (user.group ? [user.group] : []));
   const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || (user.group ? [user.group] : []));
   const [path, setPath] = useState(page?.path || "");
+  const [changeSummary, setChangeSummary] = useState("");
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -61,7 +62,14 @@ export default function PageEditor({
       if (mode === "edit" && page) {
         res = await authenticatedFetch(`/api/pages/${page.id}`, user, {
           method: "PUT",
-          body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups, path }),
+          body: JSON.stringify({ 
+            title, 
+            content, 
+            edit_groups: editGroups, 
+            view_groups: viewGroups, 
+            path,
+            change_summary: changeSummary || undefined
+          }),
         });
         if (!res.ok) {
           const errorData = await res.json();
@@ -71,7 +79,14 @@ export default function PageEditor({
       } else {
         res = await authenticatedFetch("/api/pages", user, {
           method: "POST",
-          body: JSON.stringify({ title, content, edit_groups: editGroups, view_groups: viewGroups, path }),
+          body: JSON.stringify({ 
+            title, 
+            content, 
+            edit_groups: editGroups, 
+            view_groups: viewGroups, 
+            path,
+            change_summary: changeSummary || undefined
+          }),
         });
         if (!res.ok) {
           const errorData = await res.json();
@@ -135,6 +150,21 @@ export default function PageEditor({
             className="w-full px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-2xl font-bold shadow-sm min-w-0"
           />
         </div>
+        
+        {/* Change Summary (only show for edits) */}
+        {mode === "edit" && (
+          <div className="mb-2">
+            <label className={styleTokens.label}>Change Summary (optional)</label>
+            <input
+              value={changeSummary}
+              onChange={(e) => setChangeSummary(e.target.value)}
+              placeholder="Describe what you changed..."
+              disabled={saving || isDisabled}
+              className="w-full px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-sm shadow-sm min-w-0"
+            />
+          </div>
+        )}
+        
         {/* Who can edit? */}
         <div className="mb-2">
           <label className={styleTokens.label}>Who can edit?</label>

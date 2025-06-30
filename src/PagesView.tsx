@@ -7,6 +7,7 @@ import { useUser } from "./userContext";
 import { canUserViewPage, canUserEditPage } from "./accessControl";
 import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { useRouter } from "next/navigation";
+import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
@@ -16,6 +17,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(initialId ?? null);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -75,15 +77,34 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                 <div className="flex items-center gap-2">
                   {user.group !== "public" &&
                     canUserEditPage(user, selectedPage) && (
-                      <button
-                        onClick={() => handleEdit(selectedPage.id)}
-                        className={styles.editButton}
-                      >
-                        Edit
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setShowHistory(!showHistory)}
+                          className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg transition border border-blue-800"
+                        >
+                          {showHistory ? 'Hide History' : 'View History'}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(selectedPage.id)}
+                          className={styles.editButton}
+                        >
+                          Edit
+                        </button>
+                      </>
                     )}
                 </div>
               </div>
+              
+              {/* Show version history if requested */}
+              {showHistory && selectedPage?.id && (
+                <div className="mb-6">
+                  <VersionHistory 
+                    pageId={selectedPage.id} 
+                    onClose={() => setShowHistory(false)}
+                  />
+                </div>
+              )}
+              
               <div className="flex-1 overflow-auto min-h-0 min-w-0">
                 {selectedPage.content ? (
                   parseHtmlWithRestrictedBlocks(selectedPage.content, {
