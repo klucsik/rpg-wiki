@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../db';
+import { authenticateRequest, requireAuthentication } from '../../../auth';
 
 // GET all pages
 export async function GET() {
@@ -15,12 +16,10 @@ export async function GET() {
 
 // POST create new page - requires authentication
 export async function POST(req: NextRequest) {
-  // Simple authentication check - look for user credentials in request
-  const authHeader = req.headers.get('x-user-group');
-  const userUsername = req.headers.get('x-user-name') || 'Unknown User';
-  
-  if (!authHeader || authHeader === 'public') {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = authenticateRequest(req);
+  const authError = requireAuthentication(auth);
+  if (authError) {
+    return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
   const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
         path,
         edit_groups: edit_groups || ['admin', 'editor'],
         view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
-        edited_by: userUsername,
+        edited_by: auth.username,
         change_summary: change_summary || 'Initial version',
       },
     });

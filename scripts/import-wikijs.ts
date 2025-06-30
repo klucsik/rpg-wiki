@@ -458,7 +458,7 @@ class WikiJsImporter {
           console.log(`Creating group: ${groupName}`);
           await fetch(`${this.baseUrl}/api/groups`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify({ name: groupName })
           });
         }
@@ -518,9 +518,7 @@ class WikiJsImporter {
       // Update the page using the PUT endpoint
       const response = await fetch(`${this.baseUrl}/api/pages/${existingPage.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(pageData),
       });
       
@@ -581,7 +579,7 @@ class WikiJsImporter {
       
       const response = await fetch(`${this.baseUrl}/api/pages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(pageData)
       });
       
@@ -684,6 +682,23 @@ class WikiJsImporter {
     }
     
     return this.stats;
+  }
+
+  /**
+   * Get headers for API requests with authentication
+   */
+  private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add API key if provided via environment variable
+    const apiKey = process.env.IMPORT_API_KEY;
+    if (apiKey) {
+      headers['X-API-Key'] = apiKey;
+    }
+
+    return headers;
   }
 }
 

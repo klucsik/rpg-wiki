@@ -25,15 +25,14 @@ model PageVersion {
   page_id        Int
   version        Int
   title          String
-  content        String   @db.Text
+  content        String
   path           String
   edit_groups    String[]
   view_groups    String[]
   edited_by      String
   edited_at      DateTime @default(now())
   change_summary String?
-
-  page Page @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  page           Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
 
   @@unique([page_id, version])
   @@map("page_versions")
