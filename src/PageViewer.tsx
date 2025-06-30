@@ -7,6 +7,7 @@ import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { canUserViewPage, canUserEditPage } from "./accessControl";
 import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
+import { authenticatedFetch } from "./apiHelpers";
 
 function NoAccessPage() {
   return (
@@ -27,10 +28,10 @@ export default function PageViewerLayout({ page }: { page: WikiPage }) {
   const [pages, setPages] = React.useState<WikiPage[]>([]);
   
   React.useEffect(() => {
-    fetch("/api/pages")
+    authenticatedFetch("/api/pages", user)
       .then((res) => res.json())
       .then((data) => setPages(data));
-  }, []);
+  }, [user]);
 
   // Restriction logic: user must be in view_groups or edit_groups
   const canView = canUserViewPage(user, page);

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import PageList from "../PageList";
 import { WikiPage } from "../types";
 import { useUser } from "../userContext";
+import { authenticatedFetch } from "../apiHelpers";
 
 export default function Pages() {
 	const { user } = useUser();
@@ -15,7 +16,7 @@ export default function Pages() {
 	useEffect(() => {
 		setLoading(true);
 		setError(null);
-		fetch("/api/pages")
+		authenticatedFetch("/api/pages", user)
 			.then((res) => {
 				if (!res.ok) throw new Error("Failed to fetch pages");
 				return res.json();
@@ -23,7 +24,7 @@ export default function Pages() {
 			.then((data) => setPages(data))
 			.catch((err) => setError(err.message))
 			.finally(() => setLoading(false));
-	}, []);
+	}, [user]);
 
 	const selectedPage = pages.find((p) => p.id === selectedId) || null;
 

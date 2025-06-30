@@ -12,6 +12,7 @@ export function createAuthHeaders(user: User): HeadersInit {
     "Content-Type": "application/json",
     "x-user-group": user.group,
     "x-user-groups": (user.groups || [user.group]).join(","),
+    "x-user-name": user.name || "Unknown User",
   };
 }
 

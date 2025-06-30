@@ -9,6 +9,7 @@ import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
 import { useRouter } from "next/navigation";
 import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
+import { authenticatedFetch } from "./apiHelpers";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
   const { user } = useUser();
@@ -22,7 +23,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch("/api/pages")
+    authenticatedFetch("/api/pages", user)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch pages");
         return res.json();
@@ -35,7 +36,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [initialId]);
+  }, [initialId, user]);
 
   useEffect(() => {
     if (initialId !== undefined && initialId !== selectedId) {

@@ -1,16 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../db';
 import { authenticateRequest, requireAuthentication } from '../../../auth';
+import { canUserViewPage } from '../../../accessControl';
 
-// GET all pages
-export async function GET() {
+// GET all pages - filtered by user permissions
+export async function GET(req: NextRequest) {
+  const auth = authenticateRequest(req);
+  
   const pages = await prisma.page.findMany({ orderBy: { id: 'asc' } });
+  
+  // Filter pages based on user permissions
+  const visiblePages = pages.filter(page => {
+    // Create user object for permission checking
+    const user = {
+      group: auth.userGroups[0] || 'public',
+      groups: auth.userGroups
+    };
+    
+    // Convert page to match WikiPage type for permission checking
+    const pageForPermission = {
+      ...page,
+      created_at: page.created_at.toISOString(),
+      updated_at: page.updated_at.toISOString(),
+    };
+    
+    return canUserViewPage(user, pageForPermission);
+  });
+  
   // Convert date fields to string for API response
-  const pagesWithDates = pages.map((p) => ({
+  const pagesWithDates = visiblePages.map((p) => ({
     ...p,
     created_at: p.created_at.toISOString(),
     updated_at: p.updated_at.toISOString(),
   }));
+  
   return NextResponse.json(pagesWithDates);
 }
 
