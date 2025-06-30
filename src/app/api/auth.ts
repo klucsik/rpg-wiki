@@ -40,7 +40,7 @@ export async function authenticate(req: NextRequest): Promise<AuthenticatedUser 
       group: user.groups?.[0]?.name || 'public',
       groups: user.groups?.map(g => g.name) || [],
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "./userContext";
 import { useGroups } from "./groupsContext";
 import { WikiPage } from "./types";
-import { authenticatedFetch, createAuthHeaders } from "./apiHelpers";
+import { authenticatedFetch } from "./apiHelpers";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {
