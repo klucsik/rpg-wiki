@@ -55,7 +55,7 @@ export default function EditPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center max-w-md">
           <h1 className="text-3xl font-bold text-red-400 mb-4">Edit Restricted</h1>
-          <p className="text-indigo-100 mb-2">You don't have permission to edit this page.</p>
+          <p className="text-indigo-100 mb-2">You don&apos;t have permission to edit this page.</p>
           <p className="text-indigo-300 text-sm mb-6">
             Only users in the following groups can edit: {page.edit_groups?.join(', ') || 'None'}
           </p>

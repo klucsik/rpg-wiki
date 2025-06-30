@@ -10,6 +10,7 @@
  * 
  * Usage:
  *   npx tsx scripts/import-all.ts [source-path] [base-url] [options]
+ *   example: npx tsx scripts/import-all.ts /home/klucsik/src/gyongy-wiki http://localhost:3000 --update-existing
  * 
  * Options:
  *   --update-existing    Update existing pages instead of skipping them

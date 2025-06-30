@@ -119,7 +119,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     } else if (parent.type.name === 'paragraph') {
       setBlockType('paragraph');
     }
-  }, [editor && editor.state.selection]);
+  }, [editor]);
 
   const handleBlockTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (!editor) return;

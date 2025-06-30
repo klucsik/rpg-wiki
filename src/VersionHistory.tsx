@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from './userContext';
 import { authenticatedFetch } from './apiHelpers';
 
@@ -6,6 +6,7 @@ interface PageVersion {
   id: number;
   version: number;
   title: string;
+  content: string;
   edited_by: string;
   edited_at: string;
   change_summary?: string;
@@ -13,7 +14,7 @@ interface PageVersion {
 
 interface VersionHistoryProps {
   pageId: number;
-  onViewVersion?: (versionData: any) => void;
+  onViewVersion?: (versionData: PageVersion) => void;
   onClose?: () => void;
 }
 
@@ -26,13 +27,9 @@ export default function VersionHistory({
   const [versions, setVersions] = useState<PageVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewingVersion, setViewingVersion] = useState<any>(null);
+  const [viewingVersion, setViewingVersion] = useState<PageVersion | null>(null);
 
-  useEffect(() => {
-    loadVersions();
-  }, [pageId]);
-
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -52,7 +49,11 @@ export default function VersionHistory({
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageId, user]);
+
+  useEffect(() => {
+    loadVersions();
+  }, [loadVersions]);
 
   const handleViewVersion = async (version: PageVersion) => {
     try {
@@ -126,7 +127,7 @@ export default function VersionHistory({
           Edited by <span className="text-indigo-300">{viewingVersion.edited_by}</span> on{' '}
           {new Date(viewingVersion.edited_at).toLocaleString()}
           {viewingVersion.change_summary && (
-            <div className="mt-1 italic">"{viewingVersion.change_summary}"</div>
+            <div className="mt-1 italic">&ldquo;{viewingVersion.change_summary}&rdquo;</div>
           )}
         </div>
         
@@ -184,7 +185,7 @@ export default function VersionHistory({
                   
                   {version.change_summary && (
                     <div className="text-sm text-gray-300 italic">
-                      "{version.change_summary}"
+                      &ldquo;{version.change_summary}&rdquo;
                     </div>
                   )}
                 </div>
