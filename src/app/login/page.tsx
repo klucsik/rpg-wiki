@@ -5,7 +5,7 @@ import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

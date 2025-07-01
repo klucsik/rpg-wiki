@@ -15,13 +15,13 @@ async function seedDefaults() {
     create: { name: 'admin' },
   });
   
-  const editorGroup = await prisma.group.upsert({
+  await prisma.group.upsert({
     where: { name: 'editor' },
     update: {},
     create: { name: 'editor' },
   });
   
-  const viewerGroup = await prisma.group.upsert({
+  await prisma.group.upsert({
     where: { name: 'viewer' },
     update: {},
     create: { name: 'viewer' },

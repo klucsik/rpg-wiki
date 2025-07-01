@@ -3,13 +3,14 @@
 import { signIn, getSession, getProviders } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type { BuiltInProviderType } from "next-auth/providers/index";
 
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [providers, setProviders] = useState<Record<string, any> | null>(null);
+  const [providers, setProviders] = useState<Record<string, { id: string; name: string; type: BuiltInProviderType }> | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function SignIn() {
         </div>
 
         {/* SSO Login Options */}
-        {providers && Object.values(providers).filter((provider: any) => provider.id !== "credentials").length > 0 && (
+        {providers && Object.values(providers).filter(provider => provider.id !== "credentials").length > 0 && (
           <div className="space-y-4">
             {Object.values(providers)
               .filter((provider: { id: string }) => provider.id !== "credentials")

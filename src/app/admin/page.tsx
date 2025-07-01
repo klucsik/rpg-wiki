@@ -1,5 +1,6 @@
 "use client";
 import { useSession, signOut, signIn } from "next-auth/react";
+import Link from "next/link";
 import React from "react";
 import GroupsAdminPage from "../groups/page";
 import UsersAdminPage from "../users/UsersAdminPage";
@@ -17,12 +18,12 @@ function AdminSidebar() {
       </nav>
       
       <div className="mt-auto pt-4 border-t border-gray-700 space-y-2">
-        <a 
+        <Link 
           href="/" 
           className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition font-medium"
         >
           ← Back to Wiki
-        </a>
+        </Link>
         <button
           onClick={() => signOut({ callbackUrl: '/' })}
           className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition font-medium"
@@ -66,7 +67,7 @@ export default function AdminPage() {
   }
 
   // Check if user has admin permissions
-  const isAdmin = session.user.groups?.includes('admin') || session.user.primaryGroup === 'admin';
+  const isAdmin = session.user.groups?.includes('admin');
   
   if (!isAdmin) {
     return (
@@ -74,7 +75,7 @@ export default function AdminPage() {
         <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
           <h1 className="text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
           <p className="text-indigo-100 mb-2">You do not have permission to access the admin page.</p>
-          <p className="text-indigo-100/80 text-sm">Current groups: {session.user.groups?.join(', ') || session.user.primaryGroup}</p>
+          <p className="text-indigo-100/80 text-sm">Current groups: {session.user.groups?.join(', ') || 'None'}</p>
         </div>
       </div>
     );
@@ -109,7 +110,7 @@ export default function AdminPage() {
             <div className="space-y-2 text-sm">
               <p><span className="text-indigo-400 font-medium">Username:</span> <span className="text-indigo-100">{session.user.username}</span></p>
               <p><span className="text-indigo-400 font-medium">Email:</span> <span className="text-indigo-100">{session.user.email}</span></p>
-              <p><span className="text-indigo-400 font-medium">Primary Group:</span> <span className="text-indigo-100">{session.user.primaryGroup}</span></p>
+              <p><span className="text-indigo-400 font-medium">Groups:</span> <span className="text-indigo-100">{session.user.groups?.join(', ') || 'None'}</span></p>
               <p><span className="text-indigo-400 font-medium">All Groups:</span> <span className="text-indigo-100">{session.user.groups?.join(', ') || 'None'}</span></p>
               <p><span className="text-indigo-400 font-medium">User ID:</span> <span className="text-indigo-100 font-mono text-xs">{session.user.id}</span></p>
             </div>

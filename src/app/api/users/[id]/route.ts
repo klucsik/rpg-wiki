@@ -45,7 +45,11 @@ export async function PUT(
   
   try {
     // Prepare the update data
-    const updateData: any = {
+    const updateData: {
+      name: string;
+      username: string;
+      password?: string;
+    } = {
       name: name || username,
       username,
     };
@@ -58,7 +62,7 @@ export async function PUT(
     // Update user and handle group memberships
     const user = await prisma.$transaction(async (tx) => {
       // Update user basic info
-      const updatedUser = await tx.user.update({
+      await tx.user.update({
         where: { id },
         data: updateData,
       });

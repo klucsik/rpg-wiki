@@ -87,9 +87,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(pageWithDates, { status: 201 });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If unique constraint violation on path, try to update existing page instead
-    if (error.code === 'P2002' && error.meta?.target?.includes('path')) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002' && 
+        'meta' in error && error.meta && typeof error.meta === 'object' && 
+        'target' in error.meta && Array.isArray(error.meta.target) && 
+        error.meta.target.includes('path')) {
       try {
         // Find the existing page
         const existingPage = await prisma.page.findUnique({
