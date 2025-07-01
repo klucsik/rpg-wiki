@@ -83,11 +83,23 @@ spec:
     spec:
       containers:
         - name: rpg-wiki
-          image: registry.klucsik.hu/rpg-wiki:latest
+          image: registry.klucsik.hu/rpg-wiki:20250701
           imagePullPolicy: Always
           env:
             - name: DATABASE_URL
               value: postgres://rpgwiki:rpgwiki@rpg-wiki-postgres.rpg-wiki-demo.svc.cluster.local:5432/rpgwiki
+            - name: ADMIN_PASSWORD
+              value: rpgwiki
+            - name: KEYCLOAK_CLIENT_ID
+              value: "test_rpg_wiki"
+            - name: KEYCLOAK_CLIENT_SECRET
+              value: "wGKyoSUbFM8Ucwy0dKAE7yiTpBQVRnuH"
+            - name: KEYCLOAK_ISSUER
+              value: "https:/auth.klucsik.hu/realms/home"
+            - name: NEXTAUTH_SECRET
+              value: "your-secret-key-here-change-in-production"
+            - name: NEXTAUTH_URL
+              value: "rpg-wiki-demo.klucsik.hu"   
           ports:
             - containerPort: 3000
 ---
