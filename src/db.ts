@@ -1,4 +1,5 @@
 import { PrismaClient } from './generated/prisma';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -14,49 +15,47 @@ async function seedDefaults() {
     update: {},
     create: { name: 'admin' },
   });
-  
-  await prisma.group.upsert({
-    where: { name: 'editor' },
-    update: {},
-    create: { name: 'editor' },
-  });
-  
-  await prisma.group.upsert({
-    where: { name: 'viewer' },
-    update: {},
-    create: { name: 'viewer' },
-  });
-  
+    
   await prisma.group.upsert({
     where: { name: 'public' },
     update: {},
     create: { name: 'public' },
   });
 
-  // Check if admin user already exists
-  const existingAdmin = await prisma.user.findUnique({
-    where: { username: 'admin' }
+  // Create or update admin user with password from environment variable
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
+  
+  const adminUser = await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {
+      // Always update password to match environment variable
+      password: hashedPassword,
+    },
+    create: {
+      username: 'admin',
+      name: 'Administrator',
+      email: 'admin@example.com',
+      password: hashedPassword,
+    },
   });
 
-  if (!existingAdmin) {
-    console.log('Creating default admin user...');
-    const adminUser = await prisma.user.create({
-      data: {
-        username: 'admin',
-        name: 'Administrator',
-        email: 'admin@example.com',
-        password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/lewNcCNhCT/Jfh.Eu', // "admin123"
-      },
-    });
-
-    // Assign admin to admin group
-    await prisma.userGroup.create({
-      data: {
+  // Ensure admin is assigned to admin group
+  await prisma.userGroup.upsert({
+    where: {
+      userId_groupId: {
         userId: adminUser.id,
         groupId: adminGroup.id,
       }
-    });
-  }
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      groupId: adminGroup.id,
+    }
+  });
+
+  console.log('Admin user synced with environment password');
 }
 
 // Only connect and seed if running in a real server environment (not build)

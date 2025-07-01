@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
         data: {
           title,
           content,
-          edit_groups: edit_groups || ['admin', 'editor'],
-          view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+          edit_groups: edit_groups || ['admin'],
+          view_groups: view_groups || ['admin',  'public'],
           path,
         },
       });
@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
           title,
           content,
           path,
-          edit_groups: edit_groups || ['admin', 'editor'],
-          view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+          edit_groups: edit_groups || ['admin'],
+          view_groups: view_groups || ['admin',  'public'],
           edited_by: auth.username,
           change_summary: change_summary || 'Initial version',
         },
@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
             data: {
               title,
               content,
-              edit_groups: edit_groups || ['admin', 'editor'],
-              view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+              edit_groups: edit_groups || ['admin'],
+              view_groups: view_groups || ['admin',  'public'],
               updated_at: new Date(),
             },
           });
@@ -133,8 +133,8 @@ export async function POST(req: NextRequest) {
               title,
               content,
               path,
-              edit_groups: edit_groups || ['admin', 'editor'],
-              view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+              edit_groups: edit_groups || ['admin'],
+              view_groups: view_groups || ['admin',  'public'],
               edited_by: auth.username,
               change_summary: change_summary || `Update via import (version ${nextVersion})`,
             },

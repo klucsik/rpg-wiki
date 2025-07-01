@@ -21,6 +21,29 @@ A full-stack wiki app for RPGs using Next.js (App Router, TypeScript, Tailwind C
    npm run dev
    ```
 
+## Configuration
+
+### Environment Variables
+
+The following environment variables are supported:
+
+- `DATABASE_URL`: PostgreSQL connection string (required)
+- `NEXTAUTH_SECRET`: Secret for NextAuth.js session signing (required)
+- `ADMIN_PASSWORD`: Password for the admin user (optional, defaults to 'admin123')
+- `IMPORT_API_KEY`: API key for import scripts (optional)
+- `KEYCLOAK_CLIENT_ID`: Keycloak client ID for OIDC authentication (optional)
+- `KEYCLOAK_CLIENT_SECRET`: Keycloak client secret for OIDC authentication (optional)
+- `KEYCLOAK_ISSUER`: Keycloak issuer URL for OIDC authentication (optional)
+
+### Admin User
+
+The admin user is automatically created/updated on every application startup:
+- Username: `admin`
+- Password: Set via `ADMIN_PASSWORD` environment variable (defaults to `admin123`)
+- The password is updated every time the application starts to match the environment variable
+
+To change the admin password, update the `ADMIN_PASSWORD` environment variable and restart the application.
+
 ## Wiki Import
 
 ### Complete Import (Recommended)
