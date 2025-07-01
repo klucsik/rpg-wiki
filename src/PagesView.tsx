@@ -20,6 +20,8 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   const [selectedId, setSelectedId] = useState<number | null>(initialId ?? null);
   const [showHistory, setShowHistory] = useState(false);
 
+  const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -38,13 +40,34 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
       .finally(() => setLoading(false));
   }, [initialId, user]);
 
+  // Fetch individual page data when selectedId changes to get version info
+  useEffect(() => {
+    if (selectedId) {
+      authenticatedFetch(`/api/pages/${selectedId}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch page details");
+          return res.json();
+        })
+        .then((pageData) => {
+          setSelectedPage(pageData);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch page details:", err);
+          // Fallback to basic page data from list
+          const fallbackPage = pages.find((p) => p.id === selectedId) || null;
+          setSelectedPage(fallbackPage);
+        });
+    } else {
+      setSelectedPage(null);
+    }
+  }, [selectedId, pages]);
+
   useEffect(() => {
     if (initialId !== undefined && initialId !== selectedId) {
       setSelectedId(initialId);
     }
   }, [initialId, selectedId]);
 
-  const selectedPage = pages.find((p) => p.id === selectedId) || null;
   const canViewSelected = selectedPage && canUserViewPage(user, selectedPage);
 
   function handleEdit(id: number) {
@@ -115,7 +138,11 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                 )}
               </div>
               <div className={styles.pageFooter}>
-                Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""} &nbsp;|&nbsp; View groups: {Array.isArray(selectedPage.view_groups) ? selectedPage.view_groups.join(', ') : ''} &nbsp;|&nbsp; Edit groups: {Array.isArray(selectedPage.edit_groups) ? selectedPage.edit_groups.join(', ') : ''}
+                Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""} 
+                {selectedPage.version && (
+                  <> &nbsp;|&nbsp; Version: {selectedPage.version}</>
+                )}
+                 &nbsp;|&nbsp; View groups: {Array.isArray(selectedPage.view_groups) ? selectedPage.view_groups.join(', ') : ''} &nbsp;|&nbsp; Edit groups: {Array.isArray(selectedPage.edit_groups) ? selectedPage.edit_groups.join(', ') : ''}
               </div>
             </div>
           )}

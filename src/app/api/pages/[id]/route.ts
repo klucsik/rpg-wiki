@@ -27,6 +27,7 @@ export async function GET(
     edit_groups: latestVersion.edit_groups,
     view_groups: latestVersion.view_groups,
     path: latestVersion.path,
+    version: latestVersion.version,
     created_at: latestVersion.edited_at.toISOString(),
     updated_at: latestVersion.edited_at.toISOString(),
   });
@@ -97,6 +98,7 @@ export async function PUT(
     edit_groups: newVersion.edit_groups,
     view_groups: newVersion.view_groups,
     path: newVersion.path,
+    version: newVersion.version,
     created_at: newVersion.edited_at.toISOString(),
     updated_at: newVersion.edited_at.toISOString(),
   });
