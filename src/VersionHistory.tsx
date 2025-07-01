@@ -6,10 +6,11 @@ interface PageVersion {
   id: number;
   version: number;
   title: string;
-  content: string;
+  content?: string;
   edited_by: string;
   edited_at: string;
   change_summary?: string;
+  is_draft?: boolean;
 }
 
 interface VersionHistoryProps {
@@ -33,7 +34,8 @@ export default function VersionHistory({
     try {
       setLoading(true);
       setError(null);
-      const response = await authenticatedFetch(`/api/pages/${pageId}/versions`);
+      const url = `/api/pages/${pageId}/versions?drafts=true`;
+      const response = await authenticatedFetch(url);
       
       if (!response.ok) {
         if (response.status === 403) {
@@ -49,7 +51,7 @@ export default function VersionHistory({
     } finally {
       setLoading(false);
     }
-  }, [pageId, user]);
+  }, [pageId]);
 
   useEffect(() => {
     loadVersions();
@@ -58,20 +60,19 @@ export default function VersionHistory({
   const handleViewVersion = async (version: PageVersion) => {
     try {
       const response = await authenticatedFetch(`/api/pages/${pageId}/versions/${version.version}`);
-      if (response.ok) {
-        const fullVersion = await response.json();
-        setViewingVersion(fullVersion);
-        if (onViewVersion) {
-          onViewVersion(fullVersion);
-        }
+      if (!response.ok) {
+        throw new Error('Failed to load version content');
+      }
+      
+      const versionData = await response.json();
+      setViewingVersion(versionData);
+      
+      if (onViewVersion) {
+        onViewVersion(versionData);
       }
     } catch (err) {
-      console.error('Failed to load version content:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load version');
     }
-  };
-
-  const handleBackToHistory = () => {
-    setViewingVersion(null);
   };
 
   if (loading) {
@@ -86,57 +87,6 @@ export default function VersionHistory({
     return (
       <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-6">
         <div className="text-red-400">{error}</div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition"
-          >
-            Close
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  if (viewingVersion) {
-    return (
-      <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-indigo-200">
-            Version {viewingVersion.version}: {viewingVersion.title}
-          </h3>
-          <div className="flex gap-2">
-            <button
-              onClick={handleBackToHistory}
-              className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"
-            >
-              ← Back to History
-            </button>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition"
-              >
-                Close
-              </button>
-            )}
-          </div>
-        </div>
-        
-        <div className="text-sm text-gray-400 mb-4">
-          Edited by <span className="text-indigo-300">{viewingVersion.edited_by}</span> on{' '}
-          {new Date(viewingVersion.edited_at).toLocaleString()}
-          {viewingVersion.change_summary && (
-            <div className="mt-1 italic">&ldquo;{viewingVersion.change_summary}&rdquo;</div>
-          )}
-        </div>
-        
-        <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto">
-          <div 
-            className="prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: viewingVersion.content }}
-          />
-        </div>
       </div>
     );
   }
@@ -148,59 +98,80 @@ export default function VersionHistory({
         {onClose && (
           <button
             onClick={onClose}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition"
+            className="text-gray-400 hover:text-white"
           >
-            Close
+            ×
           </button>
         )}
       </div>
       
       {versions.length === 0 ? (
-        <div className="text-gray-400">No version history available</div>
+        <div className="text-gray-400">No versions found.</div>
       ) : (
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {versions.map((version, index) => (
-            <div 
-              key={version.id} 
-              className="bg-gray-800/60 border border-gray-700 rounded-lg p-4"
+        <div className="space-y-3 max-h-80 overflow-y-auto">
+          {versions.map((version) => (
+            <div
+              key={version.id}
+              className="border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="bg-indigo-700 text-white px-2 py-1 rounded text-sm font-medium">
-                      v{version.version}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-indigo-200">
+                      Version {version.version}
                     </span>
-                    {index === 0 && (
-                      <span className="bg-green-700 text-white px-2 py-1 rounded text-xs">
-                        Current
+                    {version.is_draft && (
+                      <span className="px-2 py-0.5 bg-yellow-600/30 border border-yellow-500 rounded text-yellow-200 text-xs">
+                        DRAFT
                       </span>
                     )}
-                    <span className="text-indigo-200 font-medium">{version.title}</span>
                   </div>
-                  
-                  <div className="text-sm text-gray-400 mb-2">
-                    Edited by <span className="text-indigo-300">{version.edited_by}</span> on{' '}
-                    {new Date(version.edited_at).toLocaleString()}
+                  <div className="text-sm text-gray-300 mb-2">
+                    <div>By: {version.edited_by}</div>
+                    <div>Date: {new Date(version.edited_at).toLocaleString()}</div>
+                    {version.change_summary && (
+                      <div className="mt-1 text-indigo-300">
+                        Summary: {version.change_summary}
+                      </div>
+                    )}
                   </div>
-                  
-                  {version.change_summary && (
-                    <div className="text-sm text-gray-300 italic">
-                      &ldquo;{version.change_summary}&rdquo;
-                    </div>
-                  )}
                 </div>
-                
-                <div className="flex gap-2 ml-4">
-                  <button
-                    onClick={() => handleViewVersion(version)}
-                    className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"
-                  >
-                    View
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleViewVersion(version)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                >
+                  View
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+      
+      {viewingVersion && (
+        <div className="mt-6 border-t border-gray-700 pt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-lg font-semibold text-indigo-200">
+              Version {viewingVersion.version} - {viewingVersion.title}
+              {viewingVersion.is_draft && (
+                <span className="ml-2 px-2 py-0.5 bg-yellow-600/30 border border-yellow-500 rounded text-yellow-200 text-xs">
+                  DRAFT
+                </span>
+              )}
+            </h4>
+            <button
+              onClick={() => setViewingVersion(null)}
+              className="text-gray-400 hover:text-white"
+            >
+              Close
+            </button>
+          </div>
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 max-h-60 overflow-y-auto">
+            <div 
+              className="prose prose-invert prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: viewingVersion.content || 'No content' }}
+            />
+          </div>
         </div>
       )}
     </div>

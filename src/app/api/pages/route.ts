@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
           view_groups: view_groups || ['admin',  'public'],
           edited_by: auth.username,
           change_summary: change_summary || 'Initial version',
+          is_draft: false,
         },
       });
 
@@ -137,6 +138,7 @@ export async function POST(req: NextRequest) {
               view_groups: view_groups || ['admin',  'public'],
               edited_by: auth.username,
               change_summary: change_summary || `Update via import (version ${nextVersion})`,
+              is_draft: false,
             },
           });
 

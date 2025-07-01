@@ -8,10 +8,45 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
+  const auth = await getAuthFromRequest(req);
   
-  // Get the latest version of this page
+  // Check if we should load a draft version (if user is editing)
+  const url = new URL(req.url);
+  const loadDraft = url.searchParams.get('draft') === 'true';
+  
+  if (loadDraft && auth) {
+    // Try to get the user's latest draft first
+    const latestDraft = await prisma.pageVersion.findFirst({
+      where: {
+        page_id: parseInt(id),
+        edited_by: auth.username,
+        is_draft: true
+      },
+      orderBy: { version: 'desc' }
+    });
+
+    if (latestDraft) {
+      return NextResponse.json({
+        id: latestDraft.page_id,
+        title: latestDraft.title,
+        content: latestDraft.content,
+        edit_groups: latestDraft.edit_groups,
+        view_groups: latestDraft.view_groups,
+        path: latestDraft.path,
+        version: latestDraft.version,
+        created_at: latestDraft.edited_at.toISOString(),
+        updated_at: latestDraft.edited_at.toISOString(),
+        is_draft: true
+      });
+    }
+  }
+  
+  // Get the latest published version of this page
   const latestVersion = await prisma.pageVersion.findFirst({
-    where: { page_id: parseInt(id) },
+    where: { 
+      page_id: parseInt(id),
+      is_draft: false
+    },
     orderBy: { version: 'desc' }
   });
   
@@ -30,6 +65,7 @@ export async function GET(
     version: latestVersion.version,
     created_at: latestVersion.edited_at.toISOString(),
     updated_at: latestVersion.edited_at.toISOString(),
+    is_draft: false
   });
 }
 
@@ -62,7 +98,7 @@ export async function PUT(
 
   // Create new version entry and update main page table in a transaction
   const [newVersion] = await prisma.$transaction([
-    // Create new version entry
+    // Create new version entry (not a draft)
     prisma.pageVersion.create({
       data: {
         page_id: parseInt(id),
@@ -74,6 +110,7 @@ export async function PUT(
         view_groups: view_groups || ['admin',  'public'],
         edited_by: auth.username,
         change_summary: change_summary || null,
+        is_draft: false,
       },
     }),
     // Update main page table with latest data
@@ -89,6 +126,15 @@ export async function PUT(
       },
     }),
   ]);
+
+  // Clean up any drafts by this user for this page since we've now published
+  await prisma.pageVersion.deleteMany({
+    where: {
+      page_id: parseInt(id),
+      edited_by: auth.username,
+      is_draft: true
+    }
+  });
   
   // Convert date fields to string for API response
   return NextResponse.json({

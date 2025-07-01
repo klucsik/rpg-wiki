@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
 import { authenticatedFetch } from "./apiHelpers";
+import { useDraftStatus } from "./hooks/useDraftStatus";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
   const { user } = useUser();
@@ -21,6 +22,12 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   const [showHistory, setShowHistory] = useState(false);
 
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
+
+  // Check for draft status
+  const draftStatus = useDraftStatus(
+    selectedPage?.id,
+    isUserAuthenticated(user) && selectedPage ? canUserEditPage(user, selectedPage) : false
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -97,6 +104,17 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                   <h2 className="text-2xl font-bold text-indigo-200">
                     {selectedPage.title}
                   </h2>
+                  {/* Draft indicator */}
+                  {draftStatus.hasDraft && (
+                    <div className="mt-2 px-3 py-1 bg-yellow-900/40 border border-yellow-600 rounded-lg text-yellow-200 text-sm">
+                      <span className="font-semibold">Draft available:</span> You have unsaved changes
+                      {draftStatus.draftSavedAt && (
+                        <span className="ml-1">
+                          (saved {new Date(draftStatus.draftSavedAt).toLocaleTimeString()})
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {isUserAuthenticated(user) && canUserEditPage(user, selectedPage) && (

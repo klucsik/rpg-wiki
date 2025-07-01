@@ -32,6 +32,7 @@ model PageVersion {
   edited_by      String
   edited_at      DateTime @default(now())
   change_summary String?
+  is_draft       Boolean  @default(false)
   page           Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
 
   @@unique([page_id, version])

@@ -39,7 +39,7 @@ export async function GET(
     }
   });
 
-  if (!pageVersion) {
+  if (!pageVersion || pageVersion.is_draft) {
     return NextResponse.json({ error: 'Version not found' }, { status: 404 });
   }
 

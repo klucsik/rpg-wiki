@@ -6,6 +6,7 @@ import { useGroups } from "./groupsContext";
 import { WikiPage } from "./types";
 import { authenticatedFetch } from "./apiHelpers";
 import { isUserAuthenticated } from "./accessControl";
+import { useAutosave } from "./hooks/useAutosave";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {
@@ -47,8 +48,28 @@ export default function PageEditor({
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [viewSearch, setViewSearch] = useState("");
+  const [autosaveStatus, setAutosaveStatus] = useState<string>("");
   const filteredGroups = groups.filter((g) => g.includes(search));
   const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
+
+  // Autosave functionality
+  const { saveNow } = useAutosave({
+    pageId: page?.id,
+    title,
+    content,
+    editGroups,
+    viewGroups,
+    path,
+    enabled: mode === "edit" && !isDisabled,
+    onSaveSuccess: (data) => {
+      setAutosaveStatus(`Draft saved at ${new Date(data.saved_at).toLocaleTimeString()}`);
+      setTimeout(() => setAutosaveStatus(""), 3000);
+    },
+    onSaveError: (error) => {
+      setAutosaveStatus(`Autosave failed: ${error}`);
+      setTimeout(() => setAutosaveStatus(""), 5000);
+    }
+  });
 
   async function handleSave() {
     if (!title || !content || !path) {
@@ -275,6 +296,15 @@ export default function PageEditor({
           >
             {mode === "edit" ? "Save" : "Create"}
           </button>
+          {mode === "edit" && (
+            <button
+              onClick={saveNow}
+              disabled={saving || isDisabled}
+              className="bg-gray-700 text-gray-200 font-bold px-6 py-2 rounded-lg shadow hover:bg-gray-600 transition disabled:opacity-50 text-sm border border-gray-600"
+            >
+              Save Draft Now
+            </button>
+          )}
           <button
             onClick={onCancel}
             disabled={saving}
@@ -283,6 +313,12 @@ export default function PageEditor({
             Cancel
           </button>
         </div>
+        {/* Autosave status */}
+        {autosaveStatus && (
+          <div className="text-sm text-green-400 mt-2 p-2 bg-green-900/20 rounded border border-green-800">
+            {autosaveStatus}
+          </div>
+        )}
         {validationError && (
           <div className="text-red-400 font-semibold mt-2">{validationError}</div>
         )}

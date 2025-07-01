@@ -29,8 +29,28 @@ export async function GET(
     return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
+  // Check if we should include drafts (only for authenticated users)
+  const url = new URL(req.url);
+  const includeDrafts = url.searchParams.get('drafts') === 'true' && auth.isAuthenticated;
+  
+  let whereClause: any = { page_id: parseInt(id) };
+  
+  if (includeDrafts) {
+    // Include both published versions and user's own drafts
+    whereClause = {
+      page_id: parseInt(id),
+      OR: [
+        { is_draft: false }, // All published versions
+        { is_draft: true, edited_by: auth.username } // User's own drafts
+      ]
+    };
+  } else {
+    // Only published versions
+    whereClause.is_draft = false;
+  }
+
   const versions = await prisma.pageVersion.findMany({
-    where: { page_id: parseInt(id) },
+    where: whereClause,
     orderBy: { version: 'desc' },
     select: {
       id: true,
@@ -39,6 +59,7 @@ export async function GET(
       edited_by: true,
       edited_at: true,
       change_summary: true,
+      is_draft: true,
     }
   });
 
