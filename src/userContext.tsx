@@ -29,9 +29,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const user: User = session?.user ? {
     id: session.user.id,
-    name: session.user.name || session.user.username,
-    username: session.user.username,
-    groups: session.user.groups,
+    name: session.user.name || session.user.username || session.user.email?.split('@')[0] || 'User',
+    username: session.user.username || session.user.email?.split('@')[0] || 'user',
+    groups: session.user.groups || [],
   } : PUBLIC_USER;
 
   const isLoading = status === "loading";
