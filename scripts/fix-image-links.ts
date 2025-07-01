@@ -39,8 +39,16 @@ class ImageLinkFixer {
 
   /**
    * Extract filename from a path (handling both forward and backward slashes)
+   * Special handling for /api/images/ID format
    */
   private extractFilename(path: string): string {
+    // Handle /api/images/ID format - extract just the ID
+    const apiImageMatch = path.match(/\/api\/images\/(\d+)$/);
+    if (apiImageMatch) {
+      return apiImageMatch[1]; // Return just the ID number
+    }
+    
+    // Regular filename extraction
     return path.split(/[/\\]/).pop() || path;
   }
 
@@ -71,6 +79,12 @@ class ImageLinkFixer {
       if (filename !== image.filename) {
         this.imageMappings.set(image.filename, mapping);
       }
+      
+      // Store by full path with /api/images/ prefix (for direct path matching)
+      this.imageMappings.set(`/api/images/${image.filename}`, mapping);
+      
+      // Store by image ID as string (for fixing /api/images/ID references)
+      this.imageMappings.set(image.id.toString(), mapping);
     }
 
     console.log(`Built ${this.imageMappings.size} image mappings`);
@@ -129,6 +143,22 @@ class ImageLinkFixer {
       }
     }
 
+    // Pattern 4: /api/images/path/to/file.ext references (file paths in API format)
+    const apiImagePathRefs = content.match(/\/api\/images\/[^"\s<>]+\.(jpg|jpeg|png|gif|webp|svg)/gi);
+    if (apiImagePathRefs) {
+      for (const ref of apiImagePathRefs) {
+        imagePaths.add(ref);
+      }
+    }
+
+    // Pattern 5: /api/images/ID references (numeric IDs)
+    const apiImageRefs = content.match(/\/api\/images\/\d+/gi);
+    if (apiImageRefs) {
+      for (const ref of apiImageRefs) {
+        imagePaths.add(ref);
+      }
+    }
+
     return Array.from(imagePaths);
   }
 
@@ -175,8 +205,41 @@ class ImageLinkFixer {
     console.log(`Found ${imagePaths.length} potential image references`);
 
     for (const imagePath of imagePaths) {
+      let mapping: ImageMapping | undefined;
+      
+      // First, try to match by filename extraction
       const filename = this.extractFilename(imagePath);
-      const mapping = this.imageMappings.get(filename);
+      mapping = this.imageMappings.get(filename);
+      
+      // If no mapping found and this looks like a file path with /api/images/,
+      // try to extract the actual filename and match
+      if (!mapping && imagePath.startsWith('/api/images/')) {
+        const pathWithoutPrefix = imagePath.replace('/api/images/', '');
+        const actualFilename = pathWithoutPrefix.split('/').pop();
+        if (actualFilename) {
+          mapping = this.imageMappings.get(actualFilename);
+          if (mapping) {
+            console.log(`  Found mapping by actual filename: ${actualFilename}`);
+          }
+        }
+      }
+      
+      // If still no mapping and this is /api/images/NUMBER, check if the ID exists in database
+      if (!mapping && imagePath.match(/\/api\/images\/\d+$/)) {
+        const numericId = imagePath.match(/\/api\/images\/(\d+)$/)?.[1];
+        if (numericId) {
+          // Check if this numeric ID actually exists in our mappings
+          mapping = this.imageMappings.get(numericId);
+          if (mapping) {
+            // This is actually a correct reference, no change needed
+            console.log(`  Numeric API reference is correct: ${imagePath}`);
+            continue;
+          } else {
+            console.log(`  Invalid numeric API reference (no image with ID ${numericId}): ${imagePath}`);
+            continue;
+          }
+        }
+      }
 
       if (mapping && imagePath !== mapping.newUrl) {
         console.log(`  Replacing: ${imagePath} -> ${mapping.newUrl}`);
@@ -194,7 +257,45 @@ class ImageLinkFixer {
   }
 
   /**
-   * Fix image links in all pages
+   * Update a page via the API (which properly handles versioning)
+   */
+  private async updatePageViaAPI(pageId: number, title: string, content: string, path: string): Promise<boolean> {
+    try {
+      const apiKey = process.env.IMPORT_API_KEY;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (apiKey) {
+        headers['X-API-Key'] = apiKey;
+      }
+
+      const response = await fetch(`${this.baseUrl}/api/pages/${pageId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          title,
+          content,
+          path,
+          change_summary: 'Fixed image links to use correct database IDs'
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API error updating page ${pageId}: ${response.status} ${errorText}`);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`Error updating page ${pageId} via API:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Fix image links in all pages using the API
    */
   public async fixAllPages(dryRun = false): Promise<void> {
     console.log('Fixing image links in all pages...');
@@ -202,8 +303,18 @@ class ImageLinkFixer {
     
     await this.buildImageMapping();
     
+    // Get pages with their latest versions
     const pages = await prisma.page.findMany({
-      select: { id: true, title: true, content: true }
+      select: { 
+        id: true, 
+        title: true, 
+        path: true,
+        versions: {
+          orderBy: { version: 'desc' },
+          take: 1,
+          select: { content: true, version: true }
+        }
+      }
     });
 
     console.log(`\nProcessing ${pages.length} pages...`);
@@ -216,7 +327,13 @@ class ImageLinkFixer {
     }> = [];
 
     for (const page of pages) {
-      const result = this.fixPageImageLinks(page.id, page.title, page.content);
+      const latestVersion = page.versions[0];
+      if (!latestVersion) {
+        console.log(`  - No versions found for "${page.title}"`);
+        continue;
+      }
+
+      const result = this.fixPageImageLinks(page.id, page.title, latestVersion.content);
       
       if (result.updated) {
         totalUpdated++;
@@ -227,14 +344,13 @@ class ImageLinkFixer {
         });
 
         if (!dryRun) {
-          await prisma.page.update({
-            where: { id: page.id },
-            data: { 
-              content: result.newContent,
-              updated_at: new Date()
-            }
-          });
-          console.log(`  ✓ Updated page "${page.title}"`);
+          // Use the API to update the page (which will create a new version)
+          const success = await this.updatePageViaAPI(page.id, page.title, result.newContent, page.path);
+          if (success) {
+            console.log(`  ✓ Updated page "${page.title}"`);
+          } else {
+            console.log(`  ✗ Failed to update page "${page.title}"`);
+          }
         } else {
           console.log(`  ✓ Would update page "${page.title}"`);
         }
