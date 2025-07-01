@@ -53,8 +53,7 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
         await prisma.userGroup.create({
           data: {
             userId: apiUser.id,
-            groupId: adminGroup.id,
-            isPrimary: true
+            groupId: adminGroup.id
           }
         });
       }
@@ -84,7 +83,7 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
 
   return {
     isAuthenticated: true,
-    userGroups: session.user.groups || [session.user.primaryGroup],
+    userGroups: session.user.groups || [],
     username: session.user.username,
     userId: session.user.id,
     isApiKey: false

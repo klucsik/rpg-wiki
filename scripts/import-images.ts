@@ -47,16 +47,6 @@ class ImageImporter {
   }
 
   /**
-   * Get authentication headers for API requests
-   */
-  private getAuthHeaders(): Record<string, string> {
-    return {
-      'Authorization': `Bearer ${this.apiKey}`,
-      'Content-Type': 'application/json'
-    };
-  }
-
-  /**
    * Get MIME type from file extension
    */
   private getMimeType(filePath: string): string {
