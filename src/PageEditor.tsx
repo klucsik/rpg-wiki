@@ -5,6 +5,7 @@ import { useUser } from "./userContext";
 import { useGroups } from "./groupsContext";
 import { WikiPage } from "./types";
 import { authenticatedFetch } from "./apiHelpers";
+import { isUserAuthenticated } from "./accessControl";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {
@@ -32,12 +33,12 @@ export default function PageEditor({
 }) {
   const router = useRouter();
   const { user } = useUser();
-  const isDisabled = user.group === "public";
+  const isDisabled = !isUserAuthenticated(user);
   const { groups } = useGroups();
   const [title, setTitle] = useState(page?.title || "");
   const [content, setContent] = useState(page?.content || "");
-  const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || (user.group ? [user.group] : []));
-  const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || (user.group ? [user.group] : []));
+  const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || (user.groups.length > 0 ? [user.groups[0]] : []));
+  const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || (user.groups.length > 0 ? [user.groups[0]] : []));
   const [path, setPath] = useState(page?.path || "");
   const [changeSummary, setChangeSummary] = useState("");
   const [saving, setSaving] = useState(false);
@@ -60,7 +61,7 @@ export default function PageEditor({
     try {
       let res, saved;
       if (mode === "edit" && page) {
-        res = await authenticatedFetch(`/api/pages/${page.id}`, user, {
+        res = await authenticatedFetch(`/api/pages/${page.id}`, {
           method: "PUT",
           body: JSON.stringify({ 
             title, 
@@ -77,7 +78,7 @@ export default function PageEditor({
         }
         saved = await res.json();
       } else {
-        res = await authenticatedFetch("/api/pages", user, {
+        res = await authenticatedFetch("/api/pages", {
           method: "POST",
           body: JSON.stringify({ 
             title, 
@@ -109,7 +110,7 @@ export default function PageEditor({
     setSaving(true);
     setError(null);
     try {
-      const res = await authenticatedFetch(`/api/pages/${page.id}`, user, { method: "DELETE" });
+      const res = await authenticatedFetch(`/api/pages/${page.id}`, { method: "DELETE" });
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to delete page");

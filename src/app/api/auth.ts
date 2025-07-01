@@ -37,8 +37,7 @@ export async function authenticate(req: NextRequest): Promise<AuthenticatedUser 
     return {
       id: user.id,
       name: user.name,
-      group: user.groups?.[0]?.name || 'public',
-      groups: user.groups?.map(g => g.name) || [],
+      groups: user.groups?.map((g: any) => g.name) || [],
     };
   } catch {
     return null;

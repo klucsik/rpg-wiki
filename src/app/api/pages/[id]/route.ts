@@ -59,20 +59,35 @@ export async function PUT(
   // Get the next version number
   const nextVersion = latestVersion.version + 1;
 
-  // Create new version entry
-  const newVersion = await prisma.pageVersion.create({
-    data: {
-      page_id: parseInt(id),
-      version: nextVersion,
-      title,
-      content,
-      path,
-      edit_groups: edit_groups || ['admin', 'editor'],
-      view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
-      edited_by: auth.username,
-      change_summary: change_summary || null,
-    },
-  });
+  // Create new version entry and update main page table in a transaction
+  const [newVersion] = await prisma.$transaction([
+    // Create new version entry
+    prisma.pageVersion.create({
+      data: {
+        page_id: parseInt(id),
+        version: nextVersion,
+        title,
+        content,
+        path,
+        edit_groups: edit_groups || ['admin', 'editor'],
+        view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+        edited_by: auth.username,
+        change_summary: change_summary || null,
+      },
+    }),
+    // Update main page table with latest data
+    prisma.page.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        content,
+        path,
+        edit_groups: edit_groups || ['admin', 'editor'],
+        view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+        updated_at: new Date(),
+      },
+    }),
+  ]);
   
   // Convert date fields to string for API response
   return NextResponse.json({

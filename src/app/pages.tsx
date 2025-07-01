@@ -4,6 +4,7 @@ import PageList from "../PageList";
 import { WikiPage } from "../types";
 import { useUser } from "../userContext";
 import { authenticatedFetch } from "../apiHelpers";
+import { isUserAuthenticated, canUserEditPage } from "../accessControl";
 
 export default function Pages() {
 	const { user } = useUser();
@@ -16,7 +17,7 @@ export default function Pages() {
 	useEffect(() => {
 		setLoading(true);
 		setError(null);
-		authenticatedFetch("/api/pages", user)
+		authenticatedFetch("/api/pages")
 			.then((res) => {
 				if (!res.ok) throw new Error("Failed to fetch pages");
 				return res.json();
@@ -48,7 +49,7 @@ export default function Pages() {
 								<h2 className="text-2xl font-bold text-indigo-200">
 									{selectedPage.title}
 								</h2>
-								{user.group !== "public" && (
+								{canUserEditPage(user, selectedPage) && (
 									<button
 										onClick={handleEdit}
 										className="bg-yellow-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-yellow-800 transition text-sm"

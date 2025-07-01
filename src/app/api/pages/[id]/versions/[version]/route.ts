@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../../db';
+import { getAuthFromRequest, requireEditPermissions } from '../../../../../../lib/auth-utils';
 
 // GET /api/pages/[id]/versions/[version] - Get specific version content
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string; version: string }> }
 ) {
-  const authHeader = req.headers.get('x-user-group');
-  const userGroups = req.headers.get('x-user-groups')?.split(',') || [];
+  const auth = await getAuthFromRequest(req);
   
-  if (!authHeader || authHeader === 'public') {
+  if (!auth.isAuthenticated) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
@@ -25,9 +25,9 @@ export async function GET(
     return NextResponse.json({ error: 'Page not found' }, { status: 404 });
   }
 
-  const canEdit = userGroups.some(g => page.edit_groups.includes(g));
-  if (!canEdit) {
-    return NextResponse.json({ error: 'Only editors can view page history' }, { status: 403 });
+  const authError = requireEditPermissions(auth, page.edit_groups);
+  if (authError) {
+    return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
   const pageVersion = await prisma.pageVersion.findUnique({

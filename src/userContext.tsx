@@ -14,7 +14,7 @@ const PUBLIC_USER: User = {
   id: "anonymous",
   name: "Guest", 
   username: "guest",
-  groups: ["public"] 
+  groups: ["public"]
 };
 
 interface UserContextType {

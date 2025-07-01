@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import PageList from "./PageList";
 import { WikiPage } from "./types";
 import { useUser } from "./userContext";
-import { canUserViewPage, canUserEditPage } from "./accessControl";
-import { parseHtmlWithRestrictedBlocks } from "./app/pageviewer";
+import { canUserViewPage, canUserEditPage, isUserAuthenticated } from "./accessControl";
+import { parseWikiContentWithRestrictedBlocks } from "./lib/restricted-content-parser";
 import { useRouter } from "next/navigation";
 import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
@@ -23,7 +23,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    authenticatedFetch("/api/pages", user)
+    authenticatedFetch("/api/pages")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch pages");
         return res.json();
@@ -76,8 +76,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  {user.group !== "public" &&
-                    canUserEditPage(user, selectedPage) && (
+                  {isUserAuthenticated(user) && canUserEditPage(user, selectedPage) && (
                       <>
                         <button
                           onClick={() => setShowHistory(!showHistory)}
@@ -108,8 +107,8 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
               
               <div className="flex-1 overflow-auto min-h-0 min-w-0">
                 {selectedPage.content ? (
-                  parseHtmlWithRestrictedBlocks(selectedPage.content, {
-                    groups: user.groups || [user.group],
+                  parseWikiContentWithRestrictedBlocks(selectedPage.content, {
+                    groups: user.groups,
                   })
                 ) : (
                   <div>No content</div>

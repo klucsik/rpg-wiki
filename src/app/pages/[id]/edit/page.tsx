@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import PageEditor from "../../../../PageEditor";
 import { WikiPage } from "../../../../types";
 import { useUser } from "../../../../userContext";
-import { canUserEditPage } from "../../../../accessControl";
+import { canUserEditPage, isUserAuthenticated } from "../../../../accessControl";
 
 export default function EditPage() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function EditPage() {
 
   // Redirect unauthenticated users to login
   useEffect(() => {
-    if (user.group === "public") {
+    if (!isUserAuthenticated(user)) {
       router.push("/login");
       return;
     }
@@ -26,7 +26,7 @@ export default function EditPage() {
 
   // Fetch page data only for authenticated users
   useEffect(() => {
-    if (user.group === "public") return; // Will redirect above
+    if (!isUserAuthenticated(user)) return; // Will redirect above
     
     setLoading(true);
     setError(null);
@@ -41,7 +41,7 @@ export default function EditPage() {
   }, [id, user]);
 
   // Show loading state while redirecting unauthenticated users
-  if (user.group === "public") {
+  if (!isUserAuthenticated(user)) {
     return <div className="text-indigo-400 p-8">Redirecting to login...</div>;
   }
 

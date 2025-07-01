@@ -33,7 +33,7 @@ export default function VersionHistory({
     try {
       setLoading(true);
       setError(null);
-      const response = await authenticatedFetch(`/api/pages/${pageId}/versions`, user);
+      const response = await authenticatedFetch(`/api/pages/${pageId}/versions`);
       
       if (!response.ok) {
         if (response.status === 403) {
@@ -57,7 +57,7 @@ export default function VersionHistory({
 
   const handleViewVersion = async (version: PageVersion) => {
     try {
-      const response = await authenticatedFetch(`/api/pages/${pageId}/versions/${version.version}`, user);
+      const response = await authenticatedFetch(`/api/pages/${pageId}/versions/${version.version}`);
       if (response.ok) {
         const fullVersion = await response.json();
         setViewingVersion(fullVersion);
