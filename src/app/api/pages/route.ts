@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../db';
-import { authenticateRequest, requireAuthentication } from '../../../auth';
+import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
 import { canUserViewPage } from '../../../accessControl';
 
 // GET all pages - filtered by user permissions
 export async function GET(req: NextRequest) {
-  const auth = authenticateRequest(req);
+  const auth = await getAuthFromRequest(req);
   
   const pages = await prisma.page.findMany({ orderBy: { id: 'asc' } });
   
@@ -37,9 +37,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(pagesWithDates);
 }
 
-// POST create new page - requires authentication
+// POST create new page or update existing - requires authentication
 export async function POST(req: NextRequest) {
-  const auth = authenticateRequest(req);
+  const auth = await getAuthFromRequest(req);
   const authError = requireAuthentication(auth);
   if (authError) {
     return NextResponse.json({ error: authError.error }, { status: authError.status });
@@ -47,40 +47,116 @@ export async function POST(req: NextRequest) {
 
   const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
   
-  // Create page and first version in a transaction
-  const result = await prisma.$transaction(async (tx) => {
-    const created = await tx.page.create({
-      data: {
-        title,
-        content,
-        edit_groups: edit_groups || ['admin', 'editor'],
-        view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
-        path,
-      },
+  try {
+    // First try to create a new page
+    const result = await prisma.$transaction(async (tx) => {
+      const created = await tx.page.create({
+        data: {
+          title,
+          content,
+          edit_groups: edit_groups || ['admin', 'editor'],
+          view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+          path,
+        },
+      });
+
+      // Create the first version
+      await tx.pageVersion.create({
+        data: {
+          page_id: created.id,
+          version: 1,
+          title,
+          content,
+          path,
+          edit_groups: edit_groups || ['admin', 'editor'],
+          view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+          edited_by: auth.username,
+          change_summary: change_summary || 'Initial version',
+        },
+      });
+
+      return created;
     });
 
-    // Create the first version
-    await tx.pageVersion.create({
-      data: {
-        page_id: created.id,
-        version: 1,
-        title,
-        content,
-        path,
-        edit_groups: edit_groups || ['admin', 'editor'],
-        view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
-        edited_by: auth.username,
-        change_summary: change_summary || 'Initial version',
-      },
-    });
+    // Convert date fields to string for API response
+    const pageWithDates = {
+      ...result,
+      created_at: result.created_at.toISOString(),
+      updated_at: result.updated_at.toISOString(),
+    };
 
-    return created;
-  });
+    return NextResponse.json(pageWithDates, { status: 201 });
+    
+  } catch (error: any) {
+    // If unique constraint violation on path, try to update existing page instead
+    if (error.code === 'P2002' && error.meta?.target?.includes('path')) {
+      try {
+        // Find the existing page
+        const existingPage = await prisma.page.findUnique({
+          where: { path },
+        });
 
-  // Convert date fields to string for API response
-  return NextResponse.json({
-    ...result,
-    created_at: result.created_at.toISOString(),
-    updated_at: result.updated_at.toISOString(),
-  });
+        if (!existingPage) {
+          return NextResponse.json({ error: 'Page conflict but cannot find existing page' }, { status: 409 });
+        }
+
+        // Update the existing page
+        const result = await prisma.$transaction(async (tx) => {
+          // Update the page
+          const updated = await tx.page.update({
+            where: { id: existingPage.id },
+            data: {
+              title,
+              content,
+              edit_groups: edit_groups || ['admin', 'editor'],
+              view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+              updated_at: new Date(),
+            },
+          });
+
+          // Get the latest version number
+          const latestVersion = await tx.pageVersion.findFirst({
+            where: { page_id: existingPage.id },
+            orderBy: { version: 'desc' },
+          });
+
+          const nextVersion = (latestVersion?.version || 0) + 1;
+
+          // Create a new version
+          await tx.pageVersion.create({
+            data: {
+              page_id: existingPage.id,
+              version: nextVersion,
+              title,
+              content,
+              path,
+              edit_groups: edit_groups || ['admin', 'editor'],
+              view_groups: view_groups || ['admin', 'editor', 'viewer', 'public'],
+              edited_by: auth.username,
+              change_summary: change_summary || `Update via import (version ${nextVersion})`,
+            },
+          });
+
+          return updated;
+        });
+
+        // Convert date fields to string for API response
+        const pageWithDates = {
+          ...result,
+          created_at: result.created_at.toISOString(),
+          updated_at: result.updated_at.toISOString(),
+        };
+
+        return NextResponse.json(pageWithDates, { status: 200 });
+        
+      } catch (updateError) {
+        console.error('Error updating existing page:', updateError);
+        return NextResponse.json({ error: 'Failed to update existing page' }, { status: 500 });
+      }
+    }
+    
+    // Re-throw other errors
+    console.error('Error creating page:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

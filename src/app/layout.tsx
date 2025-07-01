@@ -6,6 +6,7 @@ import React from "react";
 import { UserProvider } from "../userContext";
 import { GroupsProvider } from "../groupsContext";
 import HeaderNav from "../HeaderNav";
+import { AuthProvider } from "../components/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,12 +28,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <GroupsProvider>
-          <UserProvider>
-            <HeaderNav />
-            <main className="w-full flex-1 min-h-0">{children}</main>
-          </UserProvider>
-        </GroupsProvider>
+        <AuthProvider>
+          <GroupsProvider>
+            <UserProvider>
+              <HeaderNav />
+              <main className="w-full flex-1 min-h-0">{children}</main>
+            </UserProvider>
+          </GroupsProvider>
+        </AuthProvider>
       </body>
     </html>
   );

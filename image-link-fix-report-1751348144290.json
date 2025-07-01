@@ -1,0 +1,599 @@
+{
+  "timestamp": "2025-07-01T05:35:44.290Z",
+  "dryRun": false,
+  "totalPages": 74,
+  "pagesUpdated": 18,
+  "imageMappings": [
+    {
+      "key": "53e33f2bd19ec83a67459a32a71b63ab.jpg",
+      "value": {
+        "originalPath": "53e33f2bd19ec83a67459a32a71b63ab.jpg",
+        "newId": 1,
+        "newUrl": "/api/images/1"
+      }
+    },
+    {
+      "key": "61lhdalo9wl.jpg",
+      "value": {
+        "originalPath": "61lhdalo9wl.jpg",
+        "newId": 2,
+        "newUrl": "/api/images/2"
+      }
+    },
+    {
+      "key": "bearded-vulture.jpg",
+      "value": {
+        "originalPath": "bearded-vulture.jpg",
+        "newId": 3,
+        "newUrl": "/api/images/3"
+      }
+    },
+    {
+      "key": "klucsik_simple_crest_of_weeping_e0ea7f83-d34e-4574-a8fd-de80a4a13e52.png",
+      "value": {
+        "originalPath": "klucsik_simple_crest_of_weeping_e0ea7f83-d34e-4574-a8fd-de80a4a13e52.png",
+        "newId": 4,
+        "newUrl": "/api/images/4"
+      }
+    },
+    {
+      "key": "drakonír_szigetei.jpg",
+      "value": {
+        "originalPath": "drakonír_szigetei.jpg",
+        "newId": 5,
+        "newUrl": "/api/images/5"
+      }
+    },
+    {
+      "key": "drakonír_szigetei_political.jpg",
+      "value": {
+        "originalPath": "drakonír_szigetei_political.jpg",
+        "newId": 6,
+        "newUrl": "/api/images/6"
+      }
+    },
+    {
+      "key": "acélverő.jpg",
+      "value": {
+        "originalPath": "acélverő.jpg",
+        "newId": 7,
+        "newUrl": "/api/images/7"
+      }
+    },
+    {
+      "key": "aranyjogar.jpg",
+      "value": {
+        "originalPath": "aranyjogar.jpg",
+        "newId": 8,
+        "newUrl": "/api/images/8"
+      }
+    },
+    {
+      "key": "aranyszakáll.jpg",
+      "value": {
+        "originalPath": "aranyszakáll.jpg",
+        "newId": 9,
+        "newUrl": "/api/images/9"
+      }
+    },
+    {
+      "key": "ezüstszemű.jpg",
+      "value": {
+        "originalPath": "ezüstszemű.jpg",
+        "newId": 10,
+        "newUrl": "/api/images/10"
+      }
+    },
+    {
+      "key": "gyémántököl.jpg",
+      "value": {
+        "originalPath": "gyémántököl.jpg",
+        "newId": 11,
+        "newUrl": "/api/images/11"
+      }
+    },
+    {
+      "key": "hordóderekú.jpg",
+      "value": {
+        "originalPath": "hordóderekú.jpg",
+        "newId": 12,
+        "newUrl": "/api/images/12"
+      }
+    },
+    {
+      "key": "hullámtörő.jpg",
+      "value": {
+        "originalPath": "hullámtörő.jpg",
+        "newId": 13,
+        "newUrl": "/api/images/13"
+      }
+    },
+    {
+      "key": "istenek-szent-kövei.jpg",
+      "value": {
+        "originalPath": "istenek-szent-kövei.jpg",
+        "newId": 14,
+        "newUrl": "/api/images/14"
+      }
+    },
+    {
+      "key": "kirstálykönny.jpg",
+      "value": {
+        "originalPath": "kirstálykönny.jpg",
+        "newId": 15,
+        "newUrl": "/api/images/15"
+      }
+    },
+    {
+      "key": "kőzúzó.jpg",
+      "value": {
+        "originalPath": "kőzúzó.jpg",
+        "newId": 16,
+        "newUrl": "/api/images/16"
+      }
+    },
+    {
+      "key": "mennykő.jpg",
+      "value": {
+        "originalPath": "mennykő.jpg",
+        "newId": 17,
+        "newUrl": "/api/images/17"
+      }
+    },
+    {
+      "key": "rúnavéső.jpg",
+      "value": {
+        "originalPath": "rúnavéső.jpg",
+        "newId": 18,
+        "newUrl": "/api/images/18"
+      }
+    },
+    {
+      "key": "selyemszakáll.jpg",
+      "value": {
+        "originalPath": "selyemszakáll.jpg",
+        "newId": 19,
+        "newUrl": "/api/images/19"
+      }
+    },
+    {
+      "key": "sziklafejű.jpg",
+      "value": {
+        "originalPath": "sziklafejű.jpg",
+        "newId": 20,
+        "newUrl": "/api/images/20"
+      }
+    },
+    {
+      "key": "szélespajzs.jpg",
+      "value": {
+        "originalPath": "szélespajzs.jpg",
+        "newId": 21,
+        "newUrl": "/api/images/21"
+      }
+    },
+    {
+      "key": "tölgyfaragó.jpg",
+      "value": {
+        "originalPath": "tölgyfaragó.jpg",
+        "newId": 22,
+        "newUrl": "/api/images/22"
+      }
+    },
+    {
+      "key": "törp-istenek.jpg",
+      "value": {
+        "originalPath": "törp-istenek.jpg",
+        "newId": 23,
+        "newUrl": "/api/images/23"
+      }
+    },
+    {
+      "key": "törp_feleségek.jpg",
+      "value": {
+        "originalPath": "törp_feleségek.jpg",
+        "newId": 24,
+        "newUrl": "/api/images/24"
+      }
+    },
+    {
+      "key": "tüzeskohó.jpg",
+      "value": {
+        "originalPath": "tüzeskohó.jpg",
+        "newId": 25,
+        "newUrl": "/api/images/25"
+      }
+    },
+    {
+      "key": "vándorklánok-vándorlása.png",
+      "value": {
+        "originalPath": "vándorklánok-vándorlása.png",
+        "newId": 26,
+        "newUrl": "/api/images/26"
+      }
+    },
+    {
+      "key": "árnyéktárna.jpg",
+      "value": {
+        "originalPath": "árnyéktárna.jpg",
+        "newId": 27,
+        "newUrl": "/api/images/27"
+      }
+    },
+    {
+      "key": "bloodfrog_shaman_2.png",
+      "value": {
+        "originalPath": "bloodfrog_shaman_2.png",
+        "newId": 28,
+        "newUrl": "/api/images/28"
+      }
+    },
+    {
+      "key": "klucsik_small_orb_in_a_hand_as_water_elemental_core._violent_st_29c3c28d-9748-4f7a-9703-e8f3256459ea.png",
+      "value": {
+        "originalPath": "klucsik_small_orb_in_a_hand_as_water_elemental_core._violent_st_29c3c28d-9748-4f7a-9703-e8f3256459ea.png",
+        "newId": 29,
+        "newUrl": "/api/images/29"
+      }
+    },
+    {
+      "key": "klucsik_small_orb_in_a_hand_as_water_elemental_core._violent_st_dd3a51e6-e290-431d-88f5-c7ae88ff5a37.png",
+      "value": {
+        "originalPath": "klucsik_small_orb_in_a_hand_as_water_elemental_core._violent_st_dd3a51e6-e290-431d-88f5-c7ae88ff5a37.png",
+        "newId": 30,
+        "newUrl": "/api/images/30"
+      }
+    },
+    {
+      "key": "letöltés.jpg",
+      "value": {
+        "originalPath": "letöltés.jpg",
+        "newId": 31,
+        "newUrl": "/api/images/31"
+      }
+    },
+    {
+      "key": "arkánum_-politikai.jpg",
+      "value": {
+        "originalPath": "arkánum_-politikai.jpg",
+        "newId": 32,
+        "newUrl": "/api/images/32"
+      }
+    },
+    {
+      "key": "arkánum_grid.jpg",
+      "value": {
+        "originalPath": "arkánum_grid.jpg",
+        "newId": 33,
+        "newUrl": "/api/images/33"
+      }
+    },
+    {
+      "key": "arkánum_gridless.jpg",
+      "value": {
+        "originalPath": "arkánum_gridless.jpg",
+        "newId": 34,
+        "newUrl": "/api/images/34"
+      }
+    },
+    {
+      "key": "swamp_bridges_night_gridless.jpg",
+      "value": {
+        "originalPath": "swamp_bridges_night_gridless.jpg",
+        "newId": 35,
+        "newUrl": "/api/images/35"
+      }
+    },
+    {
+      "key": "swamp_shrine_night_gridless.jpg",
+      "value": {
+        "originalPath": "swamp_shrine_night_gridless.jpg",
+        "newId": 36,
+        "newUrl": "/api/images/36"
+      }
+    },
+    {
+      "key": "drakonír_szigetei_-_drakonír_szíve.jpg",
+      "value": {
+        "originalPath": "drakonír_szigetei_-_drakonír_szíve.jpg",
+        "newId": 37,
+        "newUrl": "/api/images/37"
+      }
+    },
+    {
+      "key": "rémerdő_középső_szakasz_m.u._590_old.jpg",
+      "value": {
+        "originalPath": "rémerdő_középső_szakasz_m.u._590_old.jpg",
+        "newId": 38,
+        "newUrl": "/api/images/38"
+      }
+    },
+    {
+      "key": "rémerdő_pikkelyvölgy_m.u._590.jpg",
+      "value": {
+        "originalPath": "rémerdő_pikkelyvölgy_m.u._590.jpg",
+        "newId": 39,
+        "newUrl": "/api/images/39"
+      }
+    },
+    {
+      "key": "szokot_-grid.jpg",
+      "value": {
+        "originalPath": "szokot_-grid.jpg",
+        "newId": 40,
+        "newUrl": "/api/images/40"
+      }
+    },
+    {
+      "key": "vérváros.jpg",
+      "value": {
+        "originalPath": "vérváros.jpg",
+        "newId": 41,
+        "newUrl": "/api/images/41"
+      }
+    },
+    {
+      "key": "miha-brumec-20210910-characters01-gripplis-ranger05a.jpg",
+      "value": {
+        "originalPath": "miha-brumec-20210910-characters01-gripplis-ranger05a.jpg",
+        "newId": 42,
+        "newUrl": "/api/images/42"
+      }
+    },
+    {
+      "key": "pzo90201-alacreon.webp",
+      "value": {
+        "originalPath": "pzo90201-alacreon.webp",
+        "newId": 43,
+        "newUrl": "/api/images/43"
+      }
+    },
+    {
+      "key": "spirál_ág_szobra.jpeg",
+      "value": {
+        "originalPath": "spirál_ág_szobra.jpeg",
+        "newId": 44,
+        "newUrl": "/api/images/44"
+      }
+    },
+    {
+      "key": "klucsik_dwarven_ship_as_city_f1519ae8-9913-4877-9ce5-4b582847c0a6.png",
+      "value": {
+        "originalPath": "klucsik_dwarven_ship_as_city_f1519ae8-9913-4877-9ce5-4b582847c0a6.png",
+        "newId": 45,
+        "newUrl": "/api/images/45"
+      }
+    },
+    {
+      "key": "klucsik_dwarven_ship_as_city_metallic_6ec7c6bc-fe6d-47fa-8d4f-66ab84dc5c75.png",
+      "value": {
+        "originalPath": "klucsik_dwarven_ship_as_city_metallic_6ec7c6bc-fe6d-47fa-8d4f-66ab84dc5c75.png",
+        "newId": 46,
+        "newUrl": "/api/images/46"
+      }
+    },
+    {
+      "key": "klucsik_dwarven_ship_as_city_metallic_d1672123-e057-4533-b812-f85b16006548.png",
+      "value": {
+        "originalPath": "klucsik_dwarven_ship_as_city_metallic_d1672123-e057-4533-b812-f85b16006548.png",
+        "newId": 47,
+        "newUrl": "/api/images/47"
+      }
+    },
+    {
+      "key": "klucsik_steampunk_city_as_ships_ca4642a4-27a0-4049-867b-35a0f49d37dc.png",
+      "value": {
+        "originalPath": "klucsik_steampunk_city_as_ships_ca4642a4-27a0-4049-867b-35a0f49d37dc.png",
+        "newId": 48,
+        "newUrl": "/api/images/48"
+      }
+    },
+    {
+      "key": "cptn.jpg",
+      "value": {
+        "originalPath": "cptn.jpg",
+        "newId": 49,
+        "newUrl": "/api/images/49"
+      }
+    },
+    {
+      "key": "quartermaser.jpg",
+      "value": {
+        "originalPath": "quartermaser.jpg",
+        "newId": 50,
+        "newUrl": "/api/images/50"
+      }
+    },
+    {
+      "key": "xarxan__dragonborn_wizard_by_eavroniev_df5d789-fullview.jpg",
+      "value": {
+        "originalPath": "xarxan__dragonborn_wizard_by_eavroniev_df5d789-fullview.jpg",
+        "newId": 51,
+        "newUrl": "/api/images/51"
+      }
+    },
+    {
+      "key": "yluewdn.jpeg",
+      "value": {
+        "originalPath": "yluewdn.jpeg",
+        "newId": 52,
+        "newUrl": "/api/images/52"
+      }
+    }
+  ],
+  "changes": [
+    {
+      "pageId": 1,
+      "title": "Békanépek",
+      "changes": [
+        "/api/images/fajok/bloodfrog_shaman_2.png -> /api/images/28"
+      ]
+    },
+    {
+      "pageId": 8,
+      "title": "Drakonír Szíve",
+      "changes": [
+        "/api/images/maps/drakonír_szigetei_-_drakonír_szíve.jpg -> /api/images/37"
+      ]
+    },
+    {
+      "pageId": 14,
+      "title": "Rémerdő",
+      "changes": [
+        "/api/images/maps/rémerdő_pikkelyvölgy_m.u._590.jpg -> /api/images/39"
+      ]
+    },
+    {
+      "pageId": 16,
+      "title": "Szokot szigete",
+      "changes": [
+        "/api/images/maps/szokot_-grid.jpg -> /api/images/40"
+      ]
+    },
+    {
+      "pageId": 17,
+      "title": "Vérváros",
+      "changes": [
+        "/api/images/maps/vérváros.jpg -> /api/images/41"
+      ]
+    },
+    {
+      "pageId": 49,
+      "title": "Sirató",
+      "changes": [
+        "/api/images/crests/klucsik_simple_crest_of_weeping_e0ea7f83-d34e-4574-a8fd-de80a4a13e52.png -> /api/images/4"
+      ]
+    },
+    {
+      "pageId": 26,
+      "title": "Paikai, a békafutár",
+      "changes": [
+        "/api/images/remerdo-orzoi/miha-brumec-20210910-characters01-gripplis-ranger05a.jpg -> /api/images/42"
+      ]
+    },
+    {
+      "pageId": 30,
+      "title": "Alacreon - a nevető herceg",
+      "changes": [
+        "/api/images/remerdo-orzoi/pzo90201-alacreon.webp -> /api/images/43"
+      ]
+    },
+    {
+      "pageId": 31,
+      "title": "Rémerdő Őrzői",
+      "changes": [
+        "/api/images/maps/rémerdő_pikkelyvölgy_m.u._590.jpg -> /api/images/39"
+      ]
+    },
+    {
+      "pageId": 59,
+      "title": "TöRp Istenek",
+      "changes": [
+        "/api/images//dwarf/törp-istenek.jpg -> /api/images/23",
+        "/api/images//dwarf/törp_feleségek.jpg -> /api/images/24",
+        "/api/images//dwarf/istenek-szent-kövei.jpg -> /api/images/14",
+        "törp-istenek.jpg -> /api/images/23",
+        "törp_feleségek.jpg -> /api/images/24",
+        "istenek-szent-kövei.jpg -> /api/images/14"
+      ]
+    },
+    {
+      "pageId": 63,
+      "title": "A Szakállszülöttek tizenhét klánja",
+      "changes": [
+        "/api/images//dwarf/rúnavéső.jpg -> /api/images/18",
+        "/api/images//dwarf/aranyjogar.jpg -> /api/images/8",
+        "/api/images//dwarf/sziklafejű.jpg -> /api/images/20",
+        "/api/images//dwarf/ezüstszemű.jpg -> /api/images/10",
+        "/api/images//dwarf/kőzúzó.jpg -> /api/images/16",
+        "/api/images//dwarf/hullámtörő.jpg -> /api/images/13",
+        "/api/images//dwarf/tölgyfaragó.jpg -> /api/images/22",
+        "/api/images//dwarf/mennykő.jpg -> /api/images/17",
+        "/api/images//dwarf/kirstálykönny.jpg -> /api/images/15",
+        "/api/images//dwarf/árnyéktárna.jpg -> /api/images/27",
+        "/api/images//dwarf/aranyszakáll.jpg -> /api/images/9",
+        "/api/images//dwarf/szélespajzs.jpg -> /api/images/21",
+        "/api/images//dwarf/tüzeskohó.jpg -> /api/images/25",
+        "/api/images//dwarf/acélverő.jpg -> /api/images/7",
+        "/api/images//dwarf/selyemszakáll.jpg -> /api/images/19",
+        "/api/images//dwarf/hordóderekú.jpg -> /api/images/12",
+        "rúnavéső.jpg -> /api/images/18",
+        "aranyjogar.jpg -> /api/images/8",
+        "sziklafejű.jpg -> /api/images/20",
+        "ezüstszemű.jpg -> /api/images/10",
+        "kőzúzó.jpg -> /api/images/16",
+        "hullámtörő.jpg -> /api/images/13",
+        "tölgyfaragó.jpg -> /api/images/22",
+        "mennykő.jpg -> /api/images/17",
+        "kirstálykönny.jpg -> /api/images/15",
+        "árnyéktárna.jpg -> /api/images/27",
+        "aranyszakáll.jpg -> /api/images/9",
+        "szélespajzs.jpg -> /api/images/21",
+        "tüzeskohó.jpg -> /api/images/25",
+        "acélverő.jpg -> /api/images/7",
+        "selyemszakáll.jpg -> /api/images/19",
+        "hordóderekú.jpg -> /api/images/12"
+      ]
+    },
+    {
+      "pageId": 64,
+      "title": "A Vándorklánok története",
+      "changes": [
+        "/api/images/dwarf/vándorklánok-vándorlása.png -> /api/images/26"
+      ]
+    },
+    {
+      "pageId": 65,
+      "title": "Laeskronni Saskeselyű",
+      "changes": [
+        "/api/images/bearded-vulture.jpg -> /api/images/3",
+        "https://emilywilloughby.com/gallery-data/images/full/bearded-vulture.jpg -> /api/images/3"
+      ]
+    },
+    {
+      "pageId": 70,
+      "title": "Víz Elementál Mag",
+      "changes": [
+        "/api/images//klucsik_small_orb_in_a_hand_as_water_elemental_core._violent_st_29c3c28d-9748-4f7a-9703-e8f3256459ea.png -> /api/images/29",
+        "klucsik_small_orb_in_a_hand_as_water_elemental_core._violent_st_29c3c28d-9748-4f7a-9703-e8f3256459ea.png -> /api/images/29"
+      ]
+    },
+    {
+      "pageId": 76,
+      "title": "Sárkány Szigetek",
+      "changes": [
+        "/api/images/drakonír_szigetei.jpg -> /api/images/5",
+        "/api/images/drakonír_szigetei_political.jpg -> /api/images/6"
+      ]
+    },
+    {
+      "pageId": 77,
+      "title": "Alacreon - a nevető herceg",
+      "changes": [
+        "/api/images/remerdo-orzoi/pzo90201-alacreon.webp -> /api/images/43"
+      ]
+    },
+    {
+      "pageId": 13,
+      "title": "Arkánum",
+      "changes": [
+        "/api/images/maps/arkánum_grid.jpg -> /api/images/33",
+        "/api/images/maps/arkánum_-politikai.jpg -> /api/images/32"
+      ]
+    },
+    {
+      "pageId": 18,
+      "title": "TöRp VíZi VáRosok",
+      "changes": [
+        "/api/images//scenes/klucsik_dwarven_ship_as_city_metallic_d1672123-e057-4533-b812-f85b16006548.png -> /api/images/47",
+        "/api/images//scenes/klucsik_dwarven_ship_as_city_metallic_6ec7c6bc-fe6d-47fa-8d4f-66ab84dc5c75.png -> /api/images/46",
+        "/api/images//scenes/klucsik_steampunk_city_as_ships_ca4642a4-27a0-4049-867b-35a0f49d37dc.png -> /api/images/48",
+        "/api/images//scenes/klucsik_dwarven_ship_as_city_f1519ae8-9913-4877-9ce5-4b582847c0a6.png -> /api/images/45",
+        "klucsik_dwarven_ship_as_city_metallic_d1672123-e057-4533-b812-f85b16006548.png -> /api/images/47",
+        "klucsik_dwarven_ship_as_city_metallic_6ec7c6bc-fe6d-47fa-8d4f-66ab84dc5c75.png -> /api/images/46",
+        "klucsik_steampunk_city_as_ships_ca4642a4-27a0-4049-867b-35a0f49d37dc.png -> /api/images/48",
+        "klucsik_dwarven_ship_as_city_f1519ae8-9913-4877-9ce5-4b582847c0a6.png -> /api/images/45"
+      ]
+    }
+  ]
+}

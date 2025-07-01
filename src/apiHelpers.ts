@@ -2,22 +2,19 @@ import { User } from "./userContext";
 
 /**
  * Creates headers with authentication information for API requests
+ * NextAuth automatically handles session cookies, so we only need API key support
  */
 export function createAuthHeaders(user: User): HeadersInit {
-  if (user.group === "public") {
-    return { "Content-Type": "application/json" };
-  }
-
+  // For API operations, NextAuth session cookies are automatically included
+  // We only need to handle special cases like API keys
   return {
     "Content-Type": "application/json",
-    "x-user-group": user.group,
-    "x-user-groups": (user.groups || [user.group]).join(","),
-    "x-user-name": user.name || "Unknown User",
   };
 }
 
 /**
  * Makes an authenticated fetch request
+ * NextAuth automatically includes session cookies
  */
 export async function authenticatedFetch(url: string, user: User, options: RequestInit = {}) {
   const headers = {
@@ -28,5 +25,6 @@ export async function authenticatedFetch(url: string, user: User, options: Reque
   return fetch(url, {
     ...options,
     headers,
+    credentials: 'same-origin', // Include session cookies
   });
 }

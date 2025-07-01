@@ -473,7 +473,9 @@ class WikiJsImporter {
    */
   private async pageExists(path: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/pages`);
+      const response = await fetch(`${this.baseUrl}/api/pages`, {
+        headers: this.getAuthHeaders()
+      });
       if (!response.ok) return false;
       
       const pages = await response.json();

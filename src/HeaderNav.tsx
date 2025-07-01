@@ -19,7 +19,7 @@ export default function HeaderNav() {
         >
           Pages
         </Link>
-        {user?.group === "admin" && (
+        {user?.groups?.includes("admin") && (
           <>
             <Link
               href="/admin"

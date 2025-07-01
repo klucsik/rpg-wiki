@@ -1,37 +1,44 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "../../userContext";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const { setUser } = useUser();
+  const { data: session, status } = useSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Redirect if already logged in
+  if (status === "authenticated") {
+    router.replace("/pages");
+    return null;
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
+    
     try {
-      const res = await fetch("/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
       });
-      if (!res.ok) {
+
+      if (result?.error) {
         setError("Invalid username or password");
-        return;
+      } else if (result?.ok) {
+        router.replace("/pages");
       }
-      const user = await res.json();
-      setUser(user);
-      // Persist login for 1 day
-      window.localStorage.setItem("rpgwiki_user", JSON.stringify(user));
-      window.localStorage.setItem("rpgwiki_user_expiry", (Date.now() + 86400000).toString());
-      router.replace("/pages");
     } catch {
       setError("Login failed");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -46,6 +53,7 @@ export default function LoginPage() {
           onChange={e => setUsername(e.target.value)}
           className="px-4 py-2 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-lg"
           required
+          disabled={isLoading}
         />
         <input
           type="password"
@@ -54,13 +62,15 @@ export default function LoginPage() {
           onChange={e => setPassword(e.target.value)}
           className="px-4 py-2 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-lg"
           required
+          disabled={isLoading}
         />
         {error && <div className="text-red-400 text-center">{error}</div>}
         <button
           type="submit"
-          className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition text-lg border border-indigo-700"
+          className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition text-lg border border-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading}
         >
-          Login
+          {isLoading ? "Signing in..." : "Login"}
         </button>
         <div className="text-center mt-2">
           <span className="text-indigo-300">Don&apos;t have an account? </span>

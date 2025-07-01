@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../db';
-import { authenticateRequest, requireEditPermissions } from '../../../../auth';
+import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
 
 // GET latest version of a page by page_id
 export async function GET(
@@ -36,7 +36,7 @@ export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = authenticateRequest(req);
+  const auth = await getAuthFromRequest(req);
   const { id } = await context.params;
   
   // Check if user has edit permissions for this page
@@ -91,7 +91,7 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = authenticateRequest(req);
+  const auth = await getAuthFromRequest(req);
   const { id } = await context.params;
   
   // Check if user has edit permissions for this page

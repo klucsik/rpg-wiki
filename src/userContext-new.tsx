@@ -7,6 +7,7 @@ export type User = {
   id: string;
   name: string;
   username: string;
+  group: string;
   groups: string[];
 };
 
@@ -14,6 +15,7 @@ const PUBLIC_USER: User = {
   id: "anonymous",
   name: "Guest", 
   username: "guest",
+  group: "public", 
   groups: ["public"] 
 };
 
@@ -31,6 +33,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     id: session.user.id,
     name: session.user.name || session.user.username,
     username: session.user.username,
+    group: session.user.primaryGroup,
     groups: session.user.groups,
   } : PUBLIC_USER;
 

@@ -33,11 +33,27 @@ class ImageImporter {
   private sourcePath: string;
   private baseUrl: string;
   private stats: ImportStats = { total: 0, imported: 0, skipped: 0, errors: 0 };
-  private userId: number = 1; // Default user ID for imported images
+  private apiKey: string;
 
   constructor(sourcePath: string, baseUrl = 'http://localhost:3000') {
     this.sourcePath = sourcePath;
     this.baseUrl = baseUrl;
+    
+    // Get API key from environment
+    this.apiKey = process.env.IMPORT_API_KEY || '';
+    if (!this.apiKey) {
+      throw new Error('IMPORT_API_KEY environment variable is required');
+    }
+  }
+
+  /**
+   * Get authentication headers for API requests
+   */
+  private getAuthHeaders(): Record<string, string> {
+    return {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json'
+    };
   }
 
   /**
@@ -71,10 +87,12 @@ class ImageImporter {
       const formData = new FormData();
       const blob = new Blob([data], { type: mimetype });
       formData.append('file', blob, filename);
-      formData.append('userId', this.userId.toString());
       
       const response = await fetch(`${this.baseUrl}/api/upload`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        },
         body: formData
       });
       
@@ -128,48 +146,11 @@ class ImageImporter {
   }
 
   /**
-   * Ensure default user exists for image ownership
-   */
-  private async ensureUserExists(): Promise<void> {
-    try {
-      // Check if user exists via API
-      const response = await fetch(`${this.baseUrl}/api/users`);
-      const users = await response.json();
-      
-      if (users.length === 0) {
-        console.log('Creating default user for image imports...');
-        const userResponse = await fetch(`${this.baseUrl}/api/users`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: 'importer',
-            password: 'temp123',
-            groups: ['dm']
-          })
-        });
-        
-        if (userResponse.ok) {
-          const user = await userResponse.json();
-          this.userId = user.id;
-          console.log(`Created user: ${user.name} (ID: ${user.id})`);
-        }
-      } else {
-        this.userId = users[0].id;
-        console.log(`Using existing user: ${users[0].name} (ID: ${users[0].id})`);
-      }
-    } catch (error) {
-      console.error('Error ensuring user exists:', error);
-    }
-  }
-
-  /**
    * Import all images from the source directory
    */
   public async import(): Promise<ImportStats> {
     console.log(`Starting image import from: ${this.sourcePath}`);
-    
-    // Ensure user exists for image ownership
-    await this.ensureUserExists();
+    console.log(`Using API key authentication`);
     
     const files = this.findImageFiles(this.sourcePath);
     this.stats.total = files.length;
@@ -207,11 +188,19 @@ async function main() {
     console.error('Usage: tsx import-images.ts <source-path> [base-url]');
     process.exit(1);
   }
+
+  // Check for API key
+  if (!process.env.IMPORT_API_KEY) {
+    console.error('Error: IMPORT_API_KEY environment variable is required');
+    console.error('Set it with: export IMPORT_API_KEY="your-api-key"');
+    process.exit(1);
+  }
   
   console.log('Wiki.js Image Importer');
   console.log('======================');
   console.log(`Source: ${sourcePath}`);
   console.log(`Target: ${baseUrl}`);
+  console.log(`API Key: ${process.env.IMPORT_API_KEY.substring(0, 8)}...`);
   console.log('');
   
   const importer = new ImageImporter(sourcePath, baseUrl);
