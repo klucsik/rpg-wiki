@@ -33,7 +33,11 @@ export async function GET(
   const url = new URL(req.url);
   const includeDrafts = url.searchParams.get('drafts') === 'true' && auth.isAuthenticated;
   
-  let whereClause: any = { page_id: parseInt(id) };
+  let whereClause: {
+    page_id: number;
+    OR?: Array<{ is_draft: boolean; edited_by?: string }>;
+    is_draft?: boolean;
+  } = { page_id: parseInt(id) };
   
   if (includeDrafts) {
     // Include both published versions and user's own drafts

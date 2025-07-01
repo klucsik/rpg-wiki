@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useUser } from './userContext';
 import { authenticatedFetch } from './apiHelpers';
 
 interface PageVersion {
@@ -24,7 +23,6 @@ export default function VersionHistory({
   onViewVersion,
   onClose 
 }: VersionHistoryProps) {
-  const { user } = useUser();
   const [versions, setVersions] = useState<PageVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

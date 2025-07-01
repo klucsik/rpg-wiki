@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useUser } from "../../userContext";
+import Link from "next/link";
 
 export default function DebugPage() {
   const { data: session, status } = useSession();
@@ -48,12 +49,12 @@ export default function DebugPage() {
       </div>
 
       <div className="mt-6">
-        <a 
+        <Link 
           href="/api/auth/signin" 
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded transition"
         >
           Go to Sign In
-        </a>
+        </Link>
       </div>
     </div>
   );

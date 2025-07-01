@@ -9,7 +9,7 @@ interface AutosaveOptions {
   viewGroups: string[];
   path: string;
   enabled: boolean;
-  onSaveSuccess?: (data: any) => void;
+  onSaveSuccess?: (data: { id: number; version: number; saved_at: string; is_draft: boolean }) => void;
   onSaveError?: (error: string) => void;
 }
 

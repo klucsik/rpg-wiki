@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '../../db';
 
 export interface AuthenticatedUser {
-  id: number;
+  id: string;
   name: string;
   group: string;
   groups: string[];
@@ -24,10 +24,15 @@ export async function authenticate(req: NextRequest): Promise<AuthenticatedUser 
 
   // This is a basic check - in production, verify JWT or session token
   try {
-    const userId = parseInt(userIdHeader);
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { groups: true },
+      where: { id: userIdHeader },
+      include: { 
+        userGroups: {
+          include: {
+            group: true
+          }
+        }
+      },
     });
 
     if (!user) {
@@ -36,8 +41,9 @@ export async function authenticate(req: NextRequest): Promise<AuthenticatedUser 
 
     return {
       id: user.id,
-      name: user.name,
-      groups: user.groups?.map((g: any) => g.name) || [],
+      name: user.name || '',
+      group: user.userGroups?.[0]?.group.name || 'public',
+      groups: user.userGroups?.map((ug: { group: { name: string } }) => ug.group.name) || [],
     };
   } catch {
     return null;

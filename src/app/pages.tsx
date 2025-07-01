@@ -4,7 +4,7 @@ import PageList from "../PageList";
 import { WikiPage } from "../types";
 import { useUser } from "../userContext";
 import { authenticatedFetch } from "../apiHelpers";
-import { isUserAuthenticated, canUserEditPage } from "../accessControl";
+import { canUserEditPage } from "../accessControl";
 
 export default function Pages() {
 	const { user } = useUser();
