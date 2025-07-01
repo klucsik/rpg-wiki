@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useUser } from "./userContext";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { isUserAuthenticated } from "./accessControl";
 
 export default function UserMenu() {
   const { user } = useUser();
@@ -10,7 +11,7 @@ export default function UserMenu() {
 
   return (
     <div className="relative">
-      {user.groups?.length > 0 && !user.groups.includes("public") ? (
+      {isUserAuthenticated(user) ? (
         <button
           className="bg-gray-800 text-indigo-100 px-3 py-1 rounded flex items-center gap-2 hover:bg-gray-700 border border-gray-700"
           onClick={() => setOpen((o) => !o)}
@@ -30,7 +31,7 @@ export default function UserMenu() {
           </button>
         </Link>
       )}
-      {open && user.groups?.length > 0 && !user.groups.includes("public") && (
+      {open && isUserAuthenticated(user) && (
         <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded shadow-lg z-50">
           <button
             className="w-full text-left px-4 py-2 hover:bg-gray-800 text-red-300"

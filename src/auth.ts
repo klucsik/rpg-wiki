@@ -27,32 +27,17 @@ export function authenticateRequest(req: NextRequest): AuthResult {
     // API key authentication - grant admin privileges
     return {
       isAuthenticated: true,
-      userGroups: ['admin', 'editor', 'viewer'],
+      userGroups: ['admin'],
       username: 'API Import User',
       isApiKey: true
     };
   }
   
-  // Fall back to existing session-based authentication
-  const userGroup = req.headers.get('x-user-group');
-  const userGroupsHeader = req.headers.get('x-user-groups');
-  const username = req.headers.get('x-user-name') || 'Unknown User';
-  
-  if (!userGroup || userGroup === 'public') {
-    return {
-      isAuthenticated: false,
-      userGroups: ['public'],
-      username: 'Anonymous',
-      isApiKey: false
-    };
-  }
-  
-  const userGroups = userGroupsHeader?.split(',') || [userGroup];
-  
+  // For now, default to unauthenticated until proper next-auth integration
   return {
-    isAuthenticated: true,
-    userGroups,
-    username,
+    isAuthenticated: false,
+    userGroups: ['public'],
+    username: 'Anonymous',
     isApiKey: false
   };
 }
