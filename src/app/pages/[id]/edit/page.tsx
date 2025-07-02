@@ -10,22 +10,25 @@ import { canUserEditPage, isUserAuthenticated } from "../../../../accessControl"
 export default function EditPage() {
   const router = useRouter();
   const params = useParams();
-  const { user } = useUser();
+  const { user, isLoading: userLoading } = useUser();
   const id = params?.id as string;
   const [page, setPage] = useState<WikiPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect unauthenticated users to login
+  // Redirect unauthenticated users to login, but only after user context has loaded
   useEffect(() => {
+    if (userLoading) return; // Wait for user context to load
+    
     if (!isUserAuthenticated(user)) {
       router.push("/login");
       return;
     }
-  }, [user, router]);
+  }, [user, userLoading, router]);
 
   // Fetch page data only for authenticated users
   useEffect(() => {
+    if (userLoading) return; // Wait for user context to load
     if (!isUserAuthenticated(user)) return; // Will redirect above
     
     setLoading(true);
@@ -38,11 +41,11 @@ export default function EditPage() {
       .then((data) => setPage(data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [id, user]);
+  }, [id, user, userLoading]);
 
-  // Show loading state while redirecting unauthenticated users
-  if (!isUserAuthenticated(user)) {
-    return <div className="text-indigo-400 p-8">Redirecting to login...</div>;
+  // Show loading state while user context is loading or redirecting unauthenticated users
+  if (userLoading || !isUserAuthenticated(user)) {
+    return <div className="text-indigo-400 p-8">Loading...</div>;
   }
 
   if (loading) return <div className="text-indigo-400 p-8">Loading...</div>;
