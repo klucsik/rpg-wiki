@@ -14,12 +14,21 @@ export async function GET(
   if (!image) {
     return new NextResponse('Image not found', { status: 404 });
   }
-  return new NextResponse(image.data, {
+  
+  // Convert Prisma Bytes to ArrayBuffer
+  const buffer = Buffer.from(image.data);
+  const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  
+  // Properly encode filename for HTTP header (RFC 5987)
+  const encodedFilename = encodeURIComponent(image.filename);
+  
+  return new Response(arrayBuffer, {
     status: 200,
     headers: {
       'Content-Type': image.mimetype,
-      'Content-Disposition': `inline; filename="${image.filename}"`,
+      'Content-Disposition': `inline; filename*=UTF-8''${encodedFilename}`,
       'Cache-Control': 'public, max-age=31536000',
+      'Content-Length': buffer.length.toString(),
     },
   });
 }
