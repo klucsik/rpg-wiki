@@ -99,6 +99,13 @@ MIT
 
 ## Docker Build & Push
 
+### Build Optimization Notes
+The Docker image has been optimized for minimal size:
+- Uses Alpine Linux base images (~200-400MB vs ~1.2GB+ with Ubuntu)
+- Multi-stage build with standalone Next.js output
+- Production-only dependencies in final image
+- Non-root user for security
+
 ### 1. Build the Docker image
 ```bash
 docker build -t registry.klucsik.hu/rpg-wiki:latest .

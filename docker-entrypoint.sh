@@ -17,4 +17,5 @@ else
 fi
 
 echo "Starting Next.js server..."
-exec npm start
+# Use standalone server for smaller footprint
+exec node server.js
