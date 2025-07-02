@@ -9,6 +9,8 @@
  * - Hierarchical path generation
  * - Tag-based viewer group mapping
  * - Option to skip or update existing pages
+ * - Option to exclude pages with specific tags
+ * - Dry run mode to preview changes
  * 
  * Usage:
  *   npx tsx scripts/import-wikijs.ts <source-path> [base-url] [options]
@@ -16,6 +18,8 @@
  * Options:
  *   --skip-existing     Skip pages that already exist (default)
  *   --update-existing   Update existing pages instead of skipping
+ *   --exclude-tags=tag1,tag2  Exclude pages with specific tags (e.g., dm_only)
+ *   --dry-run           Show what would be done without making changes
  */
 
 import { readFileSync, readdirSync, statSync } from 'fs';
@@ -45,6 +49,8 @@ interface ImportStats {
 interface ImportOptions {
   skipExisting: boolean;
   updateExisting: boolean;
+  excludeTags: string[];
+  dryRun: boolean;
 }
 
 class WikiJsImporter {
@@ -59,6 +65,8 @@ class WikiJsImporter {
     this.options = {
       skipExisting: options.skipExisting ?? true,
       updateExisting: options.updateExisting ?? false,
+      excludeTags: options.excludeTags ?? [],
+      dryRun: options.dryRun ?? false,
       ...options
     };
   }
@@ -446,6 +454,11 @@ class WikiJsImporter {
    * Ensure required groups exist
    */
   private async ensureGroupsExist(): Promise<void> {
+    if (this.options.dryRun) {
+      console.log('[DRY RUN] Would ensure groups exist: dm, public');
+      return;
+    }
+    
     try {
       const response = await fetch(`${this.baseUrl}/api/groups`);
       const existingGroups = await response.json();
@@ -472,6 +485,11 @@ class WikiJsImporter {
    * Check if a page already exists at the given path
    */
   private async pageExists(path: string): Promise<boolean> {
+    if (this.options.dryRun) {
+      // In dry run mode, assume page doesn't exist for demonstration
+      return false;
+    }
+    
     try {
       const response = await fetch(`${this.baseUrl}/api/pages`, {
         headers: this.getAuthHeaders()
@@ -490,6 +508,11 @@ class WikiJsImporter {
    * Update an existing page
    */
   private async updatePage(page: WikiJsPage, wikiPath: string): Promise<boolean> {
+    if (this.options.dryRun) {
+      console.log(`[DRY RUN] Would update: ${page.title} -> ${wikiPath}`);
+      return true;
+    }
+    
     try {
       const viewerGroups = this.mapTagsToViewerGroups(page.tags);
       const content = this.convertContent(page.content, page.editor);
@@ -549,17 +572,29 @@ class WikiJsImporter {
       
       if (exists) {
         if (this.options.skipExisting) {
-          console.log(`Skipping existing page: ${page.title} -> ${wikiPath}`);
+          if (this.options.dryRun) {
+            console.log(`[DRY RUN] Would skip existing page: ${page.title} -> ${wikiPath}`);
+          } else {
+            console.log(`Skipping existing page: ${page.title} -> ${wikiPath}`);
+          }
           this.stats.skipped++;
           return true; // Not an error, just skipped
         } else if (this.options.updateExisting) {
-          console.log(`Updating existing page: ${page.title} -> ${wikiPath}`);
+          if (this.options.dryRun) {
+            console.log(`[DRY RUN] Would update existing page: ${page.title} -> ${wikiPath}`);
+          } else {
+            console.log(`Updating existing page: ${page.title} -> ${wikiPath}`);
+          }
           const success = await this.updatePage(page, wikiPath);
           if (success) {
             this.stats.updated++;
             return true;
           } else {
-            console.log(`Update not supported yet, skipping: ${page.title}`);
+            if (this.options.dryRun) {
+              console.log(`[DRY RUN] Update not supported yet, would skip: ${page.title}`);
+            } else {
+              console.log(`Update not supported yet, skipping: ${page.title}`);
+            }
             this.stats.skipped++;
             return true;
           }
@@ -576,6 +611,11 @@ class WikiJsImporter {
         edit_groups: ['dm'],
         view_groups: viewerGroups
       };
+      
+      if (this.options.dryRun) {
+        console.log(`[DRY RUN] Would import: ${page.title} -> ${wikiPath}`);
+        return true;
+      }
       
       console.log(`Importing: ${page.title} -> ${wikiPath}`);
       
@@ -666,6 +706,20 @@ class WikiJsImporter {
           this.stats.skipped++;
           continue;
         }
+
+        // Check for excluded tags
+        if (this.options.excludeTags.length > 0) {
+          const hasExcludedTag = page.tags.some(tag => 
+            this.options.excludeTags.includes(tag.toLowerCase())
+          );
+          if (hasExcludedTag) {
+            console.log(`Skipping ${file}: Contains excluded tag(s): ${page.tags.filter(tag => 
+              this.options.excludeTags.includes(tag.toLowerCase())
+            ).join(', ')}`);
+            this.stats.skipped++;
+            continue;
+          }
+        }
         
         const success = await this.importPage(page);
         if (success) {
@@ -711,6 +765,13 @@ async function main() {
   // Parse flags
   const skipExisting = args.includes('--skip-existing') || args.includes('-s');
   const updateExisting = args.includes('--update-existing') || args.includes('-u');
+  const dryRun = args.includes('--dry-run');
+  
+  // Parse exclude tags
+  const excludeTagsArg = args.find(arg => arg.startsWith('--exclude-tags='));
+  const excludeTags = excludeTagsArg 
+    ? excludeTagsArg.substring('--exclude-tags='.length).split(',').map(tag => tag.trim().toLowerCase()).filter(tag => tag)
+    : [];
   
   // Filter out flags to get positional arguments
   const positionalArgs = args.filter(arg => 
@@ -730,11 +791,15 @@ async function main() {
     console.error('Options:');
     console.error('  --skip-existing, -s   Skip pages that already exist (default)');
     console.error('  --update-existing, -u Update pages that already exist');
+    console.error('  --exclude-tags=tag1,tag2  Exclude pages with specific tags (e.g., dm_only)');
+    console.error('  --dry-run             Show what would be done without making changes');
     console.error('');
     console.error('Examples:');
     console.error('  tsx import-wikijs.ts /path/to/wiki');
     console.error('  tsx import-wikijs.ts /path/to/wiki http://localhost:3000 --skip-existing');
     console.error('  tsx import-wikijs.ts /path/to/wiki --update-existing');
+    console.error('  tsx import-wikijs.ts /path/to/wiki --exclude-tags=dm_only,dmonly');
+    console.error('  tsx import-wikijs.ts /path/to/wiki --dry-run');
     process.exit(1);
   }
   
@@ -744,11 +809,15 @@ async function main() {
   console.log(`Target: ${baseUrl}`);
   console.log(`Skip existing: ${skipExisting}`);
   console.log(`Update existing: ${updateExisting}`);
+  console.log(`Excluded tags: ${excludeTags.length > 0 ? excludeTags.join(', ') : 'none'}`);
+  console.log(`Dry run: ${dryRun}`);
   console.log('');
   
   const importer = new WikiJsImporter(sourcePath, baseUrl, {
     skipExisting,
-    updateExisting
+    updateExisting,
+    excludeTags,
+    dryRun
   });
   const stats = await importer.import();
   

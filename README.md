@@ -61,6 +61,9 @@ npx tsx scripts/import-all.ts --dry-run
 
 # Skip certain steps if already done
 npx tsx scripts/import-all.ts --skip-images --update-existing
+
+#full example of dry run
+cd /home/klucsik/src/rpg-wiki && IMPORT_API_KEY="YOUR_API_KEY" npx tsx scripts/import-wikijs.ts /home/klucsik/src/gyongy-wiki http://localhost:3000 --exclude-tags=dmonly --dry-run
 ```
 
 The complete import process includes:

@@ -17,6 +17,7 @@
  *   --skip-images        Skip image import (if already done)
  *   --skip-pages         Skip page import (if already done)
  *   --skip-link-fix      Skip image link fixing (if already done)
+ *   --exclude-tags=tag1,tag2  Exclude pages with specific tags (e.g., dm_only)
  *   --dry-run            Show what would be done without making changes
  */
 
@@ -32,6 +33,7 @@ interface ImportOptions {
   skipPages: boolean;
   skipLinkFix: boolean;
   dryRun: boolean;
+  excludeTags: string[];
 }
 
 class WikiImporter {
@@ -128,6 +130,10 @@ class WikiImporter {
       args.push('--skip-existing');
     }
 
+    if (this.options.excludeTags.length > 0) {
+      args.push(`--exclude-tags=${this.options.excludeTags.join(',')}`);
+    }
+
     await this.runScript('import-wikijs.ts', args);
   }
 
@@ -158,6 +164,7 @@ class WikiImporter {
     console.log(`Source Path: ${this.options.sourcePath}`);
     console.log(`Target API: ${this.options.baseUrl}`);
     console.log(`Update Existing: ${this.options.updateExisting}`);
+    console.log(`Excluded Tags: ${this.options.excludeTags.length > 0 ? this.options.excludeTags.join(', ') : 'none'}`);
     console.log(`Dry Run: ${this.options.dryRun}`);
     console.log('');
 
@@ -223,6 +230,12 @@ function parseArgs(): ImportOptions {
   const dryRun = args.includes('--dry-run');
   const help = args.includes('--help') || args.includes('-h');
 
+  // Parse exclude tags
+  const excludeTagsArg = args.find(arg => arg.startsWith('--exclude-tags='));
+  const excludeTags = excludeTagsArg 
+    ? excludeTagsArg.substring('--exclude-tags='.length).split(',').map(tag => tag.trim()).filter(tag => tag)
+    : [];
+
   if (help) {
     console.log(`
 Wiki Import Script
@@ -240,6 +253,7 @@ Options:
   --skip-images        Skip image import (if already done)
   --skip-pages         Skip page import (if already done)  
   --skip-link-fix      Skip image link fixing (if already done)
+  --exclude-tags=tag1,tag2  Exclude pages with specific tags (e.g., dm_only)
   --dry-run            Show what would be done without making changes
   --help, -h           Show this help message
 
@@ -252,6 +266,9 @@ Examples:
 
   # Only fix image links (skip import steps)
   npx tsx scripts/import-all.ts --skip-images --skip-pages
+
+  # Exclude DM-only content from import
+  npx tsx scripts/import-all.ts --exclude-tags=dm_only,dmonly
 
   # Dry run to see what would happen
   npx tsx scripts/import-all.ts --dry-run
@@ -266,7 +283,8 @@ Examples:
     skipImages,
     skipPages,
     skipLinkFix,
-    dryRun
+    dryRun,
+    excludeTags
   };
 }
 
