@@ -46,10 +46,11 @@ spec:
             - containerPort: 5432
           volumeMounts:
             - name: pgdata
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
       volumes:
         - name: pgdata
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: rpg-wiki-demo
 ---
 apiVersion: v1
 kind: Service
@@ -83,7 +84,7 @@ spec:
     spec:
       containers:
         - name: rpg-wiki
-          image: registry.klucsik.hu/rpg-wiki:20250701
+          image: registry.klucsik.hu/rpg-wiki:20250702
           imagePullPolicy: Always
           env:
             - name: DATABASE_URL
@@ -114,10 +115,11 @@ metadata:
     app.kubernetes.io/instance: rpg-wiki
     app.kubernetes.io/name: rpg-wiki
   annotations:
-    nginx.ingress.kubernetes.io/auth-response-headers: Authorization
-    nginx.ingress.kubernetes.io/auth-signin: https://foundry.klucsik.hu/oauth2/start
-    nginx.ingress.kubernetes.io/auth-url: http://foundry-oauth2-proxy.auth-system.svc.cluster.local/oauth2/auth
-    nginx.ingress.kubernetes.io/proxy-buffer-size: 512k
+    # nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+    # nginx.ingress.kubernetes.io/auth-signin: https://foundry.klucsik.hu/oauth2/start
+    # nginx.ingress.kubernetes.io/auth-url: http://foundry-oauth2-proxy.auth-system.svc.cluster.local/oauth2/auth
+    # nginx.ingress.kubernetes.io/proxy-buffer-size: 512k
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   tls:

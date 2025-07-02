@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Wait for the database to be ready
-until npx prisma db push --preview-feature || npx prisma migrate deploy; do
+until npx prisma db push || npx prisma migrate deploy; do
   echo "Database is unavailable - sleeping"
   sleep 3
 done

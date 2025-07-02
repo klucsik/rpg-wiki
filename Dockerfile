@@ -15,7 +15,8 @@ RUN npm ci --only=production
 # Set a dummy DATABASE_URL for Prisma generate
 ENV DATABASE_URL="postgresql://user:password@prisma-dummy-host:5432/dbname"
 ENV PRISMA_SKIP_DB_INIT=1
-RUN npx prisma generate
+# Generate Prisma client with correct binary target for Alpine
+RUN npx prisma generate --generator client
 
 # Build stage
 FROM node:20-alpine AS builder
@@ -49,9 +50,8 @@ RUN apk add --no-cache libc6-compat openssl && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh
+# Copy entrypoint script with execute permissions and proper ownership
+COPY --chmod=744 --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Copy only necessary files from builder
 COPY --from=builder /app/public ./public
