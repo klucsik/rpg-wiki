@@ -158,9 +158,6 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     if (!file) return;
     const formData = new FormData();
     formData.append("file", file);
-    if (user && user.id) {
-      formData.append("userId", String(user.id));
-    }
     const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,

@@ -78,9 +78,9 @@ export const authOptions: NextAuthOptions = {
       // For Keycloak OIDC users, sync with our database
       if (account?.provider === "keycloak" && profile) {
         try {
-          // Check if user exists in our database
+          // Check if user exists in our database (first by ID, then by email)
           let dbUser = await prisma.user.findUnique({
-            where: { email: user.email! },
+            where: { id: user.id! },
             include: {
               userGroups: {
                 include: {
@@ -89,6 +89,20 @@ export const authOptions: NextAuthOptions = {
               }
             }
           });
+
+          // If not found by ID, try email (for migration purposes)
+          if (!dbUser && user.email) {
+            dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+              include: {
+                userGroups: {
+                  include: {
+                    group: true
+                  }
+                }
+              }
+            });
+          }
 
           // If user doesn't exist, create them
           if (!dbUser) {
@@ -103,6 +117,7 @@ export const authOptions: NextAuthOptions = {
 
             dbUser = await prisma.user.create({
               data: {
+                id: user.id!, // Use the Keycloak user ID
                 name: user.name!,
                 email: user.email!,
                 username: ((profile as Record<string, unknown>).preferred_username as string) || user.email!.split('@')[0],
@@ -128,19 +143,52 @@ export const authOptions: NextAuthOptions = {
             });
           } else {
             // Update existing user with latest info from Keycloak
+            // If we found the user by email but their ID doesn't match, we need to handle this carefully
+            const updateData: any = {
+              name: user.name!,
+              username: ((profile as Record<string, unknown>).preferred_username as string) || dbUser.username,
+            };
+
+            // If the user was found by email but has a different ID, we need to update the ID
+            // This handles migration from old user records
+            if (dbUser.id !== user.id) {
+              console.log(`Updating user ID from ${dbUser.id} to ${user.id} for ${user.email}`);
+              // First check if the new ID is already taken
+              const existingUserWithNewId = await prisma.user.findUnique({
+                where: { id: user.id! }
+              });
+              
+              if (!existingUserWithNewId) {
+                updateData.id = user.id!;
+              } else {
+                console.warn(`Cannot update user ID - ID ${user.id} already exists`);
+              }
+            }
+
             await prisma.user.update({
               where: { id: dbUser.id },
-              data: {
-                name: user.name!,
-                username: ((profile as Record<string, unknown>).preferred_username as string) || dbUser.username,
-              }
+              data: updateData
             });
+
+            // Refresh the user object to get the updated data
+            dbUser = await prisma.user.findUnique({
+              where: { id: updateData.id || dbUser.id },
+              include: {
+                userGroups: {
+                  include: {
+                    group: true
+                  }
+                }
+              }
+            }) || dbUser;
           }
 
           // Update user object with groups for the session
           user.groups = dbUser.userGroups.map(ug => ug.group.name);
           user.username = dbUser.username;
+          user.id = dbUser.id; // Ensure the session uses the correct user ID
 
+          console.log(`Keycloak user synced: ${dbUser.id} (${dbUser.username})`);
           return true;
         } catch (error) {
           console.error("Error syncing Keycloak user:", error);
