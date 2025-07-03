@@ -61,7 +61,7 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
 
     return {
       isAuthenticated: true,
-      userGroups: ['admin', 'editor', 'viewer'],
+      userGroups: ['admin', 'dm', 'public'],
       username: 'API Import User',
       userId: apiUser.id,
       isApiKey: true

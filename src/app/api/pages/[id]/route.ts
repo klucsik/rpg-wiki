@@ -96,6 +96,26 @@ export async function PUT(
   // Get the next version number
   const nextVersion = latestVersion.version + 1;
 
+  // Get current page data to check if path is changing
+  const currentPage = await prisma.page.findUnique({
+    where: { id: parseInt(id) },
+    select: { path: true }
+  });
+
+  // Prepare update data - only include path if it's actually changing
+  const pageUpdateData: any = {
+    title,
+    content,
+    edit_groups: edit_groups || ['admin'],
+    view_groups: view_groups || ['admin',  'public'],
+    updated_at: new Date(),
+  };
+
+  // Only update path if it's different from current path
+  if (currentPage && path && path !== currentPage.path) {
+    pageUpdateData.path = path;
+  }
+
   // Create new version entry and update main page table in a transaction
   const [newVersion] = await prisma.$transaction([
     // Create new version entry (not a draft)
@@ -105,7 +125,7 @@ export async function PUT(
         version: nextVersion,
         title,
         content,
-        path,
+        path: path || currentPage?.path || '',
         edit_groups: edit_groups || ['admin'],
         view_groups: view_groups || ['admin',  'public'],
         edited_by: auth.username,
@@ -116,14 +136,7 @@ export async function PUT(
     // Update main page table with latest data
     prisma.page.update({
       where: { id: parseInt(id) },
-      data: {
-        title,
-        content,
-        path,
-        edit_groups: edit_groups || ['admin'],
-        view_groups: view_groups || ['admin',  'public'],
-        updated_at: new Date(),
-      },
+      data: pageUpdateData,
     }),
   ]);
 

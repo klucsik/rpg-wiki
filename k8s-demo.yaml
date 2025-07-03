@@ -84,7 +84,7 @@ spec:
     spec:
       containers:
         - name: rpg-wiki
-          image: registry.klucsik.hu/rpg-wiki:20250702
+          image: registry.klucsik.hu/rpg-wiki:20250703
           imagePullPolicy: Always
           env:
             - name: DATABASE_URL

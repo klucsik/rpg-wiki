@@ -4,23 +4,23 @@
  * Image Link Fixer
  * 
  * Scans all wiki pages and updates image links to use the correct
- * /api/images/:id format based on database mappings.
+ * /api/images/:id format based on API endpoints.
  * 
  * Usage:
  *   npx tsx scripts/fix-image-links.ts [options]
  * 
  * Options:
  *   --base-url=URL    Base URL for API calls (default: http://localhost:3000)
+ *   --api-key=KEY     API key for authentication (or use IMPORT_API_KEY env var)
  *   --dry-run         Show what would be changed without making updates
  * 
  * The script will:
- * - Build filename-to-ID mappings from the database
+ * - Build filename-to-ID mappings from the API
  * - Scan all page content for image references
  * - Update links to use /api/images/:id format
  * - Generate a detailed report of changes made
  */
 
-import { prisma } from '../src/db';
 import { writeFileSync } from 'fs';
 
 interface ImageMapping {
@@ -29,12 +29,105 @@ interface ImageMapping {
   newUrl: string;
 }
 
+interface Page {
+  id: number;
+  title: string;
+  path: string;
+  content: string;
+}
+
+interface Image {
+  id: number;
+  filename: string;
+}
+
 class ImageLinkFixer {
   private baseUrl: string;
+  private apiKey: string | undefined;
   private imageMappings: Map<string, ImageMapping> = new Map();
 
-  constructor(baseUrl = 'http://localhost:3000') {
+  constructor(baseUrl = 'http://localhost:3000', apiKey?: string) {
     this.baseUrl = baseUrl;
+    this.apiKey = apiKey || process.env.IMPORT_API_KEY;
+  }
+
+  /**
+   * Get headers for API requests
+   */
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.apiKey) {
+      headers['X-API-Key'] = this.apiKey;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Fetch all images from the API
+   */
+  private async fetchImages(): Promise<Image[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/images`, {
+        headers: this.getHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch images: ${response.status} ${await response.text()}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching images:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch all pages from the API
+   */
+  private async fetchPages(): Promise<Page[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/pages`, {
+        headers: this.getHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch pages: ${response.status} ${await response.text()}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching pages:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch a single page's content from the API
+   */
+  private async fetchPage(pageId: number): Promise<Page | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/pages/${pageId}`, {
+        headers: this.getHeaders()
+      });
+
+      if (response.status === 404) {
+        return null;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch page ${pageId}: ${response.status} ${await response.text()}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error fetching page ${pageId}:`, error);
+      return null;
+    }
   }
 
   /**
@@ -53,16 +146,14 @@ class ImageLinkFixer {
   }
 
   /**
-   * Build image mapping from database
+   * Build image mapping from API
    */
   private async buildImageMapping(): Promise<void> {
-    console.log('Building image mapping from database...');
+    console.log('Building image mapping from API...');
     
-    const images = await prisma.image.findMany({
-      select: { id: true, filename: true }
-    });
+    const images = await this.fetchImages();
 
-    console.log(`Found ${images.length} images in database`);
+    console.log(`Found ${images.length} images from API`);
 
     for (const image of images) {
       const filename = this.extractFilename(image.filename);
@@ -261,18 +352,9 @@ class ImageLinkFixer {
    */
   private async updatePageViaAPI(pageId: number, title: string, content: string, path: string): Promise<boolean> {
     try {
-      const apiKey = process.env.IMPORT_API_KEY;
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (apiKey) {
-        headers['X-API-Key'] = apiKey;
-      }
-
       const response = await fetch(`${this.baseUrl}/api/pages/${pageId}`, {
         method: 'PUT',
-        headers,
+        headers: this.getHeaders(),
         body: JSON.stringify({
           title,
           content,
@@ -283,7 +365,36 @@ class ImageLinkFixer {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`API error updating page ${pageId}: ${response.status} ${errorText}`);
+        
+        if (response.status === 404) {
+          console.error(`Page ${pageId} not found - it may have been deleted or not imported correctly`);
+        } else if (response.status === 500) {
+          console.error(`Server error updating page ${pageId}: ${errorText}`);
+          // For 500 errors, it might be worth retrying once
+          console.log(`  Retrying page ${pageId} in 1 second...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const retryResponse = await fetch(`${this.baseUrl}/api/pages/${pageId}`, {
+            method: 'PUT',
+            headers: this.getHeaders(),
+            body: JSON.stringify({
+              title,
+              content,
+              path,
+              change_summary: 'Fixed image links to use correct database IDs (retry)'
+            })
+          });
+          
+          if (retryResponse.ok) {
+            console.log(`  ✓ Retry successful for page ${pageId}`);
+            return true;
+          } else {
+            const retryErrorText = await retryResponse.text();
+            console.error(`  ✗ Retry failed for page ${pageId}: ${retryResponse.status} ${retryErrorText}`);
+          }
+        } else {
+          console.error(`API error updating page ${pageId}: ${response.status} ${errorText}`);
+        }
         return false;
       }
 
@@ -303,19 +414,8 @@ class ImageLinkFixer {
     
     await this.buildImageMapping();
     
-    // Get pages with their latest versions
-    const pages = await prisma.page.findMany({
-      select: { 
-        id: true, 
-        title: true, 
-        path: true,
-        versions: {
-          orderBy: { version: 'desc' },
-          take: 1,
-          select: { content: true, version: true }
-        }
-      }
-    });
+    // Get all pages from the API
+    const pages = await this.fetchPages();
 
     console.log(`\nProcessing ${pages.length} pages...`);
 
@@ -327,13 +427,14 @@ class ImageLinkFixer {
     }> = [];
 
     for (const page of pages) {
-      const latestVersion = page.versions[0];
-      if (!latestVersion) {
-        console.log(`  - No versions found for "${page.title}"`);
+      // Fetch full page content
+      const fullPage = await this.fetchPage(page.id);
+      if (!fullPage) {
+        console.log(`  - Page "${page.title}" (ID: ${page.id}) not found or inaccessible`);
         continue;
       }
 
-      const result = this.fixPageImageLinks(page.id, page.title, latestVersion.content);
+      const result = this.fixPageImageLinks(page.id, page.title, fullPage.content);
       
       if (result.updated) {
         totalUpdated++;
@@ -390,14 +491,12 @@ class ImageLinkFixer {
   }
 
   /**
-   * List all images in database for debugging
+   * List all images from API for debugging
    */
   public async listImages(): Promise<void> {
-    const images = await prisma.image.findMany({
-      select: { id: true, filename: true, createdAt: true }
-    });
+    const images = await this.fetchImages();
 
-    console.log(`\nImages in database (${images.length} total):`);
+    console.log(`\nImages from API (${images.length} total):`);
     console.log('='.repeat(60));
     
     for (const image of images) {
@@ -412,11 +511,12 @@ async function main() {
   const dryRun = args.includes('--dry-run');
   const listOnly = args.includes('--list-images');
   const baseUrl = args.find(arg => arg.startsWith('--base-url='))?.split('=')[1] || 'http://localhost:3000';
+  const apiKey = args.find(arg => arg.startsWith('--api-key='))?.split('=')[1];
 
   console.log('Image Link Fixer for RPG Wiki');
   console.log('==============================');
   
-  const fixer = new ImageLinkFixer(baseUrl);
+  const fixer = new ImageLinkFixer(baseUrl, apiKey);
 
   if (listOnly) {
     await fixer.listImages();
@@ -431,9 +531,7 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch(console.error).finally(() => {
-    prisma.$disconnect();
-  });
+  main().catch(console.error);
 }
 
 export { ImageLinkFixer };
