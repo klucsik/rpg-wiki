@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../../lib/auth-utils';
+import { filterRestrictedContent, hasRestrictedContent } from '../../../../../../lib/server-content-filter';
 
 // GET /api/pages/[id]/versions/[version] - Get specific version content
 export async function GET(
@@ -43,8 +44,20 @@ export async function GET(
     return NextResponse.json({ error: 'Version not found' }, { status: 404 });
   }
 
+  // Apply server-side content filtering for version history
+  let processedContent = pageVersion.content;
+  
+  if (hasRestrictedContent(pageVersion.content)) {
+    const filterResult = filterRestrictedContent(pageVersion.content, {
+      groups: auth.userGroups || ['public'],
+      isAuthenticated: auth.isAuthenticated || false
+    });
+    processedContent = filterResult.filteredContent;
+  }
+
   return NextResponse.json({
     ...pageVersion,
+    content: processedContent, // Filtered content
     edited_at: pageVersion.edited_at.toISOString(),
   });
 }

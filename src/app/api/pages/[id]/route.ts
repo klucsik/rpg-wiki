@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
+import { filterRestrictedContent, hasRestrictedContent } from '../../../../lib/server-content-filter';
 
 // GET latest version of a page by page_id
 export async function GET(
@@ -26,10 +27,21 @@ export async function GET(
     });
 
     if (latestDraft) {
+      // Apply content filtering to draft as well
+      let processedDraftContent = latestDraft.content;
+      
+      if (hasRestrictedContent(latestDraft.content)) {
+        const filterResult = filterRestrictedContent(latestDraft.content, {
+          groups: auth.userGroups || ['public'],
+          isAuthenticated: auth.isAuthenticated || false
+        });
+        processedDraftContent = filterResult.filteredContent;
+      }
+      
       return NextResponse.json({
         id: latestDraft.page_id,
         title: latestDraft.title,
-        content: latestDraft.content,
+        content: processedDraftContent,
         edit_groups: latestDraft.edit_groups,
         view_groups: latestDraft.view_groups,
         path: latestDraft.path,
@@ -54,18 +66,41 @@ export async function GET(
     return NextResponse.json({ error: 'Page not found' }, { status: 404 });
   }
   
+  // Apply server-side content filtering based on user permissions
+  let processedContent = latestVersion.content;
+  let removedBlocks: Array<{ title: string; groups: string[] }> = [];
+  
+  if (hasRestrictedContent(latestVersion.content)) {
+    const filterResult = filterRestrictedContent(latestVersion.content, {
+      groups: auth?.userGroups || ['public'],
+      isAuthenticated: auth?.isAuthenticated || false
+    });
+    processedContent = filterResult.filteredContent;
+    removedBlocks = filterResult.removedBlocks;
+    
+    // Log removed blocks for audit (optional)
+    if (removedBlocks.length > 0) {
+      console.log(`Filtered ${removedBlocks.length} restricted blocks for user ${auth?.username || 'anonymous'}`);
+    }
+  }
+
   // Convert date fields to string for API response
   return NextResponse.json({
     id: latestVersion.page_id,
     title: latestVersion.title,
-    content: latestVersion.content,
+    content: processedContent,
     edit_groups: latestVersion.edit_groups,
     view_groups: latestVersion.view_groups,
     path: latestVersion.path,
     version: latestVersion.version,
     created_at: latestVersion.edited_at.toISOString(),
     updated_at: latestVersion.edited_at.toISOString(),
-    is_draft: false
+    is_draft: false,
+    // Include metadata about filtering for debugging (optional)
+    _filtering: {
+      removedBlocksCount: removedBlocks.length,
+      hasRestrictedContent: hasRestrictedContent(latestVersion.content)
+    }
   });
 }
 

@@ -33,7 +33,7 @@ export default function EditPage() {
     
     setLoading(true);
     setError(null);
-    fetch(`/api/pages/${id}?draft=true`)
+    fetch(`/api/pages/${id}/edit?draft=true`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch page");
         return res.json();
