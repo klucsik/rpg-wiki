@@ -1,0 +1,47 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../../lib/auth';
+import { GitBackupService } from '../../../../gitBackupService';
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.groups?.includes('admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const backupService = GitBackupService.getInstance();
+    const settings = await backupService.getSettings();
+    
+    return NextResponse.json(settings);
+  } catch (error) {
+    console.error('Error fetching backup settings:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.groups?.includes('admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const settings = await request.json();
+    const backupService = GitBackupService.getInstance();
+    
+    await backupService.updateSettings(settings);
+    
+    // If backup is enabled and settings look valid, trigger a backup
+    if (settings.enabled && settings.gitRepoUrl && session.user.id) {
+      await backupService.createBackupJob(session.user.id, 'manual');
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating backup settings:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

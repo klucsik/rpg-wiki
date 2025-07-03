@@ -7,6 +7,7 @@ A full-stack wiki app for RPGs using Next.js (App Router, TypeScript, Tailwind C
 - Usergroup-based content restriction
 - Image support
 - Crosslinking ([[PageName]])
+- Git-based automated backup system
 - Full-text search (planned)
 - PostgreSQL persistence via API routes
 
@@ -128,3 +129,86 @@ docker push registry.klucsik.hu/rpg-wiki:latest
 ```bash
 docker run --env-file .env.local -p 3000:3000 registry.klusik.hu/rpg-wiki:latest
 ```
+
+## Git Backup System
+
+The RPG Wiki includes an automated git-based backup system that exports all wiki content and images to a git repository after each successful page save.
+
+### Setup
+
+1. **Configure in Admin Panel**: Go to `/admin` and scroll to "Git Backup Settings"
+
+2. **Set up Git Repository**: 
+   - Create a git repository (GitHub, GitLab, etc.)
+   - For SSH access, add your server's SSH public key to the repository's deploy keys
+
+3. **Configure Settings**:
+   - **Git Repository URL**: SSH (`git@github.com:user/repo.git`) or HTTPS URL
+   - **SSH Key Path**: Path to private SSH key (optional for HTTPS)
+   - **Local Backup Path**: Directory where git repo will be cloned/managed
+   - **Enable Backups**: Toggle automatic backups on page saves
+
+### How It Works
+
+1. **Automatic Backups**: After each successful page save, if backups are enabled:
+   - Wiki content is exported to filesystem in git-friendly format
+   - Git commit is created with timestamp
+   - Changes are pushed to remote repository
+
+2. **Manual Backups**: Admins can trigger manual backups from the admin panel
+
+3. **Backup Format**:
+   - Pages: `path/title.html` with metadata in HTML comments
+   - Images: `images/filename` with `.meta` JSON files
+   - Export manifest: `export-manifest.json` with backup info
+
+### Export/Import Scripts
+
+#### Export to Filesystem
+```bash
+# Export all pages and images to filesystem
+npm run export:filesystem /path/to/export
+
+# Export with all versions
+npx tsx scripts/export-to-filesystem.ts /path/to/export --all-versions
+
+# Dry run to see what would be exported
+npx tsx scripts/export-to-filesystem.ts /path/to/export --dry-run
+```
+
+#### Import from Filesystem
+```bash
+# Import from exported filesystem backup
+npm run import:filesystem /path/to/backup/wiki-data
+
+# Update existing pages instead of skipping
+npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --update-existing
+
+# Import all page versions
+npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --import-versions
+
+# Dry run to see what would be imported
+npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --dry-run
+```
+
+### Restore from Backup
+
+To restore your wiki from a git backup:
+
+1. Clone your backup repository:
+   ```bash
+   git clone your-backup-repo.git /tmp/restore
+   ```
+
+2. Import the data:
+   ```bash
+   npm run import:filesystem /tmp/restore/wiki-data --update-existing
+   ```
+
+### Backup Job Monitoring
+
+The admin panel shows recent backup jobs with:
+- Job status (pending, running, completed, failed)  
+- Trigger type (auto vs manual)
+- Commit hashes
+- Error messages for failed jobs

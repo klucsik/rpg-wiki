@@ -109,6 +109,27 @@ spec:
               value: "d1b0ae5e5fd8570529344e9e8ad24ca2a06462eebb94dff5c47dd829b96ff846"
           ports:
             - containerPort: 3000
+          volumeMounts:
+            - name: backup-ssh-key
+              mountPath: /mount/.ssh
+              readOnly: true
+      securityContext:
+        fsGroup: 1001
+      volumes:
+        - name: backup-ssh-key
+          secret:
+            secretName: rpg-wiki-backup-ssh-key
+            defaultMode: 0400
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rpg-wiki-backup-ssh-key
+  namespace: rpg-wiki-demo
+type: Opaque
+data:
+  id_rsa: "c2VjcmV0LWtleQ=="  #Update it by hand
+
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

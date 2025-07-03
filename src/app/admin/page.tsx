@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import GroupsAdminPage from "../groups/page";
 import UsersAdminPage from "../users/UsersAdminPage";
+import BackupSettingsPage from "../../components/BackupSettingsPage";
 
 function AdminSidebar() {
   return (
@@ -12,6 +13,7 @@ function AdminSidebar() {
       <nav className="flex flex-col gap-2">
         <a href="#users" className="text-indigo-300 hover:text-indigo-100 transition font-medium">User Management</a>
         <a href="#groups" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Group Management</a>
+        <a href="#backup" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Git Backup Settings</a>
         <a href="#settings" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Site Settings</a>
         <a href="#session-info" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Session Info</a>
         {/* Add more admin options here as needed */}
@@ -97,6 +99,10 @@ export default function AdminPage() {
         <section id="groups" className="mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Group Management</h1>
           <GroupsAdminPage />
+        </section>
+        <section id="backup" className="mb-12">
+          <h1 className="text-3xl font-bold text-indigo-200 mb-6">Git Backup Settings</h1>
+          <BackupSettingsPage />
         </section>
         <section id="settings">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Site Settings</h1>

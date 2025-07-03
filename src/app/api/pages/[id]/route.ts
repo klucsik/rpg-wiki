@@ -184,6 +184,20 @@ export async function PUT(
     }
   });
   
+  // Trigger backup after successful save
+  try {
+    const { GitBackupService } = await import('../../../../gitBackupService');
+    const backupService = GitBackupService.getInstance();
+    const settings = await backupService.getSettings();
+    
+    if (settings.enabled) {
+      await backupService.createBackupJob(auth.username, 'auto');
+    }
+  } catch (error) {
+    // Don't fail the save if backup fails, just log the error
+    console.error('Failed to trigger backup after page save:', error);
+  }
+  
   // Convert date fields to string for API response
   return NextResponse.json({
     id: newVersion.page_id,

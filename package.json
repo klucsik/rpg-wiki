@@ -10,7 +10,9 @@
     "import:all": "tsx scripts/import-all.ts",
     "import:wikijs": "tsx scripts/import-wikijs.ts",
     "import:images": "tsx scripts/import-images.ts",
-    "fix:image-links": "tsx scripts/fix-image-links.ts"
+    "fix:image-links": "tsx scripts/fix-image-links.ts",
+    "export:filesystem": "tsx scripts/export-to-filesystem.ts",
+    "import:filesystem": "tsx scripts/import-from-filesystem.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

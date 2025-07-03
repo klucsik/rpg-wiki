@@ -124,3 +124,24 @@ model Image {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 }
+
+model SiteSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String?  @db.Text
+  encrypted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BackupJob {
+  id          Int      @id @default(autoincrement())
+  status      String   // 'pending', 'running', 'completed', 'failed'
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  error       String?  @db.Text
+  commitHash  String?
+  exportPath  String?
+  triggeredBy String   // user ID who triggered the backup
+  jobType     String   @default("auto") // 'auto', 'manual'
+}
