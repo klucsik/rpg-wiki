@@ -108,12 +108,10 @@ export const authOptions: NextAuthOptions = {
           if (!dbUser) {
             // Map Keycloak groups to our groups
             const keycloakGroups = ((profile as Record<string, unknown>).groups as string[]) || [];
-            const defaultGroups = ["viewer"]; // Default group for new users
+            const defaultGroups = ["public"]; // Default group for new users
             
             // You can customize this mapping based on your Keycloak group structure
-            const groupsToAssign = keycloakGroups.includes("/admin") || keycloakGroups.includes("admin") 
-              ? ["admin", "viewer"] 
-              : defaultGroups;
+            const groupsToAssign = [...new Set([...keycloakGroups, ...defaultGroups])];
 
             dbUser = await prisma.user.create({
               data: {

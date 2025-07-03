@@ -23,6 +23,8 @@ metadata:
   name: rpg-wiki-postgres
   namespace: rpg-wiki-demo
 spec:
+  strategy:
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:
@@ -34,7 +36,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:15
+          image: postgres:17
           env:
             - name: POSTGRES_DB
               value: rpgwiki
@@ -42,11 +44,13 @@ spec:
               value: rpgwiki
             - name: POSTGRES_PASSWORD
               value: rpgwiki
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           ports:
             - containerPort: 5432
           volumeMounts:
             - name: pgdata
-              mountPath: /var/lib/postgresql
+              mountPath: /var/lib/postgresql/data
       volumes:
         - name: pgdata
           persistentVolumeClaim:
