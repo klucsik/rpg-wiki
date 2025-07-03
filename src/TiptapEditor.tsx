@@ -6,6 +6,10 @@ import TipTapLink from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import RestrictedBlock from './RestrictedBlock';
 import TextAlign from '@tiptap/extension-text-align';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 import { useUser } from "./userContext";
 import styles from './Editor.module.css';
 
@@ -76,6 +80,12 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       Placeholder.configure({ placeholder: 'Start typing your wiki content...' }),
       RestrictedBlock,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -262,6 +272,77 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           if (url) editor.chain().focus().toggleLink({ href: url }).run();
         }} className={styles.toolbarButton}>Link</button>
         <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className={styles.toolbarButton}>Unlink</button>
+        
+        {/* Table controls */}
+        <div className={styles.tableControls}>
+          <button 
+            type="button" 
+            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            className={styles.toolbarButton}
+          >
+            Table
+          </button>
+          {editor.isActive('table') && (
+            <>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().addColumnBefore().run()}
+                className={styles.toolbarButton}
+              >
+                +Col
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                className={styles.toolbarButton}
+              >
+                Col+
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                className={styles.toolbarButton}
+              >
+                Col-
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().addRowBefore().run()}
+                className={styles.toolbarButton}
+              >
+                Row⁺
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                className={styles.toolbarButton}
+              >
+                Row₊
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                className={styles.toolbarButton}
+              >
+                Row-
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+                className={`${styles.toolbarButton} ${editor.isActive('table') && editor.can().toggleHeaderRow() ? styles.toolbarButtonActive : ''}`}
+              >
+                Header
+              </button>
+              <button 
+                type="button" 
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className={styles.toolbarButton}
+              >
+                Del Table
+              </button>
+            </>
+          )}
+        </div>
         {/* Image controls: only show if image is selected */}
         {isImageSelected && (
           <div className={styles.imageControls}>
