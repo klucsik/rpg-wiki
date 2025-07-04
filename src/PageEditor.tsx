@@ -68,6 +68,14 @@ export default function PageEditor({
     path,
     enabled: mode === "edit" && !isDisabled,
     onSaveSuccess: (data) => {
+      // Handle no_change response for manual draft saves
+      if (data.no_change) {
+        setError(null);
+        setAutosaveStatus("No changes detected - draft is already up to date.");
+        setTimeout(() => setAutosaveStatus(""), 3000);
+        return;
+      }
+      
       setAutosaveStatus(`Draft saved at ${new Date(data.saved_at).toLocaleTimeString()}`);
       setTimeout(() => setAutosaveStatus(""), 3000);
     },
@@ -104,6 +112,15 @@ export default function PageEditor({
           throw new Error(errorData.error || "Failed to update page");
         }
         saved = await res.json();
+        
+        // Handle no_change response
+        if (saved.no_change) {
+          // Show a message that no changes were detected and clear any errors
+          setError(null);
+          setAutosaveStatus("No changes detected - page is already up to date.");
+          setTimeout(() => setAutosaveStatus(""), 3000);
+          return;
+        }
       } else {
         res = await authenticatedFetch("/api/pages", {
           method: "POST",
@@ -121,6 +138,15 @@ export default function PageEditor({
           throw new Error(errorData.error || "Failed to add page");
         }
         saved = await res.json();
+        
+        // Handle no_change response
+        if (saved.no_change) {
+          // Show a message that no changes were detected and clear any errors
+          setError(null);
+          setAutosaveStatus("No changes detected - content is already up to date.");
+          setTimeout(() => setAutosaveStatus(""), 3000);
+          return;
+        }
       }
       if (onSuccess) onSuccess(saved);
       else if (mode === "edit" && page) router.push(`/pages/${page.id}`);

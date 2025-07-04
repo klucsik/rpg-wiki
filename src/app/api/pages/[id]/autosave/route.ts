@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { prisma } from '../../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
 
@@ -26,7 +27,33 @@ export async function POST(
   }
 
   const { title, content, edit_groups, view_groups, path } = await req.json();
+  // Compute hash for change detection (includes content + metadata)
+  const hashInput = JSON.stringify({
+    title,
+    content,
+    path,
+    edit_groups: (edit_groups || []).sort(),
+    view_groups: (view_groups || []).sort()
+  });
+  const newHash = createHash('sha256').update(hashInput).digest('hex');
   
+  // Check against latest published version: skip if no change
+  const latestPublished = await prisma.pageVersion.findFirst({
+    where: { page_id: parseInt(id), is_draft: false },
+    orderBy: { version: 'desc' },
+    select: { content_hash: true, edited_at: true }
+  });
+  if (latestPublished?.content_hash === newHash) {
+    // No changes since last published, return existing published info
+    return NextResponse.json({ 
+      id: parseInt(id), 
+      version: latestPublished ? latestPublished : undefined, 
+      saved_at: latestPublished?.edited_at.toISOString(), 
+      is_draft: false,
+      no_change: true
+    });
+  }
+
   // Check if there's already a recent draft by this user (within last 5 minutes)
   const recentDraft = await prisma.pageVersion.findFirst({
     where: {
@@ -43,7 +70,19 @@ export async function POST(
   let draftVersion;
 
   if (recentDraft) {
-    // Update the existing recent draft instead of creating a new one
+    // Check if content actually changed before updating
+    if (recentDraft.content_hash === newHash) {
+      // No changes, return existing draft info
+      return NextResponse.json({
+        id: recentDraft.page_id,
+        version: recentDraft.version,
+        saved_at: recentDraft.edited_at.toISOString(),
+        is_draft: true,
+        no_change: true
+      });
+    }
+    
+    // Update the existing recent draft with new content
     draftVersion = await prisma.pageVersion.update({
       where: { id: recentDraft.id },
       data: {
@@ -52,6 +91,7 @@ export async function POST(
         path,
         edit_groups: edit_groups || ['admin'],
         view_groups: view_groups || ['admin', 'public'],
+        content_hash: newHash,
         edited_at: new Date(),
       },
     });
@@ -78,6 +118,7 @@ export async function POST(
         edited_by: auth.username,
         is_draft: true,
         change_summary: 'Autosave draft',
+        content_hash: newHash, // Store the content hash
       },
     });
 

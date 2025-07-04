@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { prisma } from '../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
 import { filterRestrictedContent, hasRestrictedContent } from '../../../../lib/server-content-filter';
@@ -136,9 +137,34 @@ export async function PUT(
   const authError = requireEditPermissions(auth, latestVersion.edit_groups);
   if (authError) {
     return NextResponse.json({ error: authError.error }, { status: authError.status });
+  }  const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
+  
+  // Compute hash for change detection (includes content + metadata)
+  const hashInput = JSON.stringify({
+    title,
+    content,
+    path,
+    edit_groups: (edit_groups || []).sort(),
+    view_groups: (view_groups || []).sort()
+  });
+  const newHash = createHash('sha256').update(hashInput).digest('hex');
+ 
+  // Check if content actually changed compared to latest published version
+  if (latestVersion.content_hash === newHash) {
+    // No changes, return existing page info
+    return NextResponse.json({
+      id: parseInt(id),
+      title: latestVersion.title,
+      content: latestVersion.content,
+      edit_groups: latestVersion.edit_groups,
+      view_groups: latestVersion.view_groups,
+      path: latestVersion.path,
+      version: latestVersion.version,
+      created_at: latestVersion.edited_at.toISOString(),
+      updated_at: latestVersion.edited_at.toISOString(),
+      no_change: true
+    });
   }
-
-  const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
   
   // Get the next version number
   const nextVersion = latestVersion.version + 1;
@@ -177,6 +203,7 @@ export async function PUT(
         view_groups: view_groups || ['admin',  'public'],
         edited_by: auth.username,
         change_summary: change_summary || null,
+        content_hash: newHash,
         is_draft: false,
       },
     }),

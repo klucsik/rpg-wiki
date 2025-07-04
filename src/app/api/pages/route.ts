@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { prisma } from '../../../db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
 import { canUserViewPage } from '../../../accessControl';
@@ -72,6 +73,13 @@ export async function POST(req: NextRequest) {
           view_groups: view_groups || ['admin',  'public'],
           edited_by: auth.username,
           change_summary: change_summary || 'Initial version',
+          content_hash: createHash('sha256').update(JSON.stringify({
+            title,
+            content,
+            path,
+            edit_groups: (edit_groups || ['admin']).sort(),
+            view_groups: (view_groups || ['admin', 'public']).sort()
+          })).digest('hex'),
           is_draft: false,
         },
       });
@@ -138,6 +146,13 @@ export async function POST(req: NextRequest) {
               view_groups: view_groups || ['admin',  'public'],
               edited_by: auth.username,
               change_summary: change_summary || `Update via import (version ${nextVersion})`,
+              content_hash: createHash('sha256').update(JSON.stringify({
+                title,
+                content,
+                path,
+                edit_groups: (edit_groups || ['admin']).sort(),
+                view_groups: (view_groups || ['admin', 'public']).sort()
+              })).digest('hex'),
               is_draft: false,
             },
           });

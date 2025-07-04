@@ -9,6 +9,7 @@ interface PageVersion {
   edited_by: string;
   edited_at: string;
   change_summary?: string;
+  content_hash?: string;
   is_draft?: boolean;
 }
 
@@ -127,6 +128,14 @@ export default function VersionHistory({
                   <div className="text-sm text-gray-300 mb-2">
                     <div>By: {version.edited_by}</div>
                     <div>Date: {new Date(version.edited_at).toLocaleString()}</div>
+                    {version.content_hash && (
+                      <div 
+                        className="mt-1 font-mono text-xs text-gray-400 cursor-help"
+                        title={`Full hash: ${version.content_hash}`}
+                      >
+                        Hash: {version.content_hash.substring(0, 12)}...
+                      </div>
+                    )}
                     {version.change_summary && (
                       <div className="mt-1 text-indigo-300">
                         Summary: {version.change_summary}
@@ -157,6 +166,14 @@ export default function VersionHistory({
                 </span>
               )}
             </h4>
+            {viewingVersion.content_hash && (
+              <div 
+                className="text-xs font-mono text-gray-400 mt-1 cursor-help"
+                title={`Full hash: ${viewingVersion.content_hash}`}
+              >
+                Content Hash: {viewingVersion.content_hash.substring(0, 16)}...
+              </div>
+            )}
             <button
               onClick={() => setViewingVersion(null)}
               className="text-gray-400 hover:text-white"

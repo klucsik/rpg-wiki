@@ -9,7 +9,7 @@ interface AutosaveOptions {
   viewGroups: string[];
   path: string;
   enabled: boolean;
-  onSaveSuccess?: (data: { id: number; version: number; saved_at: string; is_draft: boolean }) => void;
+  onSaveSuccess?: (data: { id: number; version: number; saved_at: string; is_draft: boolean; no_change?: boolean }) => void;
   onSaveError?: (error: string) => void;
 }
 
@@ -65,6 +65,14 @@ export function useAutosave({
       }
 
       const data = await response.json();
+      
+      // Handle no-change responses gracefully
+      if (data.no_change) {
+        // Update our tracking to prevent repeated save attempts
+        lastSavedRef.current = currentHash;
+        return; // Don't call onSaveSuccess for no-change responses
+      }
+      
       lastSavedRef.current = currentHash;
       
       if (onSaveSuccess) {
