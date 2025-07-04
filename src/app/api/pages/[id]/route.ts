@@ -54,6 +54,16 @@ export async function GET(
     }
   }
   
+  // First check if the main page record exists
+  const pageExists = await prisma.page.findUnique({
+    where: { id: parseInt(id) },
+    select: { id: true }
+  });
+  
+  if (!pageExists) {
+    return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+  }
+  
   // Get the latest published version of this page
   const latestVersion = await prisma.pageVersion.findFirst({
     where: { 
@@ -236,7 +246,22 @@ export async function DELETE(
     return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
-  // Delete all versions of this page
-  await prisma.pageVersion.deleteMany({ where: { page_id: parseInt(id) } });
+  // Delete the main page record (this will cascade delete all versions due to onDelete: Cascade)
+  await prisma.page.delete({ where: { id: parseInt(id) } });
+  
+  // Trigger backup after successful deletion
+  try {
+    const { GitBackupService } = await import('../../../../gitBackupService');
+    const backupService = GitBackupService.getInstance();
+    const settings = await backupService.getSettings();
+    
+    if (settings.enabled) {
+      await backupService.createBackupJob(auth.username, 'auto');
+    }
+  } catch (error) {
+    // Don't fail the deletion if backup fails, just log the error
+    console.error('Failed to trigger backup after page deletion:', error);
+  }
+  
   return NextResponse.json({ success: true });
 }
