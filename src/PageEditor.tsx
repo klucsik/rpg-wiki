@@ -38,8 +38,14 @@ export default function PageEditor({
   const { groups } = useGroups();
   const [title, setTitle] = useState(page?.title || "");
   const [content, setContent] = useState(page?.content || "");
-  const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || (user.groups.length > 0 ? [user.groups[0]] : []));
-  const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || (user.groups.length > 0 ? [user.groups[0]] : []));
+  // Default groups for new pages: admin + creator (username)
+  const getDefaultGroups = () => {
+    if (page) return page.edit_groups || page.view_groups || [];
+    return user.username ? ['admin', user.username] : (user.groups.length > 0 ? [user.groups[0]] : []);
+  };
+  
+  const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || getDefaultGroups());
+  const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || getDefaultGroups());
   const [path, setPath] = useState(page?.path || "");
   const [changeSummary, setChangeSummary] = useState("");
   const [saving, setSaving] = useState(false);
@@ -190,6 +196,11 @@ export default function PageEditor({
         {/* Who can edit? */}
         <div className="mb-2">
           <label className={styleTokens.label}>Who can edit?</label>
+          {mode === "create" && (
+            <div className="text-xs text-gray-400 mb-1">
+              Default: admin + you ({user.username || 'your username'})
+            </div>
+          )}
           <input
             type="text"
             placeholder="Search groups..."
@@ -240,6 +251,11 @@ export default function PageEditor({
         {/* Who can see? */}
         <div className="mb-2">
           <label className={styleTokens.label}>Who can see?</label>
+          {mode === "create" && (
+            <div className="text-xs text-gray-400 mb-1">
+              Default: admin + you ({user.username || 'your username'})
+            </div>
+          )}
           <input
             type="text"
             placeholder="Search groups..."
