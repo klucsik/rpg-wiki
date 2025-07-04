@@ -112,7 +112,7 @@ export const authOptions: NextAuthOptions = {
             const defaultGroups = ["public"]; // Default group for new users
             
             // Include personal group (username) + Keycloak groups + default groups
-            const groupsToAssign = [...new Set([username, ...keycloakGroups, ...defaultGroups])];
+            const groupsToAssign = [...new Set([username, ...defaultGroups])];
 
             dbUser = await prisma.user.create({
               data: {
