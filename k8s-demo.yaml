@@ -88,7 +88,7 @@ spec:
     spec:
       containers:
         - name: rpg-wiki
-          image: registry.klucsik.hu/rpg-wiki:20250703
+          image: registry.klucsik.hu/rpg-wiki:20250704
           imagePullPolicy: Always
           env:
             - name: DATABASE_URL
@@ -111,8 +111,10 @@ spec:
             - containerPort: 3000
           volumeMounts:
             - name: backup-ssh-key
-              mountPath: /mount/.ssh
+              mountPath: /app/.ssh
               readOnly: true
+            - name: backup-data
+              mountPath: /app/backup-data
       securityContext:
         fsGroup: 1001
       volumes:
@@ -120,16 +122,10 @@ spec:
           secret:
             secretName: rpg-wiki-backup-ssh-key
             defaultMode: 0400
+        - name: backup-data
+          emptyDir: {}
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: rpg-wiki-backup-ssh-key
-  namespace: rpg-wiki-demo
-type: Opaque
-data:
-  id_rsa: "c2VjcmV0LWtleQ=="  #Update it by hand
-
+# Create ssh key secret with command similar to: kubectl create secret generic rpg-wiki-backup-ssh-key   --from-file=id_rsa=/home/klucsik/.ssh/test/rpg-wiki-dev   -n rpg-wiki-demo
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

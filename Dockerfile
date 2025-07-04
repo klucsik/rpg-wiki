@@ -45,8 +45,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install only essential runtime dependencies
-RUN apk add --no-cache libc6-compat openssl && \
+# Install only essential runtime dependencies including git for backup functionality
+RUN apk add --no-cache libc6-compat openssl git openssh-client && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 

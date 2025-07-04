@@ -23,13 +23,14 @@ interface BackupJob {
 export default function BackupSettingsPage() {
   const [settings, setSettings] = useState<BackupSettings>({
     gitRepoUrl: '',
-    sshKeyPath: '',
-    backupPath: '/tmp/wiki-backup',
+    sshKeyPath: '/app/.ssh/id_rsa',
+    backupPath: '/app/backup-data',
     enabled: false
   });
   const [jobs, setJobs] = useState<BackupJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
@@ -112,6 +113,37 @@ export default function BackupSettingsPage() {
     }
   };
 
+  const testGitConnection = async () => {
+    setTesting(true);
+    setMessage(null);
+    
+    try {
+      const response = await fetch('/api/admin/backup-settings/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMessage({ 
+          type: result.success ? 'success' : 'error', 
+          text: result.message 
+        });
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.message || 'Connection test failed' });
+      }
+    } catch (error) {
+      console.error('Error testing git connection:', error);
+      setMessage({ type: 'error', text: 'Failed to test git connection' });
+    } finally {
+      setTesting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'text-green-400';
@@ -173,11 +205,11 @@ export default function BackupSettingsPage() {
               type="text"
               value={settings.sshKeyPath}
               onChange={(e) => setSettings({ ...settings, sshKeyPath: e.target.value })}
-              placeholder="/path/to/ssh/private/key"
+              placeholder="/app/.ssh/id_rsa"
               className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-indigo-100 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Leave empty for HTTPS URLs or default SSH key
+              For Kubernetes: SSH key is mounted at /app/.ssh/id_rsa
             </p>
           </div>
 
@@ -189,11 +221,11 @@ export default function BackupSettingsPage() {
               type="text"
               value={settings.backupPath}
               onChange={(e) => setSettings({ ...settings, backupPath: e.target.value })}
-              placeholder="/tmp/wiki-backup"
+              placeholder="/app/backup-data"
               className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-indigo-100 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Local directory where the git repository will be cloned/managed
+              For Kubernetes: Use /app/backup-data (mounted as emptyDir volume)
             </p>
           </div>
 
@@ -226,6 +258,14 @@ export default function BackupSettingsPage() {
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition font-medium"
           >
             Trigger Manual Backup
+          </button>
+
+          <button
+            onClick={testGitConnection}
+            disabled={testing || !settings.gitRepoUrl}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition font-medium"
+          >
+            {testing ? 'Testing...' : 'Test Connection'}
           </button>
         </div>
       </div>
@@ -306,17 +346,38 @@ export default function BackupSettingsPage() {
           </div>
           
           <div>
-            <h4 className="font-medium text-indigo-300 mb-2">2. SSH Key (Optional)</h4>
-            <p>If using SSH URLs, ensure the SSH private key is accessible to the application and specify the full path above.</p>
+            <h4 className="font-medium text-indigo-300 mb-2">2. SSH Key Setup (Kubernetes)</h4>
+            <div className="text-sm space-y-2">
+              <p>For Kubernetes deployments, create a secret with your SSH private key:</p>
+              <code className="block bg-gray-900 p-2 rounded mt-1 font-mono text-xs">
+                kubectl create secret generic rpg-wiki-backup-ssh-key \<br/>
+                &nbsp;&nbsp;--from-file=id_rsa=/path/to/your/private/key \<br/>
+                &nbsp;&nbsp;-n rpg-wiki-demo
+              </code>
+              <p className="text-yellow-400">The key will be mounted at <code>/app/.ssh/id_rsa</code> with correct permissions (0600).</p>
+            </div>
           </div>
           
           <div>
-            <h4 className="font-medium text-indigo-300 mb-2">3. Backup Path</h4>
-            <p>Choose a local directory where the git repository will be cloned. Ensure the application has write permissions.</p>
+            <h4 className="font-medium text-indigo-300 mb-2">3. Backup Storage (Kubernetes)</h4>
+            <div className="text-sm space-y-2">
+              <p>The backup path <code>/app/backup-data</code> is mounted as an emptyDir volume.</p>
+              <p className="text-yellow-400">Note: emptyDir volumes are ephemeral. For persistent backups, consider using a PersistentVolume.</p>
+            </div>
           </div>
           
           <div>
-            <h4 className="font-medium text-indigo-300 mb-2">4. Import from Backup</h4>
+            <h4 className="font-medium text-indigo-300 mb-2">4. Troubleshooting</h4>
+            <ul className="text-sm space-y-1">
+              <li>• Use "Test Connection" button to verify git access</li>
+              <li>• Check backup job logs in the "Recent Backup Jobs" section</li>
+              <li>• For SSH issues, ensure keys are mounted and have correct permissions (600)</li>
+              <li>• For permission issues, check that the container can write to the backup path</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-indigo-300 mb-2">5. Import from Backup</h4>
             <p>To restore from a backup, use the import script:</p>
             <code className="block bg-gray-900 p-2 rounded mt-1 font-mono text-xs">
               npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --update-existing
