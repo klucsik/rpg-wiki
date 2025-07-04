@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 import { prisma } from '../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
 import { filterRestrictedContent, hasRestrictedContent } from '../../../../lib/server-content-filter';
+import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../lib/placeholder-restore';
 
 // GET latest version of a page by page_id
 export async function GET(
@@ -139,10 +140,17 @@ export async function PUT(
     return NextResponse.json({ error: authError.error }, { status: authError.status });
   }  const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
   
+  // Restore any placeholders back to restricted blocks before saving
+  let processedContent = content;
+  if (hasRestrictedPlaceholders(content)) {
+    processedContent = restorePlaceholdersToRestrictedBlocks(content);
+    console.log('Restored placeholders to restricted blocks before publishing');
+  }
+  
   // Compute hash for change detection (includes content + metadata)
   const hashInput = JSON.stringify({
     title,
-    content,
+    content: processedContent,
     path,
     edit_groups: (edit_groups || []).sort(),
     view_groups: (view_groups || []).sort()
@@ -178,7 +186,7 @@ export async function PUT(
   // Prepare update data - only include path if it's actually changing
   const pageUpdateData: any = {
     title,
-    content,
+    content: processedContent,
     edit_groups: edit_groups || ['admin'],
     view_groups: view_groups || ['admin',  'public'],
     updated_at: new Date(),
@@ -197,7 +205,7 @@ export async function PUT(
         page_id: parseInt(id),
         version: nextVersion,
         title,
-        content,
+        content: processedContent,
         path: path || currentPage?.path || '',
         edit_groups: edit_groups || ['admin'],
         view_groups: view_groups || ['admin',  'public'],

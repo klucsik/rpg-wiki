@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { prisma } from '../../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
+import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../../lib/placeholder-restore';
 
 // POST autosave draft version
 export async function POST(
@@ -27,10 +28,18 @@ export async function POST(
   }
 
   const { title, content, edit_groups, view_groups, path } = await req.json();
+  
+  // Restore any placeholders back to restricted blocks before saving
+  let processedContent = content;
+  if (hasRestrictedPlaceholders(content)) {
+    processedContent = restorePlaceholdersToRestrictedBlocks(content);
+    console.log('Restored placeholders to restricted blocks before saving');
+  }
+  
   // Compute hash for change detection (includes content + metadata)
   const hashInput = JSON.stringify({
     title,
-    content,
+    content: processedContent, // Use processed content for hash
     path,
     edit_groups: (edit_groups || []).sort(),
     view_groups: (view_groups || []).sort()
@@ -87,7 +96,7 @@ export async function POST(
       where: { id: recentDraft.id },
       data: {
         title,
-        content,
+        content: processedContent, // Use processed content (placeholders restored)
         path,
         edit_groups: edit_groups || ['admin'],
         view_groups: view_groups || ['admin', 'public'],
@@ -111,7 +120,7 @@ export async function POST(
         page_id: parseInt(id),
         version: nextVersion,
         title,
-        content,
+        content: processedContent, // Use processed content (placeholders restored)
         path,
         edit_groups: edit_groups || ['admin'],
         view_groups: view_groups || ['admin', 'public'],

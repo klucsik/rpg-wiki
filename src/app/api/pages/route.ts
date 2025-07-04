@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 import { prisma } from '../../../db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
 import { canUserViewPage } from '../../../accessControl';
+import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../lib/placeholder-restore';
 
 // GET all pages - filtered by user permissions
 export async function GET(req: NextRequest) {
@@ -48,13 +49,20 @@ export async function POST(req: NextRequest) {
 
   const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
   
+  // Restore any placeholders back to restricted blocks before saving
+  let processedContent = content;
+  if (hasRestrictedPlaceholders(content)) {
+    processedContent = restorePlaceholdersToRestrictedBlocks(content);
+    console.log('Restored placeholders to restricted blocks before publishing');
+  }
+  
   try {
     // First try to create a new page
     const result = await prisma.$transaction(async (tx) => {
       const created = await tx.page.create({
         data: {
           title,
-          content,
+          content: processedContent,
           edit_groups: edit_groups || ['admin'],
           view_groups: view_groups || ['admin',  'public'],
           path,
@@ -67,7 +75,7 @@ export async function POST(req: NextRequest) {
           page_id: created.id,
           version: 1,
           title,
-          content,
+          content: processedContent,
           path,
           edit_groups: edit_groups || ['admin'],
           view_groups: view_groups || ['admin',  'public'],
@@ -75,7 +83,7 @@ export async function POST(req: NextRequest) {
           change_summary: change_summary || 'Initial version',
           content_hash: createHash('sha256').update(JSON.stringify({
             title,
-            content,
+            content: processedContent,
             path,
             edit_groups: (edit_groups || ['admin']).sort(),
             view_groups: (view_groups || ['admin', 'public']).sort()
@@ -119,7 +127,7 @@ export async function POST(req: NextRequest) {
             where: { id: existingPage.id },
             data: {
               title,
-              content,
+              content: processedContent,
               edit_groups: edit_groups || ['admin'],
               view_groups: view_groups || ['admin',  'public'],
               updated_at: new Date(),
@@ -140,7 +148,7 @@ export async function POST(req: NextRequest) {
               page_id: existingPage.id,
               version: nextVersion,
               title,
-              content,
+              content: processedContent,
               path,
               edit_groups: edit_groups || ['admin'],
               view_groups: view_groups || ['admin',  'public'],
@@ -148,7 +156,7 @@ export async function POST(req: NextRequest) {
               change_summary: change_summary || `Update via import (version ${nextVersion})`,
               content_hash: createHash('sha256').update(JSON.stringify({
                 title,
-                content,
+                content: processedContent,
                 path,
                 edit_groups: (edit_groups || ['admin']).sort(),
                 view_groups: (view_groups || ['admin', 'public']).sort()

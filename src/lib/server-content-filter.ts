@@ -103,12 +103,18 @@ export function filterRestrictedContent(
         // In edit mode, replace with placeholder
         removedBlocks.push({ title: 'Hidden Block', groups: allowedEditGroups });
         
+        // Store the original block's HTML content (without the outer div)
+        const originalContent = block.innerHTML;
+        
         // Create placeholder element
         const placeholder = document.createElement('div');
         placeholder.setAttribute('data-block-type', 'restricted-placeholder');
         placeholder.setAttribute('data-block-id', `placeholder-${Date.now()}-${Math.random()}`);
         placeholder.setAttribute('data-original-usergroups', userGroupsAttr || '[]');
         placeholder.setAttribute('data-original-editgroups', editGroupsAttr || '[]');
+        placeholder.setAttribute('data-original-title', title);
+        placeholder.setAttribute('data-original-content', originalContent);
+        placeholder.setAttribute('data-allowed-groups', JSON.stringify(allowedEditGroups));
         placeholder.className = 'restricted-block-placeholder-html';
         
         // Replace original block with placeholder

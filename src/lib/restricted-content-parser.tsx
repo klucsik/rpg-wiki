@@ -69,6 +69,8 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
             blockId={el.getAttribute('data-block-id') || ''}
             originalUsergroups={el.getAttribute('data-original-usergroups') || '[]'}
             originalEditgroups={el.getAttribute('data-original-editgroups') || '[]'}
+            originalTitle={el.getAttribute('data-original-title') || undefined}
+            allowedGroups={el.getAttribute('data-allowed-groups') || '[]'}
           />
         );
       }

@@ -42,6 +42,27 @@ const RestrictedBlockPlaceholder = Node.create<RestrictedBlockPlaceholderOptions
           return { 'data-original-editgroups': attributes.originalEditgroups };
         },
       },
+      originalTitle: {
+        default: 'Restricted Block',
+        parseHTML: element => element.getAttribute('data-original-title') || 'Restricted Block',
+        renderHTML: attributes => {
+          return { 'data-original-title': attributes.originalTitle };
+        },
+      },
+      originalContent: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-original-content') || '',
+        renderHTML: attributes => {
+          return { 'data-original-content': attributes.originalContent };
+        },
+      },
+      allowedGroups: {
+        default: '[]',
+        parseHTML: element => element.getAttribute('data-allowed-groups') || '[]',
+        renderHTML: attributes => {
+          return { 'data-allowed-groups': attributes.allowedGroups };
+        },
+      },
     };
   },
   parseHTML() {
@@ -61,6 +82,9 @@ const RestrictedBlockPlaceholder = Node.create<RestrictedBlockPlaceholderOptions
           'data-block-id': node.attrs.blockId,
           'data-original-usergroups': node.attrs.originalUsergroups,
           'data-original-editgroups': node.attrs.originalEditgroups,
+          'data-original-title': node.attrs.originalTitle,
+          'data-original-content': node.attrs.originalContent,
+          'data-allowed-groups': node.attrs.allowedGroups,
           class: 'restricted-block-placeholder-html',
         }
       ),
