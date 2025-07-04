@@ -7,6 +7,7 @@ export interface GitBackupSettings {
   gitRepoUrl: string;
   sshKeyPath: string;
   backupPath: string;
+  branchName: string;
   enabled: boolean;
 }
 
@@ -24,7 +25,7 @@ export class GitBackupService {
     const settings = await prisma.siteSetting.findMany({
       where: {
         key: {
-          in: ['git_repo_url', 'ssh_key_path', 'backup_path', 'backup_enabled']
+          in: ['git_repo_url', 'ssh_key_path', 'backup_path', 'backup_enabled', 'git_branch_name']
         }
       }
     });
@@ -38,6 +39,7 @@ export class GitBackupService {
       gitRepoUrl: settingsMap.git_repo_url || '',
       sshKeyPath: settingsMap.ssh_key_path || '/app/.ssh/id_rsa',
       backupPath: settingsMap.backup_path || '/app/backup-data',
+      branchName: settingsMap.git_branch_name || 'main',
       enabled: settingsMap.backup_enabled === 'true'
     };
   }
@@ -65,6 +67,14 @@ export class GitBackupService {
       updates.push({
         key: 'backup_path',
         value: settings.backupPath,
+        encrypted: false
+      });
+    }
+
+    if (settings.branchName !== undefined) {
+      updates.push({
+        key: 'git_branch_name',
+        value: settings.branchName,
         encrypted: false
       });
     }
@@ -133,10 +143,10 @@ export class GitBackupService {
       const isExisting = await this.checkIfRepoExists(settings.backupPath);
       if (isExisting) {
         repoPath = settings.backupPath;
-        await this.gitPull(repoPath, settings.sshKeyPath);
+        await this.gitPull(repoPath, settings.branchName, settings.sshKeyPath);
       } else {
         // Clone into the backup path and get the actual repo directory
-        repoPath = await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.sshKeyPath);
+        repoPath = await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.branchName, settings.sshKeyPath);
       }
 
       // Export wiki data
@@ -146,7 +156,7 @@ export class GitBackupService {
       const commitHash = await this.createGitCommit(repoPath, settings.sshKeyPath);
 
       // Push to remote
-      await this.gitPush(repoPath, settings.sshKeyPath);
+      await this.gitPush(repoPath, settings.branchName, settings.sshKeyPath);
 
       await this.updateJobStatus(jobId, 'completed', undefined, commitHash, repoPath);
     } catch (error) {
@@ -243,7 +253,7 @@ export class GitBackupService {
     });
   }
 
-  private async gitClone(repoUrl: string, parentPath: string, sshKeyPath?: string): Promise<string> {
+  private async gitClone(repoUrl: string, parentPath: string, branchName: string, sshKeyPath?: string): Promise<string> {
     // Extract repo name from URL to determine the actual clone directory
     const repoName = repoUrl.replace(/\.git$/, '').split('/').pop() || 'repo';
     const targetPath = join(parentPath, repoName);
@@ -251,16 +261,99 @@ export class GitBackupService {
     // Clone the repository
     await this.execCommand('git', ['clone', repoUrl], parentPath, sshKeyPath);
     
+    // Handle branch checkout after cloning
+    if (branchName !== 'main' && branchName !== 'master') {
+      try {
+        // First, fetch all remote branches
+        await this.execCommand('git', ['fetch', 'origin'], targetPath, sshKeyPath);
+        
+        // Try to checkout existing remote branch
+        try {
+          await this.execCommand('git', ['checkout', '-b', branchName, `origin/${branchName}`], targetPath, sshKeyPath);
+          console.log(`Checked out existing remote branch: ${branchName}`);
+        } catch (error) {
+          // If remote branch doesn't exist, create new local branch
+          await this.execCommand('git', ['checkout', '-b', branchName], targetPath, sshKeyPath);
+          console.log(`Created new local branch: ${branchName}`);
+        }
+      } catch (error) {
+        console.error(`Failed to setup branch ${branchName}:`, error);
+        // Continue with default branch if branch setup fails
+      }
+    } else {
+      // For main/master, ensure we're on the correct branch
+      try {
+        const currentBranch = await this.execCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], targetPath, sshKeyPath);
+        if (currentBranch.trim() !== branchName) {
+          await this.execCommand('git', ['checkout', branchName], targetPath, sshKeyPath);
+        }
+      } catch (error) {
+        console.error(`Failed to checkout ${branchName}:`, error);
+      }
+    }
+    
     // Return the actual repository path
     return targetPath;
   }
 
-  private async gitPull(repoPath: string, sshKeyPath?: string): Promise<void> {
-    await this.execCommand('git', ['pull', 'origin', 'main'], repoPath, sshKeyPath);
+  private async gitPull(repoPath: string, branchName: string, sshKeyPath?: string): Promise<void> {
+    try {
+      // First, fetch to make sure we have the latest remote refs
+      await this.execCommand('git', ['fetch', 'origin'], repoPath, sshKeyPath);
+      
+      // Check if the remote branch exists
+      try {
+        await this.execCommand('git', ['rev-parse', '--verify', `origin/${branchName}`], repoPath, sshKeyPath);
+        // Remote branch exists, pull from it
+        await this.execCommand('git', ['pull', 'origin', branchName], repoPath, sshKeyPath);
+      } catch (error) {
+        // Remote branch doesn't exist, check if we're already on the correct local branch
+        try {
+          const currentBranch = await this.execCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repoPath, sshKeyPath);
+          if (currentBranch.trim() !== branchName) {
+            // Create and switch to the new branch
+            await this.execCommand('git', ['checkout', '-b', branchName], repoPath, sshKeyPath);
+          }
+          // Branch is now ready, no need to pull since remote doesn't exist yet
+        } catch (branchError) {
+          throw new Error(`Failed to create or switch to branch ${branchName}: ${branchError instanceof Error ? branchError.message : 'Unknown error'}`);
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("couldn't find remote ref")) {
+        // Handle the specific case where remote branch doesn't exist
+        console.log(`Remote branch '${branchName}' doesn't exist, will create it on next push`);
+        try {
+          const currentBranch = await this.execCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repoPath, sshKeyPath);
+          if (currentBranch.trim() !== branchName) {
+            await this.execCommand('git', ['checkout', '-b', branchName], repoPath, sshKeyPath);
+          }
+        } catch (branchError) {
+          throw new Error(`Failed to create local branch ${branchName}: ${branchError instanceof Error ? branchError.message : 'Unknown error'}`);
+        }
+      } else {
+        throw error;
+      }
+    }
   }
 
-  private async gitPush(repoPath: string, sshKeyPath?: string): Promise<void> {
-    await this.execCommand('git', ['push', 'origin', 'main'], repoPath, sshKeyPath);
+  private async gitPush(repoPath: string, branchName: string, sshKeyPath?: string): Promise<void> {
+    try {
+      // Try to push to the existing branch
+      await this.execCommand('git', ['push', 'origin', branchName], repoPath, sshKeyPath);
+    } catch (error) {
+      if (error instanceof Error && (
+        error.message.includes("does not exist") || 
+        error.message.includes("no upstream branch") ||
+        error.message.includes("fatal: The current branch")
+      )) {
+        // Branch doesn't exist on remote, push and set upstream
+        console.log(`Creating new remote branch '${branchName}'`);
+        await this.execCommand('git', ['push', '-u', 'origin', branchName], repoPath, sshKeyPath);
+      } else {
+        throw error;
+      }
+    }
   }
 
   private async exportWikiData(backupPath: string): Promise<void> {
@@ -348,7 +441,7 @@ export class GitBackupService {
 
       try {
         // Try to clone the repository
-        const repoPath = await this.gitClone(settings.gitRepoUrl, testPath, settings.sshKeyPath);
+        const repoPath = await this.gitClone(settings.gitRepoUrl, testPath, settings.branchName, settings.sshKeyPath);
         
         // Clean up
         await fs.rm(testPath, { recursive: true, force: true });

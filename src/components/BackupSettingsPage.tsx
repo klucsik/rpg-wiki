@@ -5,6 +5,7 @@ interface BackupSettings {
   gitRepoUrl: string;
   sshKeyPath: string;
   backupPath: string;
+  branchName: string;
   enabled: boolean;
 }
 
@@ -25,6 +26,7 @@ export default function BackupSettingsPage() {
     gitRepoUrl: '',
     sshKeyPath: '/app/.ssh/id_rsa',
     backupPath: '/app/backup-data',
+    branchName: 'main',
     enabled: false
   });
   const [jobs, setJobs] = useState<BackupJob[]>([]);
@@ -226,6 +228,22 @@ export default function BackupSettingsPage() {
             />
             <p className="text-xs text-gray-400 mt-1">
               For Kubernetes: Use /app/backup-data (mounted as emptyDir volume)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-indigo-300 mb-2">
+              Git Branch Name
+            </label>
+            <input
+              type="text"
+              value={settings.branchName}
+              onChange={(e) => setSettings({ ...settings, branchName: e.target.value })}
+              placeholder="main"
+              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-indigo-100 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Branch to use for backups (will be created if it doesn't exist)
             </p>
           </div>
 
