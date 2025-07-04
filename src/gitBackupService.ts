@@ -503,7 +503,14 @@ export class GitBackupService {
   }
 
   private async exportPages(exportPath: string): Promise<number> {
-    const pages = await prisma.page.findMany();
+    const pages = await prisma.page.findMany({
+      include: {
+        versions: {
+          orderBy: { version: 'desc' },
+          take: 1
+        }
+      }
+    });
     let exported = 0;
 
     for (const page of pages) {
@@ -519,6 +526,17 @@ export class GitBackupService {
         const filePath = join(pageDir, filename);
 
         await this.ensureDirectoryExists(filePath);
+
+        // Calculate and store content hash if not exists
+        const contentHash = this.calculateContentHash(page.content);
+        const latestVersion = page.versions[0];
+        
+        if (latestVersion && !latestVersion.content_hash) {
+          await prisma.pageVersion.update({
+            where: { id: latestVersion.id },
+            data: { content_hash: contentHash }
+          });
+        }
 
         // Export latest version
         const content = this.createMetadataHeader(page) + page.content;
@@ -592,5 +610,409 @@ export class GitBackupService {
     const manifestPath = join(exportPath, 'export-manifest.json');
     await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
     console.log(`Export manifest created: ${manifestPath}`);
+  }
+
+  async triggerImport(userId: string, mode: 'smart' | 'force' = 'smart'): Promise<number> {
+    return this.createImportJob(userId, mode);
+  }
+
+  async createImportJob(triggeredBy: string, mode: 'smart' | 'force' = 'smart'): Promise<number> {
+    const job = await prisma.backupJob.create({
+      data: {
+        status: 'pending',
+        triggeredBy,
+        jobType: 'import'
+      }
+    });
+
+    // Start the import process asynchronously
+    this.processImport(job.id, mode).catch(error => {
+      console.error('Import job failed:', error);
+      this.updateJobStatus(job.id, 'failed', error.message);
+    });
+
+    return job.id;
+  }
+
+  private async processImport(jobId: number, mode: 'smart' | 'force'): Promise<void> {
+    try {
+      await this.updateJobStatus(jobId, 'running');
+
+      const settings = await this.getSettings();
+      if (!settings.gitRepoUrl) {
+        throw new Error('Git repository URL not configured');
+      }
+
+      // Setup SSH key if provided
+      if (settings.sshKeyPath) {
+        await this.setupSSHKey(settings.sshKeyPath);
+      }
+
+      // Create backup directory if it doesn't exist
+      await fs.mkdir(settings.backupPath, { recursive: true });
+
+      // Clone or pull the repository to get latest content
+      let repoPath: string;
+      const isExisting = await this.checkIfRepoExists(settings.backupPath);
+      if (isExisting) {
+        repoPath = settings.backupPath;
+        await this.gitPull(repoPath, settings.branchName, settings.sshKeyPath);
+      } else {
+        repoPath = await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.branchName, settings.sshKeyPath);
+      }
+
+      // Import wiki data from the repository
+      const wikiDataPath = join(repoPath, 'wiki-data');
+      const importResult = await this.importWikiData(wikiDataPath, mode);
+
+      await this.updateJobStatus(jobId, 'completed', undefined, 'imported', JSON.stringify(importResult));
+    } catch (error) {
+      await this.updateJobStatus(jobId, 'failed', error instanceof Error ? error.message : 'Unknown error');
+      throw error;
+    }
+  }
+
+  private async importWikiData(importPath: string, mode: 'smart' | 'force'): Promise<any> {
+    console.log(`Starting import from ${importPath} with mode: ${mode}`);
+    
+    const importResult = {
+      pagesImported: 0,
+      pagesUpdated: 0,
+      pagesSkipped: 0,
+      versionsImported: 0,
+      imagesImported: 0,
+      errors: [] as string[]
+    };
+
+    try {
+      // Check if import path exists
+      await fs.access(importPath);
+    } catch {
+      throw new Error(`Import path not found: ${importPath}`);
+    }
+
+    // Import pages
+    try {
+      const pageResult = await this.importPages(importPath, mode);
+      importResult.pagesImported = pageResult.imported;
+      importResult.pagesUpdated = pageResult.updated;
+      importResult.pagesSkipped = pageResult.skipped;
+    } catch (error) {
+      console.error('Error importing pages:', error);
+      importResult.errors.push(`Pages: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Import images
+    try {
+      const imagesPath = join(importPath, 'images');
+      const imageResult = await this.importImages(imagesPath, mode);
+      importResult.imagesImported = imageResult.imported;
+    } catch (error) {
+      console.error('Error importing images:', error);
+      importResult.errors.push(`Images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    console.log('Import completed:', importResult);
+    return importResult;
+  }
+
+  private async importPages(importPath: string, mode: 'smart' | 'force'): Promise<{ imported: number, updated: number, skipped: number }> {
+    const result = { imported: 0, updated: 0, skipped: 0 };
+    
+    const walkDirectory = async (dir: string): Promise<void> => {
+      const files = await fs.readdir(dir);
+      
+      for (const file of files) {
+        const filePath = join(dir, file);
+        const stat = await fs.stat(filePath);
+        
+        if (stat.isDirectory() && file !== 'images' && file !== 'versions') {
+          await walkDirectory(filePath);
+        } else if (stat.isFile() && file.endsWith('.html')) {
+          try {
+            const imported = await this.importSinglePage(filePath, importPath, mode);
+            if (imported === 'imported') result.imported++;
+            else if (imported === 'updated') result.updated++;
+            else result.skipped++;
+          } catch (error) {
+            console.error(`Error importing page ${filePath}:`, error);
+          }
+        }
+      }
+    };
+
+    await walkDirectory(importPath);
+    return result;
+  }
+
+  private async importSinglePage(filePath: string, importBasePath: string, mode: 'smart' | 'force'): Promise<'imported' | 'updated' | 'skipped'> {
+    const content = await fs.readFile(filePath, 'utf8');
+    const { metadata, htmlContent } = this.parseFileMetadata(content);
+    
+    if (!metadata) {
+      console.warn(`No metadata found in ${filePath}, skipping`);
+      return 'skipped';
+    }
+
+    // Use metadata path if available, otherwise generate from file structure
+    const pagePath = metadata.path || this.generatePathFromFile(filePath, importBasePath);
+    
+    // Calculate content hash for smart merging
+    const contentHash = this.calculateContentHash(htmlContent);
+    
+    // Check if page already exists
+    const existingPage = await prisma.page.findUnique({
+      where: { path: pagePath },
+      include: {
+        versions: {
+          orderBy: { version: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    const pageData = {
+      title: metadata.title,
+      content: htmlContent,
+      path: pagePath,
+      edit_groups: metadata.edit_groups || [],
+      view_groups: metadata.view_groups || [],
+      created_at: metadata.created ? new Date(metadata.created) : undefined,
+      updated_at: metadata.date ? new Date(metadata.date) : undefined
+    };
+
+    if (existingPage) {
+      if (mode === 'smart') {
+        // Check if content is different using hash
+        const latestVersion = existingPage.versions[0];
+        if (latestVersion?.content_hash === contentHash) {
+          console.log(`Skipping unchanged page: ${pagePath}`);
+          return 'skipped';
+        }
+      }
+
+      // Update existing page and create new version
+      const latestVersion = await prisma.pageVersion.findFirst({
+        where: { page_id: existingPage.id },
+        orderBy: { version: 'desc' }
+      });
+
+      const nextVersion = (latestVersion?.version || 0) + 1;
+
+      await prisma.page.update({
+        where: { id: existingPage.id },
+        data: {
+          title: pageData.title,
+          content: pageData.content,
+          edit_groups: pageData.edit_groups,
+          view_groups: pageData.view_groups,
+          updated_at: pageData.updated_at || new Date()
+        }
+      });
+
+      // Create new version with hash
+      await prisma.pageVersion.create({
+        data: {
+          page_id: existingPage.id,
+          version: nextVersion,
+          title: pageData.title,
+          content: pageData.content,
+          path: pagePath,
+          edit_groups: pageData.edit_groups,
+          view_groups: pageData.view_groups,
+          edited_by: 'import',
+          change_summary: `Imported from git backup (${mode} mode)`,
+          content_hash: contentHash,
+          is_draft: false,
+          edited_at: pageData.updated_at || new Date()
+        }
+      });
+
+      console.log(`Updated page: ${pagePath}`);
+      return 'updated';
+    } else {
+      // Create new page
+      const newPage = await prisma.page.create({
+        data: {
+          ...pageData,
+          created_at: pageData.created_at || new Date(),
+          updated_at: pageData.updated_at || new Date()
+        }
+      });
+
+      // Create initial version with hash
+      await prisma.pageVersion.create({
+        data: {
+          page_id: newPage.id,
+          version: 1,
+          title: pageData.title,
+          content: pageData.content,
+          path: pagePath,
+          edit_groups: pageData.edit_groups,
+          view_groups: pageData.view_groups,
+          edited_by: 'import',
+          change_summary: 'Initial import from git backup',
+          content_hash: contentHash,
+          is_draft: false,
+          edited_at: pageData.updated_at || new Date()
+        }
+      });
+
+      console.log(`Imported new page: ${pagePath}`);
+      return 'imported';
+    }
+  }
+
+  private async importImages(imagesPath: string, mode: 'smart' | 'force'): Promise<{ imported: number }> {
+    const result = { imported: 0 };
+    
+    try {
+      await fs.access(imagesPath);
+    } catch {
+      console.log('No images directory found, skipping image import');
+      return result;
+    }
+
+    const files = await fs.readdir(imagesPath);
+    const imageFiles = files.filter(f => !f.endsWith('.meta'));
+    
+    for (const imageFile of imageFiles) {
+      const imagePath = join(imagesPath, imageFile);
+      const metaPath = imagePath + '.meta';
+      
+      try {
+        // Check if metadata file exists
+        const metaExists = await fs.access(metaPath).then(() => true).catch(() => false);
+        if (!metaExists) {
+          console.warn(`No metadata file for ${imageFile}, skipping`);
+          continue;
+        }
+
+        const metaContent = await fs.readFile(metaPath, 'utf8');
+        const metadata = JSON.parse(metaContent);
+        
+        // Check if image already exists
+        const existingImage = await prisma.image.findFirst({
+          where: { filename: metadata.filename }
+        });
+
+        if (existingImage && mode === 'smart') {
+          console.log(`Skipping existing image: ${metadata.filename}`);
+          continue;
+        }
+
+        const imageData = await fs.readFile(imagePath);
+        
+        // Find or create API user for image ownership
+        let apiUser = await prisma.user.findUnique({
+          where: { username: 'api-import-user' }
+        });
+
+        if (!apiUser) {
+          apiUser = await prisma.user.create({
+            data: {
+              username: 'api-import-user',
+              name: 'API Import User',
+              email: 'api@import.system',
+            }
+          });
+        }
+
+        if (existingImage) {
+          // Update existing image
+          await prisma.image.update({
+            where: { id: existingImage.id },
+            data: {
+              data: imageData,
+              mimetype: metadata.mimetype
+            }
+          });
+        } else {
+          // Create new image
+          await prisma.image.create({
+            data: {
+              filename: metadata.filename,
+              mimetype: metadata.mimetype,
+              data: imageData,
+              userId: apiUser.id
+            }
+          });
+        }
+
+        result.imported++;
+        console.log(`Imported image: ${metadata.filename}`);
+      } catch (error) {
+        console.error(`Error importing image ${imageFile}:`, error);
+      }
+    }
+
+    return result;
+  }
+
+  private parseFileMetadata(content: string): { metadata: any | null; htmlContent: string } {
+    const metadataMatch = content.match(/^<!--\s*\n([\s\S]*?)\n-->\s*\n\n([\s\S]*)$/);
+    
+    if (!metadataMatch) {
+      return { metadata: null, htmlContent: content };
+    }
+
+    const metadataText = metadataMatch[1];
+    const htmlContent = metadataMatch[2];
+    
+    const metadata: any = {};
+    
+    metadataText.split('\n').forEach((line: string) => {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex === -1) return;
+      
+      const key = line.substring(0, colonIndex).trim();
+      const value = line.substring(colonIndex + 1).trim();
+      
+      switch (key) {
+        case 'title':
+          metadata.title = value;
+          break;
+        case 'path':
+          metadata.path = value;
+          break;
+        case 'published':
+          metadata.published = value === 'true';
+          break;
+        case 'date':
+          metadata.date = value;
+          break;
+        case 'created':
+          metadata.created = value;
+          break;
+        case 'edit_groups':
+          metadata.edit_groups = value.split(', ').map((g: string) => g.trim()).filter(Boolean);
+          break;
+        case 'view_groups':
+          metadata.view_groups = value.split(', ').map((g: string) => g.trim()).filter(Boolean);
+          break;
+      }
+    });
+
+    return { metadata, htmlContent };
+  }
+
+  private generatePathFromFile(filePath: string, importBasePath: string): string {
+    const relativePath = filePath.replace(importBasePath, '').replace(/^\/+/, '');
+    const pathParts = relativePath.split('/').filter(part => part !== 'versions');
+    
+    // Remove .html extension and convert filename back to path segment
+    const lastPart = pathParts[pathParts.length - 1];
+    if (lastPart && lastPart.endsWith('.html')) {
+      pathParts[pathParts.length - 1] = lastPart
+        .replace('.html', '')
+        .replace(/-v\d+$/, '') // Remove version suffix if present
+        .replace(/-/g, '-'); // Keep dashes as they were sanitized
+    }
+    
+    return '/' + pathParts.join('/');
+  }
+
+  private calculateContentHash(content: string): string {
+    return createHash('sha256').update(content).digest('hex');
   }
 }

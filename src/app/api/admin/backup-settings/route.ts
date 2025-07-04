@@ -34,11 +34,6 @@ export async function PUT(request: NextRequest) {
     
     await backupService.updateSettings(settings);
     
-    // If backup is enabled and settings look valid, trigger a backup
-    if (settings.enabled && settings.gitRepoUrl && session.user.id) {
-      await backupService.createBackupJob(session.user.id, 'manual');
-    }
-    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating backup settings:', error);

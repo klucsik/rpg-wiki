@@ -33,6 +33,7 @@ export default function BackupSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
@@ -81,7 +82,7 @@ export default function BackupSettingsPage() {
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Backup settings saved successfully! If enabled, a backup job has been started.' });
+        setMessage({ type: 'success', text: 'Backup settings saved successfully!' });
         fetchJobs(); // Refresh the jobs list
       } else {
         const error = await response.json();
@@ -143,6 +144,35 @@ export default function BackupSettingsPage() {
       setMessage({ type: 'error', text: 'Failed to test git connection' });
     } finally {
       setTesting(false);
+    }
+  };
+
+  const triggerImport = async () => {
+    setImporting(true);
+    setMessage(null);
+    
+    try {
+      const response = await fetch('/api/admin/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mode: 'smart' }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMessage({ type: 'success', text: `Smart import started (Job #${data.jobId}). Pages will be merged intelligently using content hashes to avoid duplicates.` });
+        fetchJobs(); // Refresh the jobs list
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.error || 'Failed to start import' });
+      }
+    } catch (error) {
+      console.error('Error starting import:', error);
+      setMessage({ type: 'error', text: 'Failed to start import' });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -285,6 +315,14 @@ export default function BackupSettingsPage() {
           >
             {testing ? 'Testing...' : 'Test Connection'}
           </button>
+
+          <button
+            onClick={triggerImport}
+            disabled={importing || !settings.gitRepoUrl}
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition font-medium"
+          >
+            {importing ? 'Importing...' : 'Smart Import'}
+          </button>
         </div>
       </div>
 
@@ -327,6 +365,8 @@ export default function BackupSettingsPage() {
                       <span className={`px-2 py-1 rounded text-xs ${
                         job.jobType === 'manual' 
                           ? 'bg-blue-900/50 text-blue-300' 
+                          : job.jobType === 'import'
+                          ? 'bg-purple-900/50 text-purple-300'
                           : 'bg-gray-900/50 text-gray-300'
                       }`}>
                         {job.jobType}
@@ -395,8 +435,23 @@ export default function BackupSettingsPage() {
           </div>
           
           <div>
-            <h4 className="font-medium text-indigo-300 mb-2">5. Import from Backup</h4>
-            <p>To restore from a backup, use the import script:</p>
+            <h4 className="font-medium text-indigo-300 mb-2">5. Smart Import Feature</h4>
+            <div className="text-sm space-y-2">
+              <p>The "Smart Import" button pulls the latest content from your git repository and intelligently merges it:</p>
+              <ul className="text-sm space-y-1 ml-4">
+                <li>• Uses content hashes to detect actual changes</li>
+                <li>• Skips pages that haven't changed to avoid unnecessary updates</li>
+                <li>• Creates new page versions for modified content</li>
+                <li>• Preserves all existing versions and their history</li>
+                <li>• Imports new pages that don't exist locally</li>
+                <li>• Handles images with metadata preservation</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-indigo-300 mb-2">6. Manual Import from Backup</h4>
+            <p>To restore from a backup manually, use the import script:</p>
             <code className="block bg-gray-900 p-2 rounded mt-1 font-mono text-xs">
               npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --update-existing
             </code>
