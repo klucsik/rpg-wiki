@@ -138,16 +138,23 @@ export class GitBackupService {
       await fs.mkdir(settings.backupPath, { recursive: true });
 
       // Determine the actual repo directory path
-      let repoPath: string;
+      const repoName = settings.gitRepoUrl.replace(/\.git$/, '').split('/').pop() || 'repo';
+      const repoPath = join(settings.backupPath, repoName);
       
       // Clone or pull the repository
-      const isExisting = await this.checkIfRepoExists(settings.backupPath);
+      const isExisting = await this.checkIfRepoExists(repoPath);
       if (isExisting) {
-        repoPath = settings.backupPath;
         await this.gitPull(repoPath, settings.branchName, settings.sshKeyPath);
       } else {
+        // Remove any existing directory first
+        try {
+          await fs.rm(repoPath, { recursive: true, force: true });
+        } catch (error) {
+          // Ignore errors if directory doesn't exist
+        }
+        
         // Clone into the backup path and get the actual repo directory
-        repoPath = await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.branchName, settings.sshKeyPath);
+        await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.branchName, settings.sshKeyPath);
       }
 
       // Export wiki data
@@ -652,13 +659,21 @@ export class GitBackupService {
       await fs.mkdir(settings.backupPath, { recursive: true });
 
       // Clone or pull the repository to get latest content
-      let repoPath: string;
-      const isExisting = await this.checkIfRepoExists(settings.backupPath);
+      const repoName = settings.gitRepoUrl.replace(/\.git$/, '').split('/').pop() || 'repo';
+      const repoPath = join(settings.backupPath, repoName);
+      
+      const isExisting = await this.checkIfRepoExists(repoPath);
       if (isExisting) {
-        repoPath = settings.backupPath;
         await this.gitPull(repoPath, settings.branchName, settings.sshKeyPath);
       } else {
-        repoPath = await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.branchName, settings.sshKeyPath);
+        // Remove any existing directory first
+        try {
+          await fs.rm(repoPath, { recursive: true, force: true });
+        } catch (error) {
+          // Ignore errors if directory doesn't exist
+        }
+        
+        await this.gitClone(settings.gitRepoUrl, settings.backupPath, settings.branchName, settings.sshKeyPath);
       }
 
       // Import wiki data from the repository
@@ -1014,5 +1029,69 @@ export class GitBackupService {
 
   private calculateContentHash(content: string): string {
     return createHash('sha256').update(content).digest('hex');
+  }
+
+  async deletePageFromBackup(pageId: number): Promise<void> {
+    const settings = await this.getSettings();
+    if (!settings.enabled) {
+      console.log('Git backup disabled, skipping file deletion');
+      return;
+    }
+
+    try {
+      // Get the page info before deletion
+      const page = await prisma.page.findUnique({
+        where: { id: pageId },
+        select: { title: true, path: true }
+      });
+
+      if (!page) {
+        console.log(`Page ${pageId} not found, skipping backup deletion`);
+        return;
+      }
+
+      const repoName = settings.gitRepoUrl.replace(/\.git$/, '').split('/').pop() || 'repo';
+      const repoPath = join(settings.backupPath, repoName);
+      
+      // Check if backup repository exists
+      if (!(await this.checkIfRepoExists(repoPath))) {
+        console.log('Backup repository does not exist, skipping file deletion');
+        return;
+      }
+
+      const wikiDataPath = join(repoPath, 'wiki-data');
+      
+      // Determine the file path in backup based on page path
+      const pathParts = page.path.split('/').filter(Boolean);
+      const pageDir = pathParts.length > 1 
+        ? join(wikiDataPath, ...pathParts.slice(0, -1))
+        : wikiDataPath;
+      
+      const filename = this.sanitizeFilename(page.title) + '.html';
+      const filePath = join(pageDir, filename);
+      
+      // Delete the file if it exists
+      try {
+        await fs.access(filePath);
+        await fs.unlink(filePath);
+        console.log(`Deleted backup file: ${filePath}`);
+      } catch (error) {
+        console.log(`Backup file does not exist or could not be deleted: ${filePath}`);
+      }
+
+      // If the directory is empty after deletion, remove it
+      try {
+        const files = await fs.readdir(pageDir);
+        if (files.length === 0 && pageDir !== wikiDataPath) {
+          await fs.rmdir(pageDir);
+          console.log(`Removed empty directory: ${pageDir}`);
+        }
+      } catch (error) {
+        console.log(`Could not check or remove directory: ${pageDir}`);
+      }
+    } catch (error) {
+      console.error('Error deleting page from backup:', error);
+      // Don't throw error to avoid breaking the deletion process
+    }
   }
 }

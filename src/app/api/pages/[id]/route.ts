@@ -281,10 +281,20 @@ export async function DELETE(
     return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
+  // Delete from backup first (before database deletion)
+  try {
+    const { GitBackupService } = await import('../../../../gitBackupService');
+    const backupService = GitBackupService.getInstance();
+    await backupService.deletePageFromBackup(parseInt(id));
+  } catch (error) {
+    // Don't fail the deletion if backup deletion fails, just log the error
+    console.error('Failed to delete page from backup:', error);
+  }
+
   // Delete the main page record (this will cascade delete all versions due to onDelete: Cascade)
   await prisma.page.delete({ where: { id: parseInt(id) } });
   
-  // Trigger backup after successful deletion
+  // Trigger backup after successful deletion to commit the file deletion
   try {
     const { GitBackupService } = await import('../../../../gitBackupService');
     const backupService = GitBackupService.getInstance();
