@@ -5,6 +5,7 @@ import Image from '@tiptap/extension-image';
 import TipTapLink from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import RestrictedBlock from './RestrictedBlock';
+import RestrictedBlockPlaceholder from './RestrictedBlockPlaceholder';
 import TextAlign from '@tiptap/extension-text-align';
 import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
@@ -79,6 +80,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       TipTapLink,
       Placeholder.configure({ placeholder: 'Start typing your wiki content...' }),
       RestrictedBlock,
+      RestrictedBlockPlaceholder,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Table.configure({
         resizable: true,
@@ -152,7 +154,8 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       editor.chain().focus().insertContent({
         type: 'restrictedBlock',
         attrs: {
-          usergroups: JSON.stringify(pageEditGroups && pageEditGroups.length > 0 ? pageEditGroups : ['public']),
+          usergroups: JSON.stringify(user?.username ? [user.username] : ['admin']),
+          editgroups: JSON.stringify(user?.username ? [user.username] : ['admin']), // Default to current user's username
           title: 'Restricted Block',
         },
         content: selectedContent,

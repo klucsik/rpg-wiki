@@ -3,6 +3,7 @@ import { JSDOM } from 'jsdom';
 export interface UserPermissions {
   groups: string[];
   isAuthenticated: boolean;
+  username?: string; // For default editgroups
 }
 
 export interface ContentFilterResult {
@@ -13,16 +14,22 @@ export interface ContentFilterResult {
   }>;
 }
 
+export interface ContentFilterOptions {
+  filterMode: 'view' | 'edit'; // New option to control filtering behavior
+}
+
 /**
- * Server-side content filter that removes restricted blocks based on user permissions
+ * Server-side content filter that removes or replaces restricted blocks based on user permissions
  * 
  * @param htmlContent - Raw HTML content from database
  * @param userPermissions - User's permission context
+ * @param options - Filtering options (view mode vs edit mode)
  * @returns Filtered content and metadata about removed blocks
  */
 export function filterRestrictedContent(
   htmlContent: string, 
-  userPermissions: UserPermissions
+  userPermissions: UserPermissions,
+  options: ContentFilterOptions = { filterMode: 'view' }
 ): ContentFilterResult {
   if (!htmlContent) {
     return { filteredContent: '', removedBlocks: [] };
@@ -37,26 +44,76 @@ export function filterRestrictedContent(
   
   restrictedBlocks.forEach((block: Element) => {
     const userGroupsAttr = block.getAttribute('data-usergroups');
+    const editGroupsAttr = block.getAttribute('data-editgroups');
     const title = block.getAttribute('data-title') || 'Restricted Block';
     
-    let allowedGroups: string[] = [];
+    let allowedUserGroups: string[] = [];
+    let allowedEditGroups: string[] = [];
+    
     try {
-      allowedGroups = JSON.parse(userGroupsAttr || '[]');
+      allowedUserGroups = JSON.parse(userGroupsAttr || '[]');
     } catch (e) {
       console.warn('Invalid usergroups JSON in restricted block:', userGroupsAttr);
-      allowedGroups = [];
+      allowedUserGroups = [];
     }
     
-    // Check if user has access to this block
-    const hasAccess = userPermissions.isAuthenticated && 
-      userPermissions.groups.some(userGroup => allowedGroups.includes(userGroup));
+    try {
+      allowedEditGroups = JSON.parse(editGroupsAttr || '[]');
+      
+      // If editgroups is empty, default to creator (username as group for now)
+      // In practice, you might want to implement a more sophisticated default system
+      if (allowedEditGroups.length === 0 && userPermissions.username) {
+        allowedEditGroups = [userPermissions.username];
+      }
+    } catch (e) {
+      console.warn('Invalid editgroups JSON in restricted block:', editGroupsAttr);
+      allowedEditGroups = [];
+    }
+    
+    let hasAccess = false;
+    
+    if (options.filterMode === 'view') {
+      // View mode: Check if user can view content (usergroups)
+      hasAccess = userPermissions.isAuthenticated && 
+        userPermissions.groups.some(userGroup => allowedUserGroups.includes(userGroup));
+    } else if (options.filterMode === 'edit') {
+      // Edit mode: Check if user can edit content (editgroups)
+      const hasGroupAccess = userPermissions.groups.some(userGroup => allowedEditGroups.includes(userGroup));
+      const hasUsernameAccess = userPermissions.username && allowedEditGroups.includes(userPermissions.username);
+      
+      hasAccess = userPermissions.isAuthenticated && (hasGroupAccess || Boolean(hasUsernameAccess));
+        
+      // Debug logging to help identify the issue
+      console.log('Edit access check:', {
+        userGroups: userPermissions.groups,
+        allowedEditGroups,
+        username: userPermissions.username,
+        hasGroupAccess,
+        hasUsernameAccess,
+        hasAccess
+      });
+    }
     
     if (!hasAccess) {
-      // Track what we're removing for audit/debugging
-      removedBlocks.push({ title, groups: allowedGroups });
-      
-      // Remove the entire block from DOM
-      block.remove();
+      if (options.filterMode === 'view') {
+        // In view mode, remove the block entirely
+        removedBlocks.push({ title, groups: allowedUserGroups });
+        block.remove();
+      } else if (options.filterMode === 'edit') {
+        // In edit mode, replace with placeholder
+        removedBlocks.push({ title: 'Hidden Block', groups: allowedEditGroups });
+        
+        // Create placeholder element
+        const placeholder = document.createElement('div');
+        placeholder.setAttribute('data-block-type', 'restricted-placeholder');
+        placeholder.setAttribute('data-block-id', `placeholder-${Date.now()}-${Math.random()}`);
+        placeholder.setAttribute('data-original-usergroups', userGroupsAttr || '[]');
+        placeholder.setAttribute('data-original-editgroups', editGroupsAttr || '[]');
+        placeholder.className = 'restricted-block-placeholder-html';
+        
+        // Replace original block with placeholder
+        block.parentNode?.replaceChild(placeholder, block);
+      }
     }
     // If user has access, keep the block as-is for client-side reveal functionality
   });

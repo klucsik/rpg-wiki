@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import RestrictedBlockView from "../RestrictedBlockView";
+import PlaceholderContentView from "../PlaceholderContentView";
+import RestrictedBlockPlaceholderView from "../RestrictedBlockPlaceholderView";
 
 interface User {
   groups: string[];
@@ -59,6 +61,18 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
         );
       }
       
+      // Handle restricted block placeholders
+      if (el.dataset.blockType === 'restricted-placeholder') {
+        return (
+          <PlaceholderContentView 
+            key={`placeholder-${el.getAttribute('data-block-id')}`}
+            blockId={el.getAttribute('data-block-id') || ''}
+            originalUsergroups={el.getAttribute('data-original-usergroups') || '[]'}
+            originalEditgroups={el.getAttribute('data-original-editgroups') || '[]'}
+          />
+        );
+      }
+      
       // Convert HTML attributes to React props
       const attribs = Object.fromEntries(
         Array.from(el.attributes).map(a => {
@@ -84,13 +98,25 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
         'link', 'meta', 'param', 'source', 'track', 'wbr'
       ]);
       
-      if (voidElements.has(el.tagName.toLowerCase())) {
-        return React.createElement(el.tagName.toLowerCase(), attribs);
+      const tagName = el.tagName.toLowerCase();
+      
+      // Only handle known HTML elements, fallback to div for unknown elements
+      const validHTMLElements = new Set([
+        'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'img', 
+        'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'hr', 'br',
+        'blockquote', 'code', 'pre', 'b', 'i', 'u', 's', 'del', 'ins', 'mark',
+        'area', 'base', 'col', 'embed', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'
+      ]);
+      
+      const safeTagName = validHTMLElements.has(tagName) ? tagName : 'div';
+      
+      if (voidElements.has(tagName)) {
+        return React.createElement(safeTagName as any, attribs);
       }
       
       // Regular elements with children
       return React.createElement(
-        el.tagName.toLowerCase(),
+        safeTagName as any,
         attribs,
         Array.from(el.childNodes).map((child, i) => (
           <span key={i}>{walkNode(child)}</span>

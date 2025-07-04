@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
+import { filterRestrictedContent, hasRestrictedContent } from '../../../../../lib/server-content-filter';
 
 // GET raw content for editing (no content filtering)
 export async function GET(
@@ -32,10 +33,22 @@ export async function GET(
         return NextResponse.json({ error: authError.error }, { status: authError.status });
       }
       
+      // Apply edit-based content filtering to draft
+      let processedDraftContent = latestDraft.content;
+      
+      if (hasRestrictedContent(latestDraft.content)) {
+        const filterResult = filterRestrictedContent(latestDraft.content, {
+          groups: auth.userGroups || [],
+          isAuthenticated: auth.isAuthenticated || false,
+          username: auth.username
+        }, { filterMode: 'edit' }); // Use edit mode - replace inaccessible blocks with placeholders
+        processedDraftContent = filterResult.filteredContent;
+      }
+      
       return NextResponse.json({
         id: latestDraft.page_id,
         title: latestDraft.title,
-        content: latestDraft.content, // UNFILTERED content for editor
+        content: processedDraftContent, // Filtered content with placeholders
         edit_groups: latestDraft.edit_groups,
         view_groups: latestDraft.view_groups,
         path: latestDraft.path,
@@ -66,11 +79,23 @@ export async function GET(
     return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
-  // Return UNFILTERED content for editor
+  // Apply edit-based content filtering
+  let processedContent = latestVersion.content;
+  
+  if (hasRestrictedContent(latestVersion.content)) {
+    const filterResult = filterRestrictedContent(latestVersion.content, {
+      groups: auth.userGroups || [],
+      isAuthenticated: auth.isAuthenticated || false,
+      username: auth.username
+    }, { filterMode: 'edit' }); // Use edit mode - replace inaccessible blocks with placeholders
+    processedContent = filterResult.filteredContent;
+  }
+
+  // Return filtered content with placeholders for editor
   return NextResponse.json({
     id: latestVersion.page_id,
     title: latestVersion.title,
-    content: latestVersion.content, // UNFILTERED content for editor
+    content: processedContent, // Filtered content with placeholders
     edit_groups: latestVersion.edit_groups,
     view_groups: latestVersion.view_groups,
     path: latestVersion.path,

@@ -44,14 +44,15 @@ export async function GET(
     return NextResponse.json({ error: 'Version not found' }, { status: 404 });
   }
 
-  // Apply server-side content filtering for version history
+  // Apply server-side content filtering for version history (use view mode)
   let processedContent = pageVersion.content;
   
   if (hasRestrictedContent(pageVersion.content)) {
     const filterResult = filterRestrictedContent(pageVersion.content, {
       groups: auth.userGroups || ['public'],
-      isAuthenticated: auth.isAuthenticated || false
-    });
+      isAuthenticated: auth.isAuthenticated || false,
+      username: auth.username
+    }, { filterMode: 'view' }); // Use view mode for version history
     processedContent = filterResult.filteredContent;
   }
 

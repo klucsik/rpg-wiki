@@ -48,16 +48,27 @@ export async function POST(req: NextRequest) {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
     
+    // Create or get personal group for this user
+    const personalGroup = await prisma.group.upsert({
+      where: { name: username },
+      update: {}, // If group exists, don't change it
+      create: { name: username }, // Create group with username as name
+    });
+    
+    // Combine personal group with any additional specified groups
+    const allGroupIds = [personalGroup.id];
+    if (groupIds && Array.isArray(groupIds) && groupIds.length > 0) {
+      allGroupIds.push(...groupIds);
+    }
+    
     const user = await prisma.user.create({
       data: {
         name: name || username,
         username,
         password: hashedPassword,
-        userGroups: groupIds && Array.isArray(groupIds) && groupIds.length > 0
-          ? {
-              create: groupIds.map(groupId => ({ groupId }))
-            }
-          : undefined,
+        userGroups: {
+          create: allGroupIds.map(groupId => ({ groupId }))
+        },
       },
       include: { 
         userGroups: {

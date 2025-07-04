@@ -33,8 +33,9 @@ export async function GET(
       if (hasRestrictedContent(latestDraft.content)) {
         const filterResult = filterRestrictedContent(latestDraft.content, {
           groups: auth.userGroups || ['public'],
-          isAuthenticated: auth.isAuthenticated || false
-        });
+          isAuthenticated: auth.isAuthenticated || false,
+          username: auth.username
+        }, { filterMode: 'view' }); // Use view mode for regular page viewing
         processedDraftContent = filterResult.filteredContent;
       }
       
@@ -73,8 +74,9 @@ export async function GET(
   if (hasRestrictedContent(latestVersion.content)) {
     const filterResult = filterRestrictedContent(latestVersion.content, {
       groups: auth?.userGroups || ['public'],
-      isAuthenticated: auth?.isAuthenticated || false
-    });
+      isAuthenticated: auth?.isAuthenticated || false,
+      username: auth?.username
+    }, { filterMode: 'view' }); // Use view mode for regular page viewing
     processedContent = filterResult.filteredContent;
     removedBlocks = filterResult.removedBlocks;
     

@@ -34,6 +34,13 @@ const RestrictedBlock = Node.create<RestrictedBlockOptions>({
           return { 'data-title': attributes.title };
         },
       },
+      editgroups: {
+        default: '[]',
+        parseHTML: element => element.getAttribute('data-editgroups') || '[]',
+        renderHTML: attributes => {
+          return { 'data-editgroups': attributes.editgroups };
+        },
+      },
     };
   },
   parseHTML() {
@@ -52,6 +59,7 @@ const RestrictedBlock = Node.create<RestrictedBlockOptions>({
           'data-block-type': 'restricted',
           'data-usergroups': node.attrs.usergroups,
           'data-title': node.attrs.title,
+          'data-editgroups': node.attrs.editgroups,
           class: 'restricted-block-html',
         }
       ),

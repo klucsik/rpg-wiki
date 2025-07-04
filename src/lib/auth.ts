@@ -108,17 +108,18 @@ export const authOptions: NextAuthOptions = {
           if (!dbUser) {
             // Map Keycloak groups to our groups
             const keycloakGroups = ((profile as Record<string, unknown>).groups as string[]) || [];
+            const username = ((profile as Record<string, unknown>).preferred_username as string) || user.email!.split('@')[0];
             const defaultGroups = ["public"]; // Default group for new users
             
-            // You can customize this mapping based on your Keycloak group structure
-            const groupsToAssign = [...new Set([...keycloakGroups, ...defaultGroups])];
+            // Include personal group (username) + Keycloak groups + default groups
+            const groupsToAssign = [...new Set([username, ...keycloakGroups, ...defaultGroups])];
 
             dbUser = await prisma.user.create({
               data: {
                 id: user.id!, // Use the Keycloak user ID
                 name: user.name!,
                 email: user.email!,
-                username: ((profile as Record<string, unknown>).preferred_username as string) || user.email!.split('@')[0],
+                username: username,
                 // No password for OIDC users
                 userGroups: {
                   create: groupsToAssign.map(groupName => ({
