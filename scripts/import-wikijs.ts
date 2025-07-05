@@ -271,7 +271,7 @@ class WikiJsImporter {
    */
   private mapTagsToViewerGroups(tags: string[]): string[] {
     if (tags.includes('dmonly')) {
-      return ['dm'];
+      return ['klucsik'];
     }
     
     return ['public'];
@@ -455,7 +455,7 @@ class WikiJsImporter {
    */
   private async ensureGroupsExist(): Promise<void> {
     if (this.options.dryRun) {
-      console.log('[DRY RUN] Would ensure groups exist: dm, public');
+      console.log('[DRY RUN] Would ensure groups exist: klucsik, public');
       return;
     }
     
@@ -464,7 +464,7 @@ class WikiJsImporter {
       const existingGroups = await response.json();
       const existingGroupNames = existingGroups.map((g: any) => g.name);
       
-      const requiredGroups = ['dm', 'public'];
+      const requiredGroups = ['klucsik', 'public'];
       
       for (const groupName of requiredGroups) {
         if (!existingGroupNames.includes(groupName)) {
@@ -521,7 +521,7 @@ class WikiJsImporter {
         title: page.title,
         content: content,
         path: wikiPath,
-        edit_groups: ['dm'],
+        edit_groups: ['klucsik'],
         view_groups: viewerGroups
       };
       
@@ -608,7 +608,7 @@ class WikiJsImporter {
         title: page.title,
         content: content,
         path: wikiPath,
-        edit_groups: ['dm'],
+        edit_groups: ['klucsik'],
         view_groups: viewerGroups
       };
       

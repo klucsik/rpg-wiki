@@ -142,6 +142,12 @@ The RPG Wiki includes an automated git-based backup system that exports all wiki
    - Create a git repository (GitHub, GitLab, etc.)
    - For SSH access, add your server's SSH public key to the repository's deploy keys
 
+2.5. **generate and deploy keys**:
+   ```bash
+   ssh-keygen -f $HOME/.ssh/rpg-wiki
+   kubectl create secret generic rpg-wiki-backup-ssh-key   --from-file=id_rsa=/home/klucsik/.ssh/rpg-wiki  -n rpg-wiki-demo
+   ```
+
 3. **Configure Settings**:
    - **Git Repository URL**: SSH (`git@github.com:user/repo.git`) or HTTPS URL
    - **SSH Key Path**: Path to private SSH key (optional for HTTPS)
