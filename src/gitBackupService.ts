@@ -291,12 +291,24 @@ export class GitBackupService {
     } else {
       // For main/master, ensure we're on the correct branch
       try {
+        // Check if HEAD exists (repository has commits)
+        await this.execCommand('git', ['rev-parse', '--verify', 'HEAD'], targetPath, sshKeyPath);
+        
+        // HEAD exists, check current branch
         const currentBranch = await this.execCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], targetPath, sshKeyPath);
         if (currentBranch.trim() !== branchName) {
           await this.execCommand('git', ['checkout', branchName], targetPath, sshKeyPath);
         }
       } catch (error) {
-        console.error(`Failed to checkout ${branchName}:`, error);
+        // HEAD doesn't exist (empty repository) or other error
+        console.log(`Repository appears to be empty or HEAD doesn't exist, will create ${branchName} branch on first commit`);
+        
+        // Try to create the branch if it doesn't exist
+        try {
+          await this.execCommand('git', ['checkout', '-b', branchName], targetPath, sshKeyPath);
+        } catch (branchError) {
+          console.error(`Failed to create branch ${branchName}:`, branchError);
+        }
       }
     }
     
@@ -317,6 +329,10 @@ export class GitBackupService {
       } catch (error) {
         // Remote branch doesn't exist, check if we're already on the correct local branch
         try {
+          // First check if HEAD exists (repository has commits)
+          await this.execCommand('git', ['rev-parse', '--verify', 'HEAD'], repoPath, sshKeyPath);
+          
+          // HEAD exists, check current branch
           const currentBranch = await this.execCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repoPath, sshKeyPath);
           if (currentBranch.trim() !== branchName) {
             // Create and switch to the new branch
@@ -324,7 +340,13 @@ export class GitBackupService {
           }
           // Branch is now ready, no need to pull since remote doesn't exist yet
         } catch (branchError) {
-          throw new Error(`Failed to create or switch to branch ${branchName}: ${branchError instanceof Error ? branchError.message : 'Unknown error'}`);
+          // HEAD doesn't exist (empty repo) or other error - create the branch
+          console.log(`Repository appears to be empty, creating ${branchName} branch`);
+          try {
+            await this.execCommand('git', ['checkout', '-b', branchName], repoPath, sshKeyPath);
+          } catch (createError) {
+            throw new Error(`Failed to create branch ${branchName}: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+          }
         }
       }
     } catch (error) {
@@ -332,12 +354,22 @@ export class GitBackupService {
         // Handle the specific case where remote branch doesn't exist
         console.log(`Remote branch '${branchName}' doesn't exist, will create it on next push`);
         try {
+          // First check if HEAD exists (repository has commits)
+          await this.execCommand('git', ['rev-parse', '--verify', 'HEAD'], repoPath, sshKeyPath);
+          
+          // HEAD exists, check current branch
           const currentBranch = await this.execCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repoPath, sshKeyPath);
           if (currentBranch.trim() !== branchName) {
             await this.execCommand('git', ['checkout', '-b', branchName], repoPath, sshKeyPath);
           }
         } catch (branchError) {
-          throw new Error(`Failed to create local branch ${branchName}: ${branchError instanceof Error ? branchError.message : 'Unknown error'}`);
+          // HEAD doesn't exist (empty repo) or other error - create the branch
+          console.log(`Repository appears to be empty, creating ${branchName} branch`);
+          try {
+            await this.execCommand('git', ['checkout', '-b', branchName], repoPath, sshKeyPath);
+          } catch (createError) {
+            throw new Error(`Failed to create local branch ${branchName}: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+          }
         }
       } else {
         throw error;
