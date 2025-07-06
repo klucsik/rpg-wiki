@@ -102,12 +102,22 @@ img[data-align="right"] {
   margin-top: 0.75rem !important;
   margin-bottom: 0.75rem !important;
   line-height: 1.6 !important;
+  color: var(--foreground) !important;
+}
+
+.prose-invert p {
+  color: #ededed !important;
 }
 
 .prose ul, .prose ol {
   margin-top: 0.75rem !important;
   margin-bottom: 0.75rem !important;
   padding-left: 1.5rem !important;
+  color: var(--foreground) !important;
+}
+
+.prose-invert ul, .prose-invert ol {
+  color: #ededed !important;
 }
 
 .prose li {
