@@ -109,7 +109,8 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
 
   // Dropdown for block type selection
   const [blockType, setBlockType] = React.useState('paragraph');
-  const blockOptions = [
+  const blockOptions: Array<{ label: string; value: string; level?: number; disabled?: boolean }> = [
+    { label: 'Mixed/Multiple', value: '', disabled: true },
     { label: 'Paragraph', value: 'paragraph' },
     { label: 'Heading 1', value: 'heading', level: 1 },
     { label: 'Heading 2', value: 'heading', level: 2 },
@@ -123,19 +124,78 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
   // Update blockType state to reflect current selection in the editor
   React.useEffect(() => {
     if (!editor) return;
-    const { state } = editor;
-    const { $from } = state.selection;
-    const parent = $from.node($from.depth);
-    if (parent.type.name === 'heading') {
-      setBlockType(`heading-${parent.attrs.level}`);
-    } else if (parent.type.name === 'paragraph') {
-      setBlockType('paragraph');
-    }
+
+    const updateBlockType = () => {
+      const { state } = editor;
+      const { selection } = state;
+      const { $from, $to } = selection;
+      
+      // If selection spans multiple positions, check for consistent formatting
+      if (!selection.empty) {
+        const blockTypes = new Set<string>();
+        
+        // Check each position in the selection for block type
+        state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+          if (node.isBlock) {
+            if (node.type.name === 'heading') {
+              blockTypes.add(`heading-${node.attrs.level}`);
+            } else if (node.type.name === 'paragraph') {
+              blockTypes.add('paragraph');
+            } else if (node.type.name === 'restrictedBlock') {
+              blockTypes.add('restricted');
+            }
+          }
+        });
+        
+        // If multiple different block types are selected, show empty/mixed state
+        if (blockTypes.size > 1) {
+          setBlockType('');
+          return;
+        } else if (blockTypes.size === 1) {
+          setBlockType(Array.from(blockTypes)[0]);
+          return;
+        }
+      }
+      
+      // Single cursor position or empty selection
+      const parent = $from.node($from.depth);
+      if (parent.type.name === 'heading') {
+        setBlockType(`heading-${parent.attrs.level}`);
+      } else if (parent.type.name === 'paragraph') {
+        setBlockType('paragraph');
+      } else if (parent.type.name === 'restrictedBlock') {
+        setBlockType('restricted');
+      } else {
+        setBlockType('paragraph'); // fallback
+      }
+    };
+
+    // Update immediately
+    updateBlockType();
+
+    // Listen for selection changes
+    const handleSelectionUpdate = () => {
+      updateBlockType();
+    };
+
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on('transaction', handleSelectionUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off('transaction', handleSelectionUpdate);
+    };
   }, [editor]);
 
   const handleBlockTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (!editor) return;
     const selected = e.target.value;
+    
+    // If empty value is selected (Mixed/Multiple), do nothing
+    if (selected === '') {
+      return;
+    }
+    
     setBlockType(selected);
     if (selected === 'paragraph') {
       editor.chain().focus().setParagraph().run();
@@ -250,9 +310,9 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
         >
           {blockOptions.map(opt =>
             opt.value === 'heading' ? (
-              <option key={`heading-${opt.level}`} value={`heading-${opt.level}`}>{opt.label}</option>
+              <option key={`heading-${opt.level}`} value={`heading-${opt.level}`} disabled={opt.disabled}>{opt.label}</option>
             ) : (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value} disabled={opt.disabled}>{opt.label}</option>
             )
           )}
         </select>
