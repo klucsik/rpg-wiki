@@ -99,8 +99,6 @@ img[data-align="right"] {
 
 /* Additional prose typography improvements */
 .prose p {
-  margin-top: 0.75rem !important;
-  margin-bottom: 0.75rem !important;
   line-height: 1.6 !important;
   color: var(--foreground) !important;
 }

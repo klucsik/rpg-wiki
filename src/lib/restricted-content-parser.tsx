@@ -3,6 +3,7 @@ import React from "react";
 import RestrictedBlockView from "../RestrictedBlockView";
 import PlaceholderContentView from "../PlaceholderContentView";
 import RestrictedBlockPlaceholderView from "../RestrictedBlockPlaceholderView";
+import MermaidView from "../MermaidView";
 
 interface User {
   groups: string[];
@@ -73,6 +74,12 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
             allowedGroups={el.getAttribute('data-allowed-groups') || '[]'}
           />
         );
+      }
+      
+      // Handle Mermaid diagrams
+      if (el.dataset.type === 'mermaid') {
+        const code = el.getAttribute('data-code') || '';
+        return <MermaidView key={`mermaid-${Math.random()}`} code={code} />;
       }
       
       // Convert HTML attributes to React props

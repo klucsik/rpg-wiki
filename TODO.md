@@ -1,5 +1,3 @@
-mermaid integration
-backup to git
 facelift
 shirnk docker image size
 expand list viewfield if needed
@@ -14,23 +12,7 @@ Image caption
 editor: font size selector
 editor: font family selector
 link formatting
-Fix backup init:
-    Git backup disabled, skipping file deletion
-    SSH key found at /app/.ssh/id_rsa with permissions 440
-    SSH key found at /app/.ssh/id_rsa with permissions 440
-    SSH key found at /app/.ssh/id_rsa with permissions 440
-    Failed to checkout main: Error: Command 'git rev-parse --abbrev-ref HEAD' failed with code 128: fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
-    Use '--' to separate paths from revisions, like this:
-    'git <command> [<revision>...] -- [<file>...]'
-
-        at ChildProcess.<anonymous> (.next/server/chunks/774.js:1:3446)
-    Backup job failed: Error: Git backup is disabled
-        at c.processBackup (.next/server/chunks/774.js:1:1595)
-    Keycloak user synced: 096a0c15-f5c2-4969-a981-18d80ab8bd3b (lninja007)
-    Keycloak user synced: 096a0c15-f5c2-4969-a981-18d80ab8bd3b (lninja007)
-    Backup job failed: Error: Git backup is disabled
-        at c.processBackup (.next/server/chunks/774.js:1:1595)
-
+in backup settings, if the backup after pagesave is not enabled, the manual trigger will fail with a message that it is not enabled. It shouldn't care about that setting.
 Investigate:
     Keycloak user synced: af8ab8b4-1818-45f5-861a-82cd50d13d10 (klucsik)
     Keycloak user synced: 096a0c15-f5c2-4969-a981-18d80ab8bd3b (lninja007)

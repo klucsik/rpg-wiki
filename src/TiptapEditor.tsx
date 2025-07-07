@@ -13,6 +13,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { useUser } from "./userContext";
 import styles from './Editor.module.css';
+import { MermaidNode } from './MermaidExtension';
 
 interface TiptapEditorProps {
   value: string;
@@ -88,6 +89,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       TableRow,
       TableHeader,
       TableCell,
+      MermaidNode, // Include Mermaid extension
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -119,6 +121,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     { label: 'Heading 5', value: 'heading', level: 5 },
     { label: 'Heading 6', value: 'heading', level: 6 },
     { label: 'Restricted Block', value: 'restricted' },
+    { label: 'Mermaid Diagram', value: 'mermaid' },
   ];
 
   // Update blockType state to reflect current selection in the editor
@@ -143,6 +146,8 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
               blockTypes.add('paragraph');
             } else if (node.type.name === 'restrictedBlock') {
               blockTypes.add('restricted');
+            } else if (node.type.name === 'mermaid') {
+              blockTypes.add('mermaid');
             }
           }
         });
@@ -165,6 +170,8 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
         setBlockType('paragraph');
       } else if (parent.type.name === 'restrictedBlock') {
         setBlockType('restricted');
+      } else if (parent.type.name === 'mermaid') {
+        setBlockType('mermaid');
       } else {
         setBlockType('paragraph'); // fallback
       }
@@ -219,6 +226,12 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           title: 'Restricted Block',
         },
         content: selectedContent,
+      }).run();
+      setBlockType('paragraph');
+    } else if (selected === 'mermaid') {
+      // Insert a new Mermaid diagram
+      editor.chain().focus().insertMermaid({
+        code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
       }).run();
       setBlockType('paragraph');
     }
@@ -335,6 +348,11 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           if (url) editor.chain().focus().toggleLink({ href: url }).run();
         }} className={styles.toolbarButton}>Link</button>
         <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className={styles.toolbarButton}>Unlink</button>
+        <button type="button" onClick={() => {
+          editor.chain().focus().insertMermaid({
+            code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
+          }).run();
+        }} className={styles.toolbarButton}>📊 Diagram</button>
         
         {/* Table controls */}
         <div className={styles.tableControls}>
