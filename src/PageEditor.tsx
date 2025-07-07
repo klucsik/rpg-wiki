@@ -50,6 +50,7 @@ export default function PageEditor({
   const [changeSummary, setChangeSummary] = useState("");
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteDraftModal, setShowDeleteDraftModal] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -59,7 +60,7 @@ export default function PageEditor({
   const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
 
   // Autosave functionality
-  const { saveNow } = useAutosave({
+  const { saveNow, deleteDraft } = useAutosave({
     pageId: page?.id,
     title,
     content,
@@ -172,6 +173,41 @@ export default function PageEditor({
       else router.push("/pages");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteDraft() {
+    setSaving(true);
+    setError(null);
+    try {
+      await deleteDraft();
+      setAutosaveStatus("Draft deleted successfully.");
+      setTimeout(() => setAutosaveStatus(""), 3000);
+      
+      // Reload the latest published version of the page
+      if (page) {
+        try {
+          const res = await authenticatedFetch(`/api/pages/${page.id}`);
+          if (res.ok) {
+            const latestPage = await res.json();
+            // Update the form with the latest published version
+            setTitle(latestPage.title || "");
+            setContent(latestPage.content || "");
+            setEditGroups(latestPage.edit_groups || []);
+            setViewGroups(latestPage.view_groups || []);
+            setPath(latestPage.path || "");
+            setChangeSummary(""); // Clear change summary
+          }
+        } catch (reloadErr) {
+          console.error("Failed to reload page after draft deletion:", reloadErr);
+          // Fallback to full page refresh if API call fails
+          router.refresh();
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete draft");
     } finally {
       setSaving(false);
     }
@@ -347,6 +383,15 @@ export default function PageEditor({
               Save Draft Now
             </button>
           )}
+          {mode === "edit" && (
+            <button
+              onClick={() => setShowDeleteDraftModal(true)}
+              disabled={saving || isDisabled}
+              className="bg-orange-700 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-orange-600 transition disabled:opacity-50 text-sm border border-orange-800"
+            >
+              Delete Draft
+            </button>
+          )}
           <button
             onClick={onCancel}
             disabled={saving}
@@ -395,6 +440,31 @@ export default function PageEditor({
                 <button
                   className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
                   onClick={() => setShowDeleteModal(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Delete draft confirmation modal */}
+        {showDeleteDraftModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
+              <h2 className="text-2xl font-bold text-orange-400 mb-4">Are you sure you want to delete your draft?</h2>
+              <p className="text-gray-300 mb-6">This will permanently delete your unsaved changes and revert to the last published version.</p>
+              <div className="flex gap-4 justify-center mt-4">
+                <button
+                  className="px-6 py-2 rounded bg-orange-700 hover:bg-orange-800 text-white font-semibold shadow border border-orange-900 text-lg"
+                  onClick={() => { setShowDeleteDraftModal(false); handleDeleteDraft(); }}
+                  disabled={saving}
+                >
+                  Yes, Delete Draft
+                </button>
+                <button
+                  className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
+                  onClick={() => setShowDeleteDraftModal(false)}
                   disabled={saving}
                 >
                   Cancel

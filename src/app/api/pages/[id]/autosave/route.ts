@@ -219,3 +219,40 @@ export async function GET(
     is_draft: false
   });
 }
+
+// DELETE user's draft version
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const auth = await getAuthFromRequest(req);
+  const { id } = await context.params;
+  
+  if (!auth.isAuthenticated) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  // Find the user's latest draft
+  const latestDraft = await prisma.pageVersion.findFirst({
+    where: {
+      page_id: parseInt(id),
+      edited_by: auth.username,
+      is_draft: true
+    },
+    orderBy: { version: 'desc' }
+  });
+
+  if (!latestDraft) {
+    return NextResponse.json({ error: 'No draft found' }, { status: 404 });
+  }
+
+  // Delete the draft
+  await prisma.pageVersion.delete({
+    where: { id: latestDraft.id }
+  });
+
+  return NextResponse.json({ 
+    success: true, 
+    message: 'Draft deleted successfully' 
+  });
+}

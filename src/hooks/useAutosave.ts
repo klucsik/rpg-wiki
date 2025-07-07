@@ -119,6 +119,31 @@ export function useAutosave({
     performAutosave();
   }, [performAutosave]);
 
+  // Delete draft function
+  const deleteDraft = useCallback(async () => {
+    if (!pageId || !enabled) {
+      throw new Error('No page ID available');
+    }
+
+    try {
+      const response = await authenticatedFetch(`/api/pages/${pageId}/autosave`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete draft');
+      }
+
+      // Reset the last saved reference since draft is deleted
+      lastSavedRef.current = '';
+      
+      return await response.json();
+    } catch (error) {
+      throw error instanceof Error ? error : new Error('Failed to delete draft');
+    }
+  }, [pageId, enabled]);
+
   // Force save when user leaves page
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -142,6 +167,7 @@ export function useAutosave({
 
   return {
     saveNow,
+    deleteDraft,
     isSaving: isSavingRef.current
   };
 }
