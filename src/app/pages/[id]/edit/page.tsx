@@ -16,20 +16,25 @@ export default function EditPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [hasRedirected, setHasRedirected] = useState(false);
+
   // Redirect unauthenticated users to login, but only after user context has loaded
   useEffect(() => {
     if (userLoading) return; // Wait for user context to load
+    if (hasRedirected) return; // Prevent multiple redirects
     
     if (!isUserAuthenticated(user)) {
+      setHasRedirected(true);
       router.push("/login");
       return;
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, router, hasRedirected]);
 
-  // Fetch page data only for authenticated users
+  // Fetch page data only for authenticated users, but only once or when user changes
   useEffect(() => {
     if (userLoading) return; // Wait for user context to load
     if (!isUserAuthenticated(user)) return; // Will redirect above
+    if (page && page.id.toString() === id) return; // Don't refetch if we already have the right page
     
     setLoading(true);
     setError(null);
@@ -41,7 +46,7 @@ export default function EditPage() {
       .then((data) => setPage(data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [id, user, userLoading]);
+  }, [id, userLoading]); // Removed 'user' from dependencies to prevent unnecessary refetches
 
   // Show loading state while user context is loading or redirecting unauthenticated users
   if (userLoading || !isUserAuthenticated(user)) {
