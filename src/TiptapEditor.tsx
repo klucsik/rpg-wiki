@@ -11,6 +11,9 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
+import TextStyle from '@tiptap/extension-text-style';
+import FontFamily from '@tiptap/extension-font-family';
+import { FontSize, FontWeight } from './FontExtensions';
 import { useUser } from "./userContext";
 import styles from './Editor.module.css';
 import { MermaidNode } from './MermaidExtension';
@@ -76,6 +79,16 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
         },
+      }),
+      TextStyle, // Required for font extensions
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
+      FontSize.configure({
+        types: ['textStyle'],
+      }),
+      FontWeight.configure({
+        types: ['textStyle'],
       }),
       ResizableImage,
       TipTapLink,
@@ -332,6 +345,78 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
         <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonBold} ${editor.isActive('bold') ? styles.toolbarButtonActive : ''}`}>B</button>
         <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonItalic} ${editor.isActive('italic') ? styles.toolbarButtonActive : ''}`}>I</button>
         <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonStrike} ${editor.isActive('strike') ? styles.toolbarButtonActive : ''}`}>S</button>
+        
+        {/* Font Family Selector */}
+        <select
+          value={editor.getAttributes('textStyle').fontFamily || ''}
+          onChange={(e) => {
+            if (e.target.value === '') {
+              editor.chain().focus().unsetFontFamily().run();
+            } else {
+              editor.chain().focus().setFontFamily(e.target.value).run();
+            }
+          }}
+          className={styles.toolbarSelect}
+        >
+          <option value="">Default Font</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Times New Roman, serif">Times New Roman</option>
+          <option value="Helvetica, sans-serif">Helvetica</option>
+          <option value="Courier New, monospace">Courier New</option>
+          <option value="Verdana, sans-serif">Verdana</option>
+          <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+        </select>
+        
+        {/* Font Size Selector */}
+        <select
+          value={editor.getAttributes('textStyle').fontSize || ''}
+          onChange={(e) => {
+            if (e.target.value === '') {
+              editor.chain().focus().unsetFontSize().run();
+            } else {
+              editor.chain().focus().setFontSize(e.target.value).run();
+            }
+          }}
+          className={styles.toolbarSelect}
+        >
+          <option value="">Default Size</option>
+          <option value="10px">10px</option>
+          <option value="12px">12px</option>
+          <option value="14px">14px</option>
+          <option value="16px">16px</option>
+          <option value="18px">18px</option>
+          <option value="20px">20px</option>
+          <option value="24px">24px</option>
+          <option value="28px">28px</option>
+          <option value="32px">32px</option>
+          <option value="36px">36px</option>
+          <option value="48px">48px</option>
+        </select>
+        
+        {/* Font Weight Selector */}
+        <select
+          value={editor.getAttributes('textStyle').fontWeight || ''}
+          onChange={(e) => {
+            if (e.target.value === '') {
+              editor.chain().focus().unsetFontWeight().run();
+            } else {
+              editor.chain().focus().setFontWeight(e.target.value).run();
+            }
+          }}
+          className={styles.toolbarSelect}
+        >
+          <option value="">Default Weight</option>
+          <option value="100">Thin (100)</option>
+          <option value="200">Extra Light (200)</option>
+          <option value="300">Light (300)</option>
+          <option value="400">Normal (400)</option>
+          <option value="500">Medium (500)</option>
+          <option value="600">Semi Bold (600)</option>
+          <option value="700">Bold (700)</option>
+          <option value="800">Extra Bold (800)</option>
+          <option value="900">Black (900)</option>
+        </select>
         <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className={styles.toolbarButton}>• List</button>
         <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className={styles.toolbarButton}>1. List</button>
         <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={styles.toolbarButton}>―</button>

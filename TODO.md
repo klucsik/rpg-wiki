@@ -9,8 +9,6 @@ Improve image handling, add an management ui to see slef uploaded iamges, how ma
 When selecting test in editor, update the formatting type selector based on what formatting is there aroudn the cursor or in the selection. If multiple selected, leave it blank.
 Table formatting: we should be able to designate any row as header row, row size should be adjustable
 Image caption
-editor: font size selector
-editor: font family selector
 link formatting
 in backup settings, if the backup after pagesave is not enabled, the manual trigger will fail with a message that it is not enabled. It shouldn't care about that setting.
 Investigate:
