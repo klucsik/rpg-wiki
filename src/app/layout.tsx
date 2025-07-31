@@ -2,7 +2,7 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import React from "react";
+import React, { useState } from "react";
 import { UserProvider } from "../userContext";
 import { GroupsProvider } from "../groupsContext";
 import HeaderNav from "../HeaderNav";

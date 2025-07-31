@@ -139,9 +139,11 @@ function TreeNodeComponent({
 export default function PageList({
   pages,
   selectedId,
+  onClose,
 }: {
   pages: WikiPage[];
   selectedId: number | null;
+  onClose?: () => void;
 }) {
   const router = useRouter();
   const { user } = useUser();
@@ -192,22 +194,40 @@ export default function PageList({
 
   const handlePageClick = (pageId: number) => {
     router.push(`/pages/${pageId}`);
+    // Close sidebar on mobile when page is selected
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (
-    <aside className="w-64 min-w-56 max-w-xs bg-gray-900/80 border-r border-gray-800 h-full overflow-y-auto p-4 flex flex-col">
-      <h3 className="text-lg font-bold text-indigo-200 mb-4 flex items-center justify-between">
-        Pages
-        {user.group !== "public" && (
+    <aside className="w-full h-full bg-gray-900/80 border-r border-gray-800 overflow-y-auto p-4 flex flex-col overscroll-contain">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+        <h3 className="text-lg font-bold text-indigo-200 flex items-center gap-2">
+          Pages
+          {user.groups && !user.groups.includes("public") && (
+            <button
+              onClick={() => router.push("/pages/create")}
+              className="bg-green-700 text-white px-2 py-1 rounded text-xs font-semibold shadow hover:bg-green-800 transition"
+            >
+              + New
+            </button>
+          )}
+        </h3>
+        {/* Close button for mobile */}
+        {onClose && (
           <button
-            onClick={() => router.push("/pages/create")}
-            className="bg-green-700 text-white px-2 py-1 rounded text-xs font-semibold shadow hover:bg-green-800 transition"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white lg:hidden"
+            aria-label="Close sidebar"
           >
-            + New
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         )}
-      </h3>
-      <ul className="space-y-0.5 flex-1">
+      </div>
+      <ul className="space-y-0.5 flex-1 min-h-0 overflow-y-auto">
         {tree.children.map((child) => (
           <TreeNodeComponent
             key={child.path}

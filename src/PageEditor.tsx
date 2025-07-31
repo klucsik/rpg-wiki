@@ -56,6 +56,7 @@ export default function PageEditor({
   const [search, setSearch] = useState("");
   const [viewSearch, setViewSearch] = useState("");
   const [autosaveStatus, setAutosaveStatus] = useState<string>("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const filteredGroups = groups.filter((g) => g.includes(search));
   const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
 
@@ -214,9 +215,34 @@ export default function PageEditor({
   }
 
   return (
-    <div className="flex flex-row w-full h-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      {/* Sidebar pinned below the main navbar */}
-      <aside className="fixed left-0 top-[56px] h-[calc(100vh-56px)] w-full max-w-xs min-w-[320px] bg-gray-800 border-r border-gray-700 flex flex-col gap-4 p-6 z-30 overflow-y-auto">
+    <div className="flex flex-row w-full h-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 relative">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+            <div className={`
+        fixed lg:fixed lg:translate-x-0 transition-transform duration-300 ease-in-out z-30
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        left-0 top-16 h-[calc(100vh-64px)] w-full max-w-xs min-w-[320px] bg-gray-800 border-r border-gray-700 flex flex-col gap-4 p-6 overflow-y-auto overscroll-contain
+      `}>
+        {/* Close button for mobile */}
+        <div className="flex justify-end lg:hidden mb-2">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="text-gray-400 hover:text-white"
+            aria-label="Close sidebar"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
         {/* Path */}
         <div className="mb-2">
           <label className={styleTokens.label}>Path</label>
@@ -473,10 +499,23 @@ export default function PageEditor({
             </div>
           </div>
         )}
-      </aside>
+      </div>
       {/* Main content area: Tiptap toolbar and editor */}
-      <div className="flex-1 flex flex-col min-h-0 ml-[320px]">
-        <main className="flex-1 flex flex-col overflow-hidden p-0 m-0 h-screen w-full">
+      <div className="flex-1 flex flex-col min-h-0 ml-0 lg:ml-[320px]">
+        {/* Mobile sidebar toggle button */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-20 left-4 z-50 bg-gray-800 text-indigo-300 p-2 rounded-lg shadow-lg lg:hidden hover:bg-gray-700 transition"
+            aria-label="Open sidebar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
+        
+        <main className="flex-1 flex flex-col overflow-hidden p-0 m-0 h-[calc(100vh-64px)] w-full overscroll-contain">
           <div className="flex-1 flex flex-col min-h-0 w-full h-full">
             <TiptapEditor value={content} onChange={setContent} pageEditGroups={editGroups} />
           </div>

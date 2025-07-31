@@ -20,6 +20,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(initialId ?? null);
   const [showHistory, setShowHistory] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
 
@@ -83,25 +84,54 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
 
   return (
     <div className={styles.container}>
-      <PageList
-        pages={pages}
-        selectedId={selectedId}
-      />
-      <main className={styles.main}>
-        <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">
-          {loading && <div className="text-indigo-400">Loading...</div>}
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:fixed lg:translate-x-0 transition-transform duration-300 ease-in-out z-30
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        w-80 lg:w-80 h-[calc(100vh-64px)] top-16 left-0 overscroll-contain
+      `}>
+        <PageList
+          pages={pages}
+          selectedId={selectedId}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
+      <main className={`${styles.main} ml-0 lg:ml-80`}>
+        {/* Sidebar toggle button for mobile */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-20 left-4 z-50 bg-gray-800 text-indigo-300 p-2 rounded-lg shadow-lg lg:hidden hover:bg-gray-700 transition"
+            aria-label="Open sidebar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
+        
+        <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden" style={{height: 'calc(100vh - 64px)'}}>
+          {loading && <div className="text-indigo-400 p-4">Loading...</div>}
           {error && (
-            <div className="text-red-400 font-semibold mb-2">{error}</div>
+            <div className="text-red-400 font-semibold mb-2 p-4">{error}</div>
           )}
           {/* VIEW PAGE */}
           {selectedPage && canViewSelected && (
-            <div className={`prose prose-invert ${styles.proseBox}`}>
+            <div className={`prose prose-invert max-w-none ${styles.proseBox}`} style={{overflowX: 'hidden'}}>
               <div className={styles.header}>
-                <div>
+                <div className="min-w-0 flex-1">
                   {selectedPage.path && (
                     <div className={styles.path}>{selectedPage.path}</div>
                   )}
-                  <h2 className="text-2xl font-bold text-indigo-200">
+                  <h2 className="text-2xl font-bold text-indigo-200 break-words">
                     {selectedPage.title}
                   </h2>
                   {/* Draft indicator */}
@@ -116,20 +146,22 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                   {isUserAuthenticated(user) && canUserEditPage(user, selectedPage) && (
                       <>
                         <button
                           onClick={() => setShowHistory(!showHistory)}
-                          className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg transition border border-blue-800"
+                          className="bg-blue-700 hover:bg-blue-800 text-white px-2 sm:px-4 py-2 rounded-lg transition border border-blue-800 text-sm sm:text-base"
                         >
-                          {showHistory ? 'Hide History' : 'View History'}
+                          <span className="hidden sm:inline">{showHistory ? 'Hide History' : 'View History'}</span>
+                          <span className="sm:hidden">📜</span>
                         </button>
                         <button
                           onClick={() => handleEdit(selectedPage.id)}
                           className={styles.editButton}
                         >
-                          Edit
+                          <span className="hidden sm:inline">Edit</span>
+                          <span className="sm:hidden">✏️</span>
                         </button>
                       </>
                     )}
@@ -146,21 +178,26 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                 </div>
               )}
               
-              <div className="flex-1 overflow-auto min-h-0 min-w-0">
+              <div className="flex-1 overflow-auto min-h-0 min-w-0 max-w-full">
                 {selectedPage.content ? (
-                  parseWikiContentWithRestrictedBlocks(selectedPage.content, {
-                    groups: user.groups,
-                  })
+                  <div className="prose prose-invert max-w-none overflow-x-hidden break-words">
+                    {parseWikiContentWithRestrictedBlocks(selectedPage.content, {
+                      groups: user.groups,
+                    })}
+                  </div>
                 ) : (
                   <div>No content</div>
                 )}
               </div>
               <div className={styles.pageFooter}>
-                Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""} 
-                {selectedPage.version && (
-                  <> &nbsp;|&nbsp; Version: {selectedPage.version}</>
-                )}
-                 &nbsp;|&nbsp; View groups: {Array.isArray(selectedPage.view_groups) ? selectedPage.view_groups.join(', ') : ''} &nbsp;|&nbsp; Edit groups: {Array.isArray(selectedPage.edit_groups) ? selectedPage.edit_groups.join(', ') : ''}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+                  <span>Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""}</span>
+                  {selectedPage.version && (
+                    <span>Version: {selectedPage.version}</span>
+                  )}
+                  <span className="break-all">View groups: {Array.isArray(selectedPage.view_groups) ? selectedPage.view_groups.join(', ') : ''}</span>
+                  <span className="break-all">Edit groups: {Array.isArray(selectedPage.edit_groups) ? selectedPage.edit_groups.join(', ') : ''}</span>
+                </div>
               </div>
             </div>
           )}

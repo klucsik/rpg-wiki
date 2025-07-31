@@ -148,6 +148,44 @@ img[data-align="right"] {
   color: #ededed !important;
 }
 
+/* Prevent horizontal overflow in prose content */
+.prose {
+  max-width: none !important;
+  overflow-x: hidden !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.prose * {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.prose pre {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+}
+
+.prose table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.prose td, .prose th {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.prose img {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.prose code {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
 /* Link Styles */
 .prose a {
   color: #3b82f6 !important;
