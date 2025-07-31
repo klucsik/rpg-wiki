@@ -118,6 +118,61 @@ img[data-align="right"] {
   color: #ededed !important;
 }
 
+/* Link Styles */
+.prose a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  text-decoration-thickness: 1px !important;
+  transition: color 0.2s ease !important;
+}
+
+.prose a:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+}
+
+.prose a:visited {
+  color: #7c3aed !important;
+}
+
+.prose-invert a {
+  color: #60a5fa !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  text-decoration-thickness: 1px !important;
+}
+
+.prose-invert a:hover {
+  color: #93c5fd !important;
+}
+
+.prose-invert a:visited {
+  color: #a78bfa !important;
+}
+
+/* Specific styling for wiki links */
+.prose .wiki-link,
+.prose-invert .wiki-link {
+  color: #60a5fa !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  text-decoration-thickness: 1px !important;
+  transition: color 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.prose .wiki-link:hover,
+.prose-invert .wiki-link:hover {
+  color: #93c5fd !important;
+  text-decoration: underline !important;
+}
+
+.prose .wiki-link:visited,
+.prose-invert .wiki-link:visited {
+  color: #a78bfa !important;
+}
+
 .prose li {
   margin-top: 0.25rem !important;
   margin-bottom: 0.25rem !important;

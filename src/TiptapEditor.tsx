@@ -91,7 +91,12 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
         types: ['textStyle'],
       }),
       ResizableImage,
-      TipTapLink,
+      TipTapLink.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'wiki-link',
+        },
+      }),
       Placeholder.configure({ placeholder: 'Start typing your wiki content...' }),
       RestrictedBlock,
       RestrictedBlockPlaceholder,
