@@ -72,6 +72,13 @@ const ResizableImage = Image.extend({
 
 export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorProps & { pageEditGroups?: string[] }) {
   const { user } = useUser();
+  
+  // Link modal state
+  const [showLinkModal, setShowLinkModal] = React.useState(false);
+  const [linkUrl, setLinkUrl] = React.useState('');
+  const [linkText, setLinkText] = React.useState('');
+  const [isEditingLink, setIsEditingLink] = React.useState(false);
+  
   // Only set initial content on first mount
   const editor = useEditor({
     extensions: [
@@ -126,6 +133,22 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
       editor.commands.setContent(value);
     }
   }, [value, editor]);
+
+  // Handle keyboard events for link modal
+  React.useEffect(() => {
+    if (!showLinkModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLinkModal();
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        applyLink();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showLinkModal, linkUrl, linkText, isEditingLink]);
 
   // Dropdown for block type selection
   const [blockType, setBlockType] = React.useState('paragraph');
@@ -314,6 +337,60 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     }
   }
 
+  // Link modal functions
+  function openLinkModal() {
+    const { state } = editor!;
+    const { selection } = state;
+    const selectedText = state.doc.textBetween(selection.from, selection.to);
+    
+    // Check if we're editing an existing link
+    const linkAttrs = editor!.getAttributes('link');
+    if (linkAttrs.href) {
+      setIsEditingLink(true);
+      setLinkUrl(linkAttrs.href);
+      setLinkText(selectedText || 'Link text');
+    } else {
+      setIsEditingLink(false);
+      setLinkUrl('');
+      setLinkText(selectedText || '');
+    }
+    
+    setShowLinkModal(true);
+  }
+
+  function closeLinkModal() {
+    setShowLinkModal(false);
+    setLinkUrl('');
+    setLinkText('');
+    setIsEditingLink(false);
+  }
+
+  function applyLink() {
+    if (!editor) return;
+    
+    if (!linkUrl.trim()) {
+      closeLinkModal();
+      return;
+    }
+    
+    const { state } = editor;
+    const { selection } = state;
+    const hasSelection = !selection.empty;
+    
+    if (isEditingLink || hasSelection) {
+      // Update existing link or create link from selection
+      editor.chain().focus().toggleLink({ href: linkUrl.trim() }).run();
+    } else if (linkText.trim()) {
+      // Insert new link with text
+      editor.chain().focus().insertContent(`<a href="${linkUrl.trim()}">${linkText.trim()}</a>`).run();
+    } else {
+      // Insert URL as both href and text
+      editor.chain().focus().insertContent(`<a href="${linkUrl.trim()}">${linkUrl.trim()}</a>`).run();
+    }
+    
+    closeLinkModal();
+  }
+
   if (!editor) return null;
 
   // Check if image is selected
@@ -433,10 +510,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           style={{ display: "none" }}
           onChange={handleImageUpload}
         />
-        <button type="button" onClick={() => {
-          const url = window.prompt('Link URL');
-          if (url) editor.chain().focus().toggleLink({ href: url }).run();
-        }} className={styles.toolbarButton}>Link</button>
+        <button type="button" onClick={openLinkModal} className={styles.toolbarButton}>Link</button>
         <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className={styles.toolbarButton}>Unlink</button>
         <button type="button" onClick={() => {
           editor.chain().focus().insertMermaid({
@@ -548,6 +622,86 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           className={`${styles.editorContent} prose prose-invert max-w-none`}
         />
       </div>
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">
+              {isEditingLink ? 'Edit Link' : 'Add Link'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  URL
+                </label>
+                <input
+                  type="text"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (isEditingLink || !linkText.trim()) {
+                        applyLink();
+                      } else {
+                        // Focus on link text field if it exists and is empty
+                        const linkTextInput = e.currentTarget.parentElement?.parentElement?.querySelector('input[placeholder="Link text"]') as HTMLInputElement;
+                        if (linkTextInput) {
+                          linkTextInput.focus();
+                        }
+                      }
+                    }
+                  }}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              
+              {!isEditingLink && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Link Text (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={linkText}
+                    onChange={(e) => setLinkText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyLink();
+                      }
+                    }}
+                    placeholder="Link text"
+                    className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Leave empty to use the URL as link text
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={applyLink}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                {isEditingLink ? 'Update Link' : 'Add Link'}
+              </button>
+              <button
+                onClick={closeLinkModal}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
