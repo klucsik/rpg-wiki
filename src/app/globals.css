@@ -114,6 +114,36 @@ img[data-align="right"] {
   color: var(--foreground) !important;
 }
 
+/* Add proper list styling */
+.prose ul {
+  list-style-type: disc !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+}
+
+/* Nested list styling */
+.prose ul ul {
+  list-style-type: circle !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.prose ul ul ul {
+  list-style-type: square !important;
+}
+
+.prose ol ol {
+  list-style-type: lower-alpha !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.prose ol ol ol {
+  list-style-type: lower-roman !important;
+}
+
 .prose-invert ul, .prose-invert ol {
   color: #ededed !important;
 }

@@ -131,6 +131,42 @@
   color: #a78bfa !important;
 }
 
+/* List styles for editor content */
+.editorContent ul {
+  list-style-type: disc !important;
+  margin: 0.75rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.editorContent ol {
+  list-style-type: decimal !important;
+  margin: 0.75rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.editorContent ul ul {
+  list-style-type: circle !important;
+  margin: 0.25rem 0 !important;
+}
+
+.editorContent ul ul ul {
+  list-style-type: square !important;
+}
+
+.editorContent ol ol {
+  list-style-type: lower-alpha !important;
+  margin: 0.25rem 0 !important;
+}
+
+.editorContent ol ol ol {
+  list-style-type: lower-roman !important;
+}
+
+.editorContent li {
+  margin: 0.25rem 0 !important;
+  color: #c7d2fe !important;
+}
+
 .editorOffset {
   flex: 1;
   min-height: 0;
