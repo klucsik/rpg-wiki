@@ -46,3 +46,6 @@ Investigate:
     Keycloak user synced: 77ca87ba-5870-427b-8fc2-118308e08b8c (keno_vs)
 
 Add telemetry and monitoring
+on link creation: search  add a search bar for existing pages.
+Search integration: full-text search, path and title search functions
+make links visible, lists well functioning.
