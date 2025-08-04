@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import mermaid from 'mermaid';
 
 // Initialize Mermaid with dark theme for view context

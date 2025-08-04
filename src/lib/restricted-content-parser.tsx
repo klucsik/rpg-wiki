@@ -2,7 +2,6 @@
 import React from "react";
 import RestrictedBlockView from "../RestrictedBlockView";
 import PlaceholderContentView from "../PlaceholderContentView";
-import RestrictedBlockPlaceholderView from "../RestrictedBlockPlaceholderView";
 import MermaidView from "../MermaidView";
 
 interface User {

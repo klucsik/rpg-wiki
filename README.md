@@ -1,220 +1,44 @@
-# RPG Wiki Next.js
+# RPG Wiki
 
-A full-stack wiki app for RPGs using Next.js (App Router, TypeScript, Tailwind CSS, PostgreSQL, TipTap).
+A wiki like information system for RPGs, with focus on granual access control.
+The main motivation behind this project is to provide a wiki that allows for restricted access to pages and specific content within pages, making it suitable for RPG campaigns where some information should only be visible to the game master or specific players.
+The RPG wiki is built with Next.js, TypeScript, Tailwind CSS, and PostgreSQL.
+## Disclaimer
+This is a personal project, and is not intended for production use. It is a work in progress, and may contain bugs or incomplete features. Use at your own risk.
+This is project heavily uses AI code generation.
+This is not a security product, do not store any sensitive information in it, and do not use it for any sensitive applications.
+This software is provided as is, without warranty of any kind.
 
 ## Features
-- Rich text editing with TipTap
-- Usergroup-based content restriction
-- Image support
-- Crosslinking ([[PageName]])
-- Git-based automated backup system
-- Full-text search (planned)
-- PostgreSQL persistence via API routes
 
-## Getting Started
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Copy `.env.example` to `.env.local` and set your PostgreSQL connection string.
-3. Start the dev server:
-   ```bash
-   npm run dev
-   ```
+### Restricted Access to pages and specific content in pages
+- Pages can be restricted to specific user groups.
+- Specific content within pages can be restricted to specific user groups. So you can have your DM notes between the lines of the publicly available content.
+- If a user has edit rights to the page, they still won't see restricted content, only a placeholder.
+- The restricted content not leaves the server.
 
-## Configuration
+![Restricted Block Editor](doc/restricted%20block%20editor.png)
 
-### Environment Variables
+![Restricted Block View](doc/restricted%20block%20viewer.png)
 
-The following environment variables are supported:
+### User Groups
+- Users can be assigned to groups.
+- Groups can be assigned to pages and Restricted Blocks within pages.
 
-- `DATABASE_URL`: PostgreSQL connection string (required)
-- `NEXTAUTH_SECRET`: Secret for NextAuth.js session signing (required)
-- `ADMIN_PASSWORD`: Password for the admin user (optional, defaults to 'admin123')
-- `IMPORT_API_KEY`: API key for import scripts (optional)
-- `KEYCLOAK_CLIENT_ID`: Keycloak client ID for OIDC authentication (optional)
-- `KEYCLOAK_CLIENT_SECRET`: Keycloak client secret for OIDC authentication (optional)
-- `KEYCLOAK_ISSUER`: Keycloak issuer URL for OIDC authentication (optional)
+### History and autosave
+- Every change to a page is saved in the history.
+- When you edit a page, the last version is automatically saved as a draft. This draft needs to be saved explicitly to become the new version, and be visible.
 
-### Admin User
+### Backup to GitHub
+- You can set up a git repository on GitHub to which the wiki will be backed up.
+- After each successful save, the wiki will be pushed to the repository.
+- The pages are saved as plain html content, so everything is readable in them, make sure you restrict access to the backing repository.
+- user information is not saved to the repository, so groups and users needs to be restored manually.
 
-The admin user is automatically created/updated on every application startup:
-- Username: `admin`
-- Password: Set via `ADMIN_PASSWORD` environment variable (defaults to `admin123`)
-- The password is updated every time the application starts to match the environment variable
+### Keycloak Integration
+- The wiki can be integrated with Keycloak through ENV variables, on a sign on, local users are automatically generated.
 
-To change the admin password, update the `ADMIN_PASSWORD` environment variable and restart the application.
+## Installation
 
-## Wiki Import
-
-### Complete Import (Recommended)
-For a complete wiki import from existing sources (supports HTML, Markdown, and AsciiDoc):
-
-```bash
-# Import everything with default settings
-npm run import:all
-
-# Import with custom source and update existing pages
-npx tsx scripts/import-all.ts /path/to/wiki --update-existing
-
-# Dry run to see what would happen
-npx tsx scripts/import-all.ts --dry-run
-
-# Skip certain steps if already done
-npx tsx scripts/import-all.ts --skip-images --update-existing
-
-#full example of dry run
-cd /home/klucsik/src/rpg-wiki && IMPORT_API_KEY="YOUR_API_KEY" npx tsx scripts/import-wikijs.ts /home/klucsik/src/gyongy-wiki http://localhost:3000 --exclude-tags=dmonly --dry-run
-```
-
-The complete import process includes:
-1. **Image Import**: Uploads all images and creates database mappings
-2. **Page Import**: Imports wiki pages with proper AsciiDoc/HTML processing  
-3. **Link Fixing**: Updates all image links to use correct `/api/images/:id` URLs
-
-### Individual Import Scripts
-If you need more control, you can run individual steps:
-
-```bash
-# Import images only
-npm run import:images /path/to/wiki
-
-# Import pages only  
-npm run import:wikijs /path/to/wiki --update-existing
-
-# Fix image links only
-npm run fix:image-links
-```
-
-### Supported Formats
-- **HTML**: Wiki.js HTML exports with frontmatter metadata
-- **Markdown**: Standard Markdown with YAML frontmatter
-- **AsciiDoc**: AsciiDoc files with proper header/list/image processing
-
-## Tech Stack
-- Next.js (App Router, SSR/SSG)
-- TypeScript
-- Tailwind CSS
-- TipTap (editor)
-- PostgreSQL
-
-## License
-MIT
-
-## Docker Build & Push
-
-### Build Optimization Notes
-The Docker image has been optimized for minimal size:
-- Uses Alpine Linux base images (~200-400MB vs ~1.2GB+ with Ubuntu)
-- Multi-stage build with standalone Next.js output
-- Production-only dependencies in final image
-- Non-root user for security
-
-### 1. Build the Docker image
-```bash
-docker build -t registry.klucsik.hu/rpg-wiki:latest .
-```
-
-### 2. Login to the registry
-```bash
-docker login registry.klucsik.hu
-```
-
-### 3. Push the image
-```bash
-docker push registry.klucsik.hu/rpg-wiki:latest
-```
-
-### 4. (Optional) Run the image locally
-```bash
-docker run --env-file .env.local -p 3000:3000 registry.klusik.hu/rpg-wiki:latest
-```
-
-## Git Backup System
-
-The RPG Wiki includes an automated git-based backup system that exports all wiki content and images to a git repository after each successful page save.
-
-### Setup
-
-1. **Configure in Admin Panel**: Go to `/admin` and scroll to "Git Backup Settings"
-
-2. **Set up Git Repository**: 
-   - Create a git repository (GitHub, GitLab, etc.)
-   - For SSH access, add your server's SSH public key to the repository's deploy keys
-
-2.5. **generate and deploy keys**:
-   ```bash
-   ssh-keygen -f $HOME/.ssh/rpg-wiki
-   kubectl create secret generic rpg-wiki-backup-ssh-key   --from-file=id_rsa=/home/klucsik/.ssh/rpg-wiki  -n rpg-wiki-demo
-   ```
-
-3. **Configure Settings**:
-   - **Git Repository URL**: SSH (`git@github.com:user/repo.git`) or HTTPS URL
-   - **SSH Key Path**: Path to private SSH key (optional for HTTPS)
-   - **Local Backup Path**: Directory where git repo will be cloned/managed
-   - **Enable Backups**: Toggle automatic backups on page saves
-
-### How It Works
-
-1. **Automatic Backups**: After each successful page save, if backups are enabled:
-   - Wiki content is exported to filesystem in git-friendly format
-   - Git commit is created with timestamp
-   - Changes are pushed to remote repository
-
-2. **Manual Backups**: Admins can trigger manual backups from the admin panel
-
-3. **Backup Format**:
-   - Pages: `path/title.html` with metadata in HTML comments
-   - Images: `images/filename` with `.meta` JSON files
-   - Export manifest: `export-manifest.json` with backup info
-
-### Export/Import Scripts
-
-#### Export to Filesystem
-```bash
-# Export all pages and images to filesystem
-npm run export:filesystem /path/to/export
-
-# Export with all versions
-npx tsx scripts/export-to-filesystem.ts /path/to/export --all-versions
-
-# Dry run to see what would be exported
-npx tsx scripts/export-to-filesystem.ts /path/to/export --dry-run
-```
-
-#### Import from Filesystem
-```bash
-# Import from exported filesystem backup
-npm run import:filesystem /path/to/backup/wiki-data
-
-# Update existing pages instead of skipping
-npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --update-existing
-
-# Import all page versions
-npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --import-versions
-
-# Dry run to see what would be imported
-npx tsx scripts/import-from-filesystem.ts /path/to/backup/wiki-data --dry-run
-```
-
-### Restore from Backup
-
-To restore your wiki from a git backup:
-
-1. Clone your backup repository:
-   ```bash
-   git clone your-backup-repo.git /tmp/restore
-   ```
-
-2. Import the data:
-   ```bash
-   npm run import:filesystem /tmp/restore/wiki-data --update-existing
-   ```
-
-### Backup Job Monitoring
-
-The admin panel shows recent backup jobs with:
-- Job status (pending, running, completed, failed)  
-- Trigger type (auto vs manual)
-- Commit hashes
-- Error messages for failed jobs
+The wiki images is hosted on DockerHub with the image name `klucsikkp/rpg-wiki`.
+You can explore the docker-compose.yml and k8s-deployment-example.yaml files for deployment examples.

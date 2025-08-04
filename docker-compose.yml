@@ -16,5 +16,26 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  rpg-wiki:
+    image: klucsikkp/rpg-wiki:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://rpgwiki:rpgwiki@db:5432/rpgwiki
+      KEYCLOAK_URL: "https://auth.klucsik.hu/realms/home"
+      KEYCLOAK_CLIENT_ID: "test_rpg_wiki"
+      KEYCLOAK_CLIENT_SECRET: "wGKyoSUbFM8Ucwy0dKAE7yiTpBQVRnuH"
+      NEXTAUTH_SECRET: "your-secret-key-here-change-in-production"
+      NEXTAUTH_URL: "http://localhost:3000"
+      IMPORT_API_KEY: "your-import-api-key-here"
+      ADMIN_PASSWORD: "rpgwiki"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
 volumes:
   pgdata:
