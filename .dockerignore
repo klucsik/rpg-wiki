@@ -13,6 +13,7 @@ README.md
 Dockerfile
 docker-compose.yml
 *.md
+!CHANGELOG.md
 .vscode
 .idea
 coverage
