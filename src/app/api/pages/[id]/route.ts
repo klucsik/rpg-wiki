@@ -125,7 +125,7 @@ export async function PUT(
   const auth = await getAuthFromRequest(req);
   const { id } = await context.params;
   
-  // Check if user has edit permissions for this page
+  // Get the latest version (for permissions check) and latest published version (for change detection)
   const latestVersion = await prisma.pageVersion.findFirst({
     where: { page_id: parseInt(id) },
     orderBy: { version: 'desc' }
@@ -138,7 +138,22 @@ export async function PUT(
   const authError = requireEditPermissions(auth, latestVersion.edit_groups);
   if (authError) {
     return NextResponse.json({ error: authError.error }, { status: authError.status });
-  }  const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
+  }
+
+  // Get the latest published (non-draft) version for change comparison
+  const latestPublishedVersion = await prisma.pageVersion.findFirst({
+    where: { 
+      page_id: parseInt(id),
+      is_draft: false
+    },
+    orderBy: { version: 'desc' }
+  });
+  
+  if (!latestPublishedVersion) {
+    return NextResponse.json({ error: 'No published version found' }, { status: 404 });
+  }
+
+  const { title, content, edit_groups, view_groups, path, change_summary } = await req.json();
   
   // Restore any placeholders back to restricted blocks before saving
   let processedContent = content;
@@ -158,23 +173,23 @@ export async function PUT(
   const newHash = createHash('sha256').update(hashInput).digest('hex');
  
   // Check if content actually changed compared to latest published version
-  if (latestVersion.content_hash === newHash) {
+  if (latestPublishedVersion.content_hash === newHash) {
     // No changes, return existing page info
     return NextResponse.json({
       id: parseInt(id),
-      title: latestVersion.title,
-      content: latestVersion.content,
-      edit_groups: latestVersion.edit_groups,
-      view_groups: latestVersion.view_groups,
-      path: latestVersion.path,
-      version: latestVersion.version,
-      created_at: latestVersion.edited_at.toISOString(),
-      updated_at: latestVersion.edited_at.toISOString(),
+      title: latestPublishedVersion.title,
+      content: latestPublishedVersion.content,
+      edit_groups: latestPublishedVersion.edit_groups,
+      view_groups: latestPublishedVersion.view_groups,
+      path: latestPublishedVersion.path,
+      version: latestPublishedVersion.version,
+      created_at: latestPublishedVersion.edited_at.toISOString(),
+      updated_at: latestPublishedVersion.edited_at.toISOString(),
       no_change: true
     });
   }
   
-  // Get the next version number
+  // Get the next version number (based on latest version overall, including drafts)
   const nextVersion = latestVersion.version + 1;
 
   // Get current page data to check if path is changing

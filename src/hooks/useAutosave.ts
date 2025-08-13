@@ -28,7 +28,7 @@ export function useAutosave({
   const lastSavedRef = useRef<string>('');
   const isSavingRef = useRef(false);
 
-  const performAutosave = useCallback(async () => {
+  const performAutosave = useCallback(async (isManual = false) => {
     if (!pageId || !enabled || isSavingRef.current) {
       return;
     }
@@ -38,6 +38,16 @@ export function useAutosave({
     
     // Don't save if content hasn't changed
     if (currentHash === lastSavedRef.current) {
+      // For manual saves, notify user that no changes were detected
+      if (isManual && onSaveSuccess) {
+        onSaveSuccess({
+          id: pageId,
+          version: 0,
+          saved_at: new Date().toISOString(),
+          is_draft: true,
+          no_change: true
+        });
+      }
       return;
     }
 
@@ -100,7 +110,7 @@ export function useAutosave({
 
     // Set new timeout for autosave (30 seconds delay)
     timeoutRef.current = setTimeout(() => {
-      performAutosave();
+      performAutosave(false);
     }, 30000);
 
     // Cleanup timeout on unmount or dependency change
@@ -116,7 +126,7 @@ export function useAutosave({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    performAutosave();
+    performAutosave(true);
   }, [performAutosave]);
 
   // Delete draft function

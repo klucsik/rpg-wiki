@@ -1,3 +1,7 @@
+# Version 20250813
+- Fixed "Save Draft Now" to show notification when no changes are detected since last draft save.
+- Fixed main "Save" button to compare changes against latest published version instead of latest draft version. This fixes the issue when after draft save, the page couldn't be saved properly if no changes were made since the last draft save.
+
 # Version 20250804
 - Added changelog.
 - Refactored readme.
