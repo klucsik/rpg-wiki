@@ -205,7 +205,7 @@ export default function PageList({
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-lg font-bold text-indigo-200 flex items-center gap-2">
           Pages
-          {user.groups && !user.groups.includes("public") && (
+          {user.id !== "anonymous" && (
             <button
               onClick={() => router.push("/pages/create")}
               className="bg-green-700 text-white px-2 py-1 rounded text-xs font-semibold shadow hover:bg-green-800 transition"

@@ -1,6 +1,7 @@
 # Changelog
 ## Version 20230815
 - Added health check endpoints (/health and /ready).
+- Fixed missing new page button in the header navigation for logged-in users.
 
 ## Version 20250813
 - Fixed "Save Draft Now" to show notification when no changes are detected since last draft save.
