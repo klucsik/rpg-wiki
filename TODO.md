@@ -47,4 +47,3 @@ Investigate:
 Add telemetry and monitoring
 on link creation: search  add a search bar for existing pages.
 Search integration: full-text search, path and title search functions
-Add health check endpoint
