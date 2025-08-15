@@ -1,6 +1,7 @@
 import Link from "next/link";
 import UserMenu from "./UserMenu";
 import { useUser } from "./userContext";
+import SearchBar from "./components/search/SearchBar";
 
 interface HeaderNavProps {
   showSidebarToggle?: boolean;
@@ -59,6 +60,12 @@ export default function HeaderNav({
           </Link>
         )}
       </nav>
+      
+      {/* Search Bar */}
+      <div className="flex-1 max-w-md mx-4 hidden md:block">
+        <SearchBar placeholder="Search wiki..." />
+      </div>
+      
       <div className="flex-shrink-0 ml-2">
         <UserMenu />
       </div>

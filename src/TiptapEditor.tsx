@@ -17,6 +17,7 @@ import { FontSize, FontWeight } from './FontExtensions';
 import { useUser } from "./userContext";
 import styles from './Editor.module.css';
 import { MermaidNode } from './MermaidExtension';
+import LinkSearchModal from './components/search/LinkSearchModal';
 
 interface TiptapEditorProps {
   value: string;
@@ -75,6 +76,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
   
   // Link modal state
   const [showLinkModal, setShowLinkModal] = React.useState(false);
+  const [showLinkSearchModal, setShowLinkSearchModal] = React.useState(false);
   const [linkUrl, setLinkUrl] = React.useState('');
   const [linkText, setLinkText] = React.useState('');
   const [isEditingLink, setIsEditingLink] = React.useState(false);
@@ -358,11 +360,45 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     setShowLinkModal(true);
   }
 
+  function openLinkSearchModal() {
+    const { state } = editor!;
+    const { selection } = state;
+    const selectedText = state.doc.textBetween(selection.from, selection.to);
+    
+    setLinkText(selectedText);
+    setShowLinkSearchModal(true);
+  }
+
   function closeLinkModal() {
     setShowLinkModal(false);
     setLinkUrl('');
     setLinkText('');
     setIsEditingLink(false);
+  }
+
+  function closeLinkSearchModal() {
+    setShowLinkSearchModal(false);
+    setLinkText('');
+  }
+
+  function handlePageSelect(page: any) {
+    if (!editor) return;
+    
+    const { state } = editor;
+    const { selection } = state;
+    const hasSelection = !selection.empty;
+    const displayText = linkText.trim() || page.title;
+    const pageUrl = `/pages/${page.id}`;
+    
+    if (hasSelection) {
+      // Update selection with link
+      editor.chain().focus().toggleLink({ href: pageUrl }).run();
+    } else {
+      // Insert new link with page title as text
+      editor.chain().focus().insertContent(`<a href="${pageUrl}">${displayText}</a>`).run();
+    }
+    
+    closeLinkSearchModal();
   }
 
   function applyLink() {
@@ -511,6 +547,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           onChange={handleImageUpload}
         />
         <button type="button" onClick={openLinkModal} className={styles.toolbarButton}>Link</button>
+        <button type="button" onClick={openLinkSearchModal} className={styles.toolbarButton}>Link Page</button>
         <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className={styles.toolbarButton}>Unlink</button>
         <button type="button" onClick={() => {
           editor.chain().focus().insertMermaid({
@@ -702,6 +739,14 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
           </div>
         </div>
       )}
+
+      {/* Link Search Modal */}
+      <LinkSearchModal
+        isOpen={showLinkSearchModal}
+        onClose={closeLinkSearchModal}
+        onPageSelect={handlePageSelect}
+        initialQuery={linkText}
+      />
     </div>
   );
 }
