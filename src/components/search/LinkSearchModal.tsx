@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { LinkSearchResult } from '../../lib/search/types';
+import { getPageDisplayText } from '../../lib/page-display-utils';
 
 interface LinkSearchModalProps {
   isOpen: boolean;
@@ -214,11 +215,12 @@ export default function LinkSearchModal({
                       : 'hover:bg-gray-700 text-gray-100'
                   }`}
                 >
-                  <div className="font-medium truncate">{page.title}</div>
-                  <div className={`text-sm truncate mt-1 ${
+                  <div className="font-medium truncate">{getPageDisplayText(page)}</div>
+                  <div className={`text-xs truncate mt-1 ${
                     index === selectedIndex ? 'text-indigo-100' : 'text-gray-400'
                   }`}>
-                    {page.path}
+                    Last updated: {/* We don't have update time in LinkSearchResult, so just show path context */}
+                    {page.path === '/' ? 'Root page' : `Path: ${page.path}`}
                   </div>
                 </div>
               ))}

@@ -17,7 +17,7 @@ model Page {
   updated_at  DateTime      @updatedAt
   edit_groups String[]
   view_groups String[]
-  path        String        @unique
+  path        String
   versions    PageVersion[]
 }
 

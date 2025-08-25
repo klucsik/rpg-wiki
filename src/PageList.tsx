@@ -25,8 +25,21 @@ function buildTree(pages: WikiPage[]): TreeNode {
     const pathParts = page.path.split('/').filter(Boolean);
     let currentNode = root;
 
-    // Navigate/create the folder structure
-    for (let i = 0; i < pathParts.length - 1; i++) {
+    // Special case: if path is just "/" (root), add directly to root
+    if (pathParts.length === 0) {
+      currentNode.children.push({
+        name: page.title,
+        path: page.path,
+        page,
+        children: [],
+        isExpanded: false,
+      });
+      return;
+    }
+
+    // Navigate/create the folder structure for ALL path parts
+    // Each path part represents a folder that the page should be in
+    for (let i = 0; i < pathParts.length; i++) {
       const part = pathParts[i];
       const partPath = '/' + pathParts.slice(0, i + 1).join('/');
       
@@ -43,10 +56,9 @@ function buildTree(pages: WikiPage[]): TreeNode {
       currentNode = childNode;
     }
 
-    // Add the page as a leaf node
-    const pageName = pathParts[pathParts.length - 1] || page.title;
+    // Add the page as a leaf node in the deepest folder
     currentNode.children.push({
-      name: pageName,
+      name: page.title, // Use the actual page title instead of path segment
       path: page.path,
       page,
       children: [],

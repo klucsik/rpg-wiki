@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TiptapEditor } from "./TiptapEditor";
 import { useRouter } from "next/navigation";
 import { useUser } from "./userContext";
@@ -7,6 +7,7 @@ import { WikiPage } from "./types";
 import { authenticatedFetch } from "./apiHelpers";
 import { isUserAuthenticated } from "./accessControl";
 import { useAutosave } from "./hooks/useAutosave";
+import PathAutocomplete from "./components/PathAutocomplete";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {
@@ -57,8 +58,60 @@ export default function PageEditor({
   const [viewSearch, setViewSearch] = useState("");
   const [autosaveStatus, setAutosaveStatus] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pathError, setPathError] = useState<string | null>(null);
+  const [existingPages, setExistingPages] = useState<WikiPage[]>([]);
   const filteredGroups = groups.filter((g) => g.includes(search));
   const filteredViewGroups = groups.filter((g) => g.includes(viewSearch));
+
+  // Fetch existing pages to validate path+title uniqueness
+  useEffect(() => {
+    const fetchExistingPages = async () => {
+      try {
+        const response = await authenticatedFetch("/api/pages");
+        if (response.ok) {
+          const pages = await response.json();
+          setExistingPages(pages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch existing pages:", error);
+      }
+    };
+
+    fetchExistingPages();
+  }, []);
+
+  // Validate path+title combination when either changes
+  useEffect(() => {
+    if (!path.trim() || !title.trim()) {
+      setPathError(null);
+      return;
+    }
+
+    const trimmedPath = path.trim();
+    const trimmedTitle = title.trim();
+    
+    // Find if there's an existing page with the same path+title combination
+    const conflictingPage = existingPages.find(p => 
+      p.path === trimmedPath && p.title === trimmedTitle
+    );
+    
+    // For create mode, check if path+title combination already exists
+    if (mode === "create" && conflictingPage) {
+      setPathError(`A page already exists with the path "${trimmedPath}" and title "${trimmedTitle}". Please choose a different path or title.`);
+      return;
+    }
+    
+    // For edit mode, allow the current page's path+title combination
+    if (mode === "edit" && page && conflictingPage && conflictingPage.id !== page.id) {
+      setPathError(`A page already exists with the path "${trimmedPath}" and title "${trimmedTitle}". Please choose a different path or title.`);
+      return;
+    }
+    
+    setPathError(null);
+  }, [path, title, existingPages, mode, page]);
+
+  // Check if save should be disabled
+  const isSaveDisabled = saving || isDisabled || !title || !content || !path || !!pathError;
 
   // Autosave functionality
   const { saveNow, deleteDraft } = useAutosave({
@@ -90,6 +143,10 @@ export default function PageEditor({
   async function handleSave() {
     if (!title || !content || !path) {
       setValidationError("Title, Content, and Path are required.");
+      return;
+    }
+    if (pathError) {
+      setValidationError("Please fix the path and title combination error before saving.");
       return;
     }
     setValidationError(null);
@@ -246,14 +303,18 @@ export default function PageEditor({
         {/* Path */}
         <div className="mb-2">
           <label className={styleTokens.label}>Path</label>
-          <input
-            type="text"
-            placeholder="/lore/dragons"
+          <PathAutocomplete
             value={path}
-            onChange={(e) => setPath(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 font-mono text-base shadow-sm min-w-0 mb-2"
+            onChange={setPath}
+            placeholder="/lore/dragons"
             disabled={saving || isDisabled}
+            className={`w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} font-mono text-base shadow-sm min-w-0 mb-2`}
           />
+          {pathError && (
+            <div className="text-red-400 text-sm mt-1 mb-2">
+              {pathError}
+            </div>
+          )}
         </div>
         {/* Title */}
         <div className="mb-2">
@@ -263,8 +324,13 @@ export default function PageEditor({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title"
             disabled={saving || isDisabled}
-            className="w-full px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-2xl font-bold shadow-sm min-w-0"
+            className={`w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} text-2xl font-bold shadow-sm min-w-0`}
           />
+          {pathError && (
+            <div className="text-red-400 text-sm mt-1 mb-2">
+              Path + Title combination must be unique
+            </div>
+          )}
         </div>
         
         {/* Change Summary (only show for edits) */}
@@ -395,7 +461,7 @@ export default function PageEditor({
         <div className="flex flex-col gap-2 mt-4">
           <button
             onClick={handleSave}
-            disabled={saving || isDisabled}
+            disabled={isSaveDisabled}
             className={styleTokens.button}
           >
             {mode === "edit" ? "Save" : "Create"}

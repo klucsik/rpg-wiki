@@ -167,7 +167,7 @@ async function importPage(filePath: string, importBasePath: string, options: Imp
     }
 
     // Check if page already exists
-    const existingPage = await prisma.page.findUnique({
+    const existingPage = await prisma.page.findFirst({
       where: { path: pagePath }
     });
 
@@ -234,7 +234,7 @@ async function importVersion(filePath: string, options: ImportOptions): Promise<
     }
 
     // Find the corresponding page
-    const page = await prisma.page.findUnique({
+    const page = await prisma.page.findFirst({
       where: { path: metadata.path }
     });
 

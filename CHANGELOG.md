@@ -1,9 +1,14 @@
 # Changelog
-## Version 20230815
+## Version 20250825
+- Improved error handling for page creation and editing.
+- Enhanced validation for path and title uniqueness.
+- Added path search for page creation, allowing users to find existing paths.
+
+## Version 20250815
 - Added health check endpoints (/health and /ready).
 - Fixed missing new page button in the header navigation for logged-in users.
 - Added search functionality to the header navigation.
-- Added Link PAge button in editor toolbar to open a modal for searching and linking to existing pages.
+- Added Link Page button in editor toolbar to open a modal for searching and linking to existing pages.
 
 ## Version 20250813
 - Fixed "Save Draft Now" to show notification when no changes are detected since last draft save.

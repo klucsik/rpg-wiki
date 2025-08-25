@@ -808,7 +808,7 @@ export class GitBackupService {
     const contentHash = this.calculateContentHash(htmlContent);
     
     // Check if page already exists
-    const existingPage = await prisma.page.findUnique({
+    const existingPage = await prisma.page.findFirst({
       where: { path: pagePath },
       include: {
         versions: {

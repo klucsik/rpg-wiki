@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { SearchResult } from '../../lib/search/types';
+import { getPageDisplayText } from '../../lib/page-display-utils';
 
 interface SearchBarProps {
   onResultsChange?: (results: SearchResult[]) => void;
@@ -152,10 +153,7 @@ export default function SearchBar({
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-100 truncate">
-                        {result.title}
-                      </div>
-                      <div className="text-xs text-gray-400 truncate mt-1">
-                        {result.path}
+                        {getPageDisplayText(result)}
                       </div>
                       {result.snippet && (
                         <div className="text-xs text-gray-300 mt-2 line-clamp-2">
