@@ -273,7 +273,7 @@ export default function BackupSettingsPage() {
               className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-indigo-100 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Branch to use for backups (will be created if it doesn't exist)
+              Branch to use for backups (will be created if it doesn&apos;t exist)
             </p>
           </div>
 
@@ -400,7 +400,7 @@ export default function BackupSettingsPage() {
         <div className="space-y-3 text-sm text-gray-300">
           <div>
             <h4 className="font-medium text-indigo-300 mb-2">1. Set up Git Repository</h4>
-            <p>Create a git repository to store your wiki backups. For SSH access, add your server's public key to the repository's deploy keys.</p>
+            <p>Create a git repository to store your wiki backups. For SSH access, add your server&apos;s public key to the repository&apos;s deploy keys.</p>
           </div>
           
           <div>
@@ -427,8 +427,8 @@ export default function BackupSettingsPage() {
           <div>
             <h4 className="font-medium text-indigo-300 mb-2">4. Troubleshooting</h4>
             <ul className="text-sm space-y-1">
-              <li>• Use "Test Connection" button to verify git access</li>
-              <li>• Check backup job logs in the "Recent Backup Jobs" section</li>
+              <li>• Use &quot;Test Connection&quot; button to verify git access</li>
+              <li>• Check backup job logs in the &quot;Recent Backup Jobs&quot; section</li>
               <li>• For SSH issues, ensure keys are mounted and have correct permissions (600)</li>
               <li>• For permission issues, check that the container can write to the backup path</li>
             </ul>
@@ -437,13 +437,13 @@ export default function BackupSettingsPage() {
           <div>
             <h4 className="font-medium text-indigo-300 mb-2">5. Smart Import Feature</h4>
             <div className="text-sm space-y-2">
-              <p>The "Smart Import" button pulls the latest content from your git repository and intelligently merges it:</p>
+              <p>The &quot;Smart Import&quot; button pulls the latest content from your git repository and intelligently merges it:</p>
               <ul className="text-sm space-y-1 ml-4">
                 <li>• Uses content hashes to detect actual changes</li>
-                <li>• Skips pages that haven't changed to avoid unnecessary updates</li>
+                <li>• Skips pages that haven&apos;t changed to avoid unnecessary updates</li>
                 <li>• Creates new page versions for modified content</li>
                 <li>• Preserves all existing versions and their history</li>
-                <li>• Imports new pages that don't exist locally</li>
+                <li>• Imports new pages that don&apos;t exist locally</li>
                 <li>• Handles images with metadata preservation</li>
               </ul>
             </div>

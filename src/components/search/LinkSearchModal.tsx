@@ -33,7 +33,7 @@ export default function LinkSearchModal({
     }
   }, [isOpen, initialQuery]);
 
-  // Debounced search function
+    // Debounced search function
   const debouncedSearch = useCallback(
     debounce(async (searchQuery: string) => {
       if (searchQuery.trim().length < 2) {
@@ -43,29 +43,23 @@ export default function LinkSearchModal({
       }
 
       try {
-        setIsLoading(true);
-        setError(null);
-
         const response = await fetch(
-          `/api/search/pages?q=${encodeURIComponent(searchQuery)}&limit=20`
+          `/api/search/pages?q=${encodeURIComponent(searchQuery)}&type=all&limit=20`
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Search failed');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         setResults(data.results || []);
-        setSelectedIndex(0);
-      } catch (err) {
-        console.error('Link search error:', err);
-        setError(err instanceof Error ? err.message : 'Search failed');
+      } catch (error) {
+        console.error('Search failed:', error);
         setResults([]);
       } finally {
         setIsLoading(false);
       }
-    }, 200),
+    }, 300),
     []
   );
 
@@ -227,7 +221,7 @@ export default function LinkSearchModal({
             </div>
           ) : query.trim().length >= 2 && !isLoading ? (
             <div className="px-6 py-8 text-center text-gray-400">
-              <div className="text-sm">No pages found for "{query}"</div>
+              <div className="text-sm">No pages found for &quot;{query}&quot;</div>
               <div className="text-xs mt-2">Try a different search term</div>
             </div>
           ) : !showingRecent && !query.trim() ? (

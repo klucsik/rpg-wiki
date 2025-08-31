@@ -71,7 +71,7 @@ const ResizableImage = Image.extend({
   },
 });
 
-export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorProps & { pageEditGroups?: string[] }) {
+export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const { user } = useUser();
   
   // Link modal state
@@ -150,7 +150,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showLinkModal, linkUrl, linkText, isEditingLink]);
+  }, [showLinkModal, linkUrl, linkText, isEditingLink, applyLink]);
 
   // Dropdown for block type selection
   const [blockType, setBlockType] = React.useState('paragraph');
@@ -174,14 +174,14 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     const updateBlockType = () => {
       const { state } = editor;
       const { selection } = state;
-      const { $from, $to } = selection;
+      const { $from } = selection;
       
       // If selection spans multiple positions, check for consistent formatting
       if (!selection.empty) {
         const blockTypes = new Set<string>();
         
         // Check each position in the selection for block type
-        state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+        state.doc.nodesBetween(selection.from, selection.to, (node) => {
           if (node.isBlock) {
             if (node.type.name === 'heading') {
               blockTypes.add(`heading-${node.attrs.level}`);
@@ -376,32 +376,7 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     setIsEditingLink(false);
   }
 
-  function closeLinkSearchModal() {
-    setShowLinkSearchModal(false);
-    setLinkText('');
-  }
-
-  function handlePageSelect(page: any) {
-    if (!editor) return;
-    
-    const { state } = editor;
-    const { selection } = state;
-    const hasSelection = !selection.empty;
-    const displayText = linkText.trim() || page.title;
-    const pageUrl = `/pages/${page.id}`;
-    
-    if (hasSelection) {
-      // Update selection with link
-      editor.chain().focus().toggleLink({ href: pageUrl }).run();
-    } else {
-      // Insert new link with page title as text
-      editor.chain().focus().insertContent(`<a href="${pageUrl}">${displayText}</a>`).run();
-    }
-    
-    closeLinkSearchModal();
-  }
-
-  function applyLink() {
+  const applyLink = React.useCallback(() => {
     if (!editor) return;
     
     if (!linkUrl.trim()) {
@@ -425,6 +400,31 @@ export function TiptapEditor({ value, onChange, pageEditGroups }: TiptapEditorPr
     }
     
     closeLinkModal();
+  }, [editor, linkUrl, isEditingLink, linkText]);
+
+  function closeLinkSearchModal() {
+    setShowLinkSearchModal(false);
+    setLinkText('');
+  }
+
+  function handlePageSelect(page: { title: string; path: string; id: number }) {
+    if (!editor) return;
+    
+    const { state } = editor;
+    const { selection } = state;
+    const hasSelection = !selection.empty;
+    const displayText = linkText.trim() || page.title;
+    const pageUrl = `/pages/${page.id}`;
+    
+    if (hasSelection) {
+      // Update selection with link
+      editor.chain().focus().toggleLink({ href: pageUrl }).run();
+    } else {
+      // Insert new link with page title as text
+      editor.chain().focus().insertContent(`<a href="${pageUrl}">${displayText}</a>`).run();
+    }
+    
+    closeLinkSearchModal();
   }
 
   if (!editor) return null;

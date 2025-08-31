@@ -46,7 +46,7 @@ export default function EditPage() {
       .then((data) => setPage(data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [id, userLoading]); // Removed 'user' from dependencies to prevent unnecessary refetches
+  }, [id, userLoading, user, page]); // Added missing dependencies
 
   // Show loading state while user context is loading or redirecting unauthenticated users
   if (userLoading || !isUserAuthenticated(user)) {

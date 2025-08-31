@@ -13,7 +13,6 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ 
-  onResultsChange, 
   placeholder = "Search wiki...", 
   autoFocus = false,
   className = ""
@@ -25,7 +24,7 @@ export default function SearchBar({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Debounced search function
+    // Debounced search function
   const debouncedSearch = useCallback(
     debounce(async (searchQuery: string) => {
       if (searchQuery.trim().length < 2) {
@@ -35,30 +34,25 @@ export default function SearchBar({
       }
 
       try {
-        setIsLoading(true);
-        setError(null);
-
         const response = await fetch(
-          `/api/search?q=${encodeURIComponent(searchQuery)}&type=all&limit=10`
+          `/api/search/pages?q=${encodeURIComponent(searchQuery)}&type=all&limit=20`
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Search failed');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         setResults(data.results || []);
-        onResultsChange?.(data.results || []);
-      } catch (err) {
-        console.error('Search error:', err);
-        setError(err instanceof Error ? err.message : 'Search failed');
+      } catch (error) {
+        console.error('Search failed:', error);
+        setError(error instanceof Error ? error.message : 'Search failed');
         setResults([]);
       } finally {
         setIsLoading(false);
       }
     }, 300),
-    [onResultsChange]
+    []
   );
 
   // Effect to trigger search when query changes
@@ -179,7 +173,7 @@ export default function SearchBar({
             </>
           ) : query.trim().length >= 2 && !isLoading ? (
             <div className="px-4 py-3 text-gray-400 text-sm">
-              No results found for "{query}"
+              No results found for &quot;{query}&quot;
             </div>
           ) : null}
         </div>

@@ -2,8 +2,6 @@
  * Utility functions for displaying page information consistently across the app
  */
 
-import { WikiPage } from '../types';
-
 /**
  * Formats page display text as path/title
  */

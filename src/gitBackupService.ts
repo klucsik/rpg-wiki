@@ -149,7 +149,7 @@ export class GitBackupService {
         // Remove any existing directory first
         try {
           await fs.rm(repoPath, { recursive: true, force: true });
-        } catch (error) {
+        } catch {
           // Ignore errors if directory doesn't exist
         }
         
@@ -279,13 +279,13 @@ export class GitBackupService {
         try {
           await this.execCommand('git', ['checkout', '-b', branchName, `origin/${branchName}`], targetPath, sshKeyPath);
           console.log(`Checked out existing remote branch: ${branchName}`);
-        } catch (error) {
+        } catch {
           // If remote branch doesn't exist, create new local branch
           await this.execCommand('git', ['checkout', '-b', branchName], targetPath, sshKeyPath);
           console.log(`Created new local branch: ${branchName}`);
         }
-      } catch (error) {
-        console.error(`Failed to setup branch ${branchName}:`, error);
+      } catch {
+        console.error(`Failed to setup branch ${branchName}`);
         // Continue with default branch if branch setup fails
       }
     } else {
@@ -299,15 +299,15 @@ export class GitBackupService {
         if (currentBranch.trim() !== branchName) {
           await this.execCommand('git', ['checkout', branchName], targetPath, sshKeyPath);
         }
-      } catch (error) {
+      } catch {
         // HEAD doesn't exist (empty repository) or other error
         console.log(`Repository appears to be empty or HEAD doesn't exist, will create ${branchName} branch on first commit`);
         
         // Try to create the branch if it doesn't exist
         try {
           await this.execCommand('git', ['checkout', '-b', branchName], targetPath, sshKeyPath);
-        } catch (branchError) {
-          console.error(`Failed to create branch ${branchName}:`, branchError);
+        } catch {
+          console.error(`Failed to create branch ${branchName}`);
         }
       }
     }

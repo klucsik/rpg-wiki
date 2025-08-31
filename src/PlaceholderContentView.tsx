@@ -38,7 +38,7 @@ const PlaceholderContentView: React.FC<PlaceholderContentViewProps> = ({
     >
       <div className={styles.restrictedTitle}>🔒 {originalTitle || 'Restricted Content'}</div>
       <div className={styles.restrictedNoAccess}>
-        <span>You don't have permission to view this content.</span>
+        <span>You don&apos;t have permission to view this content.</span>
         {groups.length > 0 && (
           <div style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af' }}>
             Required groups: {groups.join(', ')}

@@ -23,7 +23,6 @@ export function restorePlaceholdersToRestrictedBlocks(htmlContent: string): stri
     const originalEditgroups = placeholder.getAttribute('data-original-editgroups') || '[]';
     const originalTitle = placeholder.getAttribute('data-original-title') || 'Restricted Block';
     const originalContent = placeholder.getAttribute('data-original-content') || '';
-    const blockId = placeholder.getAttribute('data-block-id') || '';
     
     // Create the original restricted block element
     const originalBlock = document.createElement('div');

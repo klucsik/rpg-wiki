@@ -199,7 +199,14 @@ export async function PUT(
   });
 
   // Prepare update data - only include path if it's actually changing
-  const pageUpdateData: any = {
+  const pageUpdateData: {
+    title: string;
+    content: string;
+    edit_groups: string[];
+    view_groups: string[];
+    updated_at: Date;
+    path?: string;
+  } = {
     title,
     content: processedContent,
     edit_groups: edit_groups || ['admin'],

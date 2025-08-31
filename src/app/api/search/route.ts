@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     // Prepare search parameters
     const searchQuery: SearchQuery = {
       query: sanitizedQuery,
-      searchType: searchType as any,
+      searchType: searchType as 'all' | 'content' | 'title' | 'path',
       limit,
       offset
     };
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     const searchOptions = {
       limit,
       offset,
-      sortBy: sortBy as any
+      sortBy: sortBy as 'relevance' | 'title' | 'updated_at'
     };
 
     // Perform search

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Read changelog file
     const changelogPath = join(process.cwd(), 'CHANGELOG.md');

@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewProps, NodeViewWrapper } from '@tiptap/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
 
 declare module '@tiptap/core' {
@@ -32,8 +32,7 @@ mermaid.initialize({
 const MermaidNodeView: React.FC<NodeViewProps> = ({ 
   node, 
   updateAttributes, 
-  selected,
-  editor 
+  selected
 }) => {
   const [code, setCode] = useState(node.attrs.code || '');
   const [isEditing, setIsEditing] = useState(false);
@@ -42,19 +41,7 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   const mermaidRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (code && !isEditing) {
-      renderMermaid();
-    }
-  }, [code, isEditing]);
-
-  useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isEditing]);
-
-  const renderMermaid = async () => {
+  const renderMermaid = useCallback(async () => {
     if (!code.trim()) {
       setSvgContent('');
       setError('');
@@ -71,7 +58,22 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
       setError(err instanceof Error ? err.message : 'Failed to render diagram');
       setSvgContent('');
     }
-  };
+  }, [code]);
+
+  useEffect(() => {
+    const renderDiagram = async () => {
+      if (code && !isEditing) {
+        await renderMermaid();
+      }
+    };
+    renderDiagram();
+  }, [code, isEditing, renderMermaid]);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isEditing]);
 
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
@@ -206,7 +208,7 @@ export const MermaidNode = Node.create({
   
   addCommands() {
     return {
-      insertMermaid: (options?: { code?: string }) => ({ commands }: any) => {
+      insertMermaid: (options?: { code?: string }) => ({ commands }: { commands: { insertContent: (content: { type: string; attrs?: { code?: string } }) => boolean } }) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
