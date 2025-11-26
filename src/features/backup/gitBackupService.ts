@@ -591,7 +591,7 @@ export class GitBackupService {
   }
 
   private async exportImages(exportPath: string): Promise<number> {
-    const images = await prisma.image.findMany({
+    const images = await prisma.media.findMany({
       include: {
         user: true
       }
@@ -939,7 +939,7 @@ export class GitBackupService {
         const metadata = JSON.parse(metaContent);
         
         // Check if image already exists
-        const existingImage = await prisma.image.findFirst({
+        const existingImage = await prisma.media.findFirst({
           where: { filename: metadata.filename }
         });
 
@@ -967,7 +967,7 @@ export class GitBackupService {
 
         if (existingImage) {
           // Update existing image
-          await prisma.image.update({
+          await prisma.media.update({
             where: { id: existingImage.id },
             data: {
               data: imageData,
@@ -976,7 +976,7 @@ export class GitBackupService {
           });
         } else {
           // Create new image
-          await prisma.image.create({
+          await prisma.media.create({
             data: {
               filename: metadata.filename,
               mimetype: metadata.mimetype,

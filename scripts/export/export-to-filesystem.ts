@@ -153,7 +153,7 @@ async function exportPages(exportPath: string, options: ExportOptions): Promise<
 }
 
 async function exportImages(exportPath: string, options: ExportOptions): Promise<number> {
-  const images = await prisma.image.findMany({
+  const images = await prisma.media.findMany({
     include: {
       user: true
     }

@@ -66,7 +66,7 @@ model User {
   sessions      Session[]
   
   // Wiki relations
-  images        Image[]
+  media         Media[]
 }
 
 model UserGroup {
@@ -116,7 +116,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Image {
+model Media {
   id        Int      @id @default(autoincrement())
   filename  String
   mimetype  String
@@ -124,6 +124,8 @@ model Image {
   createdAt DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+  
+  @@map("Image")
 }
 
 model SiteSetting {

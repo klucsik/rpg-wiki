@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const images = await prisma.image.findMany({
+    const media = await prisma.media.findMany({
       select: {
         id: true,
         filename: true,
@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
     });
 
     // Convert date fields to string for API response
-    const imagesWithDates = images.map((image) => ({
-      ...image,
-      createdAt: image.createdAt.toISOString(),
+    const mediaWithDates = media.map((item) => ({
+      ...item,
+      createdAt: item.createdAt.toISOString(),
     }));
 
-    return NextResponse.json(imagesWithDates);
+    return NextResponse.json(mediaWithDates);
   } catch (error) {
     console.error('Error fetching images:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

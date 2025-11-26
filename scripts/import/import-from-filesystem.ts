@@ -310,7 +310,7 @@ async function importImage(filePath: string, options: ImportOptions): Promise<bo
     }
 
     // Check if image already exists by filename
-    const existingImage = await prisma.image.findFirst({
+    const existingImage = await prisma.media.findFirst({
       where: { filename: metadata.filename }
     });
 
@@ -347,7 +347,7 @@ async function importImage(filePath: string, options: ImportOptions): Promise<bo
     };
 
     if (existingImage && options.updateExisting) {
-      await prisma.image.update({
+      await prisma.media.update({
         where: { id: existingImage.id },
         data: {
           data: imageData,
@@ -356,7 +356,7 @@ async function importImage(filePath: string, options: ImportOptions): Promise<bo
       });
       console.log(`Updated image: ${metadata.filename}`);
     } else {
-      await prisma.image.create({
+      await prisma.media.create({
         data: imageCreateData
       });
       console.log(`Imported image: ${metadata.filename}`);

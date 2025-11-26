@@ -16,6 +16,7 @@ import { useUser } from "../../features/auth/userContext";
 import { MermaidNode } from "./MermaidExtension";
 import RestrictedBlock from "./RestrictedBlock";
 import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
+import { ResizableVideo } from "./VideoExtension";
 import LinkSearchModal from "../search/LinkSearchModal";
 import styles from "./Editor.module.css";
 
@@ -100,6 +101,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         types: ['textStyle'],
       }),
       ResizableImage,
+      ResizableVideo,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -266,7 +268,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const formData = new FormData();
@@ -278,49 +280,55 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     if (res.ok) {
       const data = await res.json();
       const url = data.url;
+      const mimetype = data.mimetype;
       if (url && editor) {
-        // Insert with default width and center alignment
-        // Use setImage, then updateAttributes to set custom attributes
-        editor.chain().focus().setImage({ src: url }).updateAttributes('image', { width: '300px', align: 'center' }).run();
+        // Check if it's a video or image
+        if (mimetype.startsWith('video/')) {
+          // Insert video with default width and center alignment
+          editor.chain().focus().setVideo({ src: url, width: '640px', align: 'center' }).run();
+        } else {
+          // Insert image with default width and center alignment
+          editor.chain().focus().setImage({ src: url }).updateAttributes('image', { width: '300px', align: 'center' }).run();
+        }
       }
     } else {
-      alert("Image upload failed");
+      alert("Media upload failed");
     }
     // Reset file input so the same file can be selected again
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  // Image resizing and alignment controls
-  function setImageWidth(width: string) {
+  // Image/Video resizing and alignment controls
+  function setMediaWidth(width: string, mediaType: 'image' | 'video') {
     if (!editor) return;
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
-    if (node && node.type.name === 'image') {
+    if (node && node.type.name === mediaType) {
       // Don't refocus the editor, just update the attributes
-      editor.chain().setNodeSelection(selection.from).updateAttributes('image', { width }).run();
+      editor.chain().setNodeSelection(selection.from).updateAttributes(mediaType, { width }).run();
     }
   }
-  function setImageAlign(align: 'left' | 'center' | 'right') {
+  function setMediaAlign(align: 'left' | 'center' | 'right', mediaType: 'image' | 'video') {
     if (!editor) return;
     const { state } = editor;
     const { selection } = state;
-    // Try to find the image node in the selection or its parent
+    // Try to find the media node in the selection or its parent
     const pos = selection.from;
     let node = state.doc.nodeAt(pos);
-    if (!node || node.type.name !== 'image') {
-      // Try to find an image node in the selection range
+    if (!node || node.type.name !== mediaType) {
+      // Try to find a media node in the selection range
       let found = false;
       state.doc.nodesBetween(selection.from, selection.to, (n) => {
-        if (n.type.name === 'image' && !found) {
+        if (n.type.name === mediaType && !found) {
           node = n;
           found = true;
         }
       });
     }
-    if (node && node.type.name === 'image') {
+    if (node && node.type.name === mediaType) {
       // Use updateAttributes directly, don't setNodeSelection (which can cause issues in some cases)
-      editor.chain().focus().updateAttributes('image', { align }).run();
+      editor.chain().focus().updateAttributes(mediaType, { align }).run();
     }
   }
 
@@ -430,19 +438,25 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
 
   if (!editor) return null;
 
-  // Check if image is selected
+  // Check if image or video is selected
   const isImageSelected = editor.isActive('image');
-  // Add type for currentImageAttrs
-  let imageNode: { attrs?: { width?: string; align?: string } } = {};
-  if (isImageSelected) {
+  const isVideoSelected = editor.isActive('video');
+  const isMediaSelected = isImageSelected || isVideoSelected;
+  const mediaType = isImageSelected ? 'image' : 'video';
+  
+  // Add type for currentMediaAttrs
+  let mediaNode: { attrs?: { width?: string; align?: string } } = {};
+  if (isMediaSelected) {
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
-    if (node && node.type.name === 'image') {
-      imageNode = node as { attrs?: { width?: string; align?: string } };
+    if (node && (node.type.name === 'image' || node.type.name === 'video')) {
+      mediaNode = node as { attrs?: { width?: string; align?: string } };
     }
   }
-  const currentImageAttrs = imageNode.attrs || {};
+  const currentMediaAttrs = mediaNode.attrs || {};
+  // Default width for images vs videos
+  const defaultWidth = mediaType === 'video' ? '640' : '300';
 
   return (
     <div className={styles.editorRoot}>
@@ -539,13 +553,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className={styles.toolbarButton}>• List</button>
         <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className={styles.toolbarButton}>1. List</button>
         <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={styles.toolbarButton}>―</button>
-        <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.toolbarButton}>Img</button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.toolbarButton}>Img/Vid</button>
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           ref={fileInputRef}
           style={{ display: "none" }}
-          onChange={handleImageUpload}
+          onChange={handleMediaUpload}
         />
         <button type="button" onClick={openLinkModal} className={styles.toolbarButton}>Link</button>
         <button type="button" onClick={openLinkSearchModal} className={styles.toolbarButton}>Link Page</button>
@@ -626,28 +640,28 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             </>
           )}
         </div>
-        {/* Image controls: only show if image is selected */}
-        {isImageSelected && (
+        {/* Image/Video controls: only show if image or video is selected */}
+        {isMediaSelected && (
           <div className={styles.imageControls}>
             <label className={styles.imageAlignLabel}>Width:</label>
             <input
               type="range"
               min="50"
               max="2500"
-              value={parseInt(currentImageAttrs.width || '300', 10)}
-              onChange={e => setImageWidth(e.target.value + 'px')}
+              value={parseInt(currentMediaAttrs.width || `${defaultWidth}`, 10)}
+              onChange={e => setMediaWidth(e.target.value + 'px', mediaType)}
               className={styles.imageWidthRange}
             />
             <input
               type="number"
-              value={parseInt(currentImageAttrs.width || '300', 10)}
-              onChange={e => setImageWidth(e.target.value + 'px')}
+              value={parseInt(currentMediaAttrs.width || `${defaultWidth}`, 10)}
+              onChange={e => setMediaWidth(e.target.value + 'px', mediaType)}
               className={styles.imageWidthInput}
             />
             <label className={styles.imageAlignLabel}>Align:</label>
-            <button type="button" onClick={() => setImageAlign('left')} className={`${styles.toolbarButton} ${currentImageAttrs.align === 'left' ? styles.toolbarButtonActive : ''}`}>Left</button>
-            <button type="button" onClick={() => setImageAlign('center')} className={`${styles.toolbarButton} ${currentImageAttrs.align === 'center' ? styles.toolbarButtonActive : ''}`}>Center</button>
-            <button type="button" onClick={() => setImageAlign('right')} className={`${styles.toolbarButton} ${currentImageAttrs.align === 'right' ? styles.toolbarButtonActive : ''}`}>Right</button>
+            <button type="button" onClick={() => setMediaAlign('left', mediaType)} className={`${styles.toolbarButton} ${currentMediaAttrs.align === 'left' ? styles.toolbarButtonActive : ''}`}>Left</button>
+            <button type="button" onClick={() => setMediaAlign('center', mediaType)} className={`${styles.toolbarButton} ${currentMediaAttrs.align === 'center' ? styles.toolbarButtonActive : ''}`}>Center</button>
+            <button type="button" onClick={() => setMediaAlign('right', mediaType)} className={`${styles.toolbarButton} ${currentMediaAttrs.align === 'right' ? styles.toolbarButtonActive : ''}`}>Right</button>
           </div>
         )}
       </nav>

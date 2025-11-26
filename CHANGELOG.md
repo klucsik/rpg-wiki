@@ -1,6 +1,7 @@
 # Changelog
 ## Version 20251127
 - Added default page option (and settings admin page)
+- Support video embeds
 
 ## Version 20251126
 - Reorganized soruce code into feature-based architecture for better maintainability.

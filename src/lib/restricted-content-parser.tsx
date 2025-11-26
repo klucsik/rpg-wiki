@@ -113,7 +113,8 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
         'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'img', 
         'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'hr', 'br',
         'blockquote', 'code', 'pre', 'b', 'i', 'u', 's', 'del', 'ins', 'mark',
-        'area', 'base', 'col', 'embed', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'
+        'video', 'audio', 'source',
+        'area', 'base', 'col', 'embed', 'input', 'link', 'meta', 'param', 'track', 'wbr'
       ]);
       
       const safeTagName = validHTMLElements.has(tagName) ? tagName : 'div';

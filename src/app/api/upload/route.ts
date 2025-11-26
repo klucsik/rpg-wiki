@@ -18,6 +18,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
+    // Validate that the file is an image or video
+    const validMimeTypes = [
+      // Images
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      // Videos
+      'video/mp4', 'video/webm', 'video/ogg'
+    ];
+    if (!validMimeTypes.includes(file.type)) {
+      return NextResponse.json({ 
+        error: 'Invalid file type. Only images (JPEG, PNG, GIF, WebP, SVG) and videos (MP4, WebM, OGG) are allowed.' 
+      }, { status: 400 });
+    }
+
     // Read file data
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -35,8 +48,8 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Save image to database using the authenticated user ID
-    const image = await prisma.image.create({
+    // Save media to database using the authenticated user ID
+    const media = await prisma.media.create({
       data: {
         filename: file.name,
         mimetype: file.type,
@@ -45,13 +58,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Return a URL to access the image
-    const url = `/api/images/${image.id}`;
-    return NextResponse.json({ url, id: image.id });
+    // Return a URL to access the media
+    const url = `/api/images/${media.id}`;
+    return NextResponse.json({ url, id: media.id, mimetype: media.mimetype });
   } catch (error) {
-    console.error('Image upload error:', error);
+    console.error('Media upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload image' }, 
+      { error: 'Failed to upload media' }, 
       { status: 500 }
     );
   }
