@@ -5,6 +5,7 @@ import React from "react";
 import GroupsAdminPage from "../groups/page";
 import UsersAdminPage from "../users/UsersAdminPage";
 import { BackupSettingsPage } from "../../features/backup";
+import SiteSettingsPage from "../../components/admin/SiteSettings";
 
 function AdminSidebar() {
   return (
@@ -104,9 +105,9 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Git Backup Settings</h1>
           <BackupSettingsPage />
         </section>
-        <section id="settings">
+        <section id="settings" className="mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Site Settings</h1>
-          <p className="text-indigo-100 mb-4">(Coming soon: site-wide settings and options.)</p>
+          <SiteSettingsPage />
         </section>
         
         <section id="session-info" className="mb-12">
