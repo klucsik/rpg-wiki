@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import PageList from "./PageList";
-import { WikiPage } from "./types";
-import { useUser } from "./userContext";
-import { canUserViewPage, canUserEditPage, isUserAuthenticated } from "./accessControl";
-import { parseWikiContentWithRestrictedBlocks } from "./lib/restricted-content-parser";
+import { WikiPage } from "../../types";
+import { useUser } from "../auth/userContext";
+import { canUserViewPage, canUserEditPage, isUserAuthenticated } from "../auth/accessControl";
+import { parseWikiContentWithRestrictedBlocks } from "../../lib/restricted-content-parser";
 import { useRouter } from "next/navigation";
 import VersionHistory from "./VersionHistory";
 import styles from "./PageView.module.css";
-import { authenticatedFetch } from "./apiHelpers";
-import { useDraftStatus } from "./hooks/useDraftStatus";
+import { authenticatedFetch } from "../../lib/api/apiHelpers";
+import { useDraftStatus } from "../../hooks/useDraftStatus";
 
 export default function PagesView({ initialId }: { initialId?: number | null }) {
   const { user } = useUser();

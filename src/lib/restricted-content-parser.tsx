@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import RestrictedBlockView from "../RestrictedBlockView";
-import PlaceholderContentView from "../PlaceholderContentView";
-import MermaidView from "../MermaidView";
+import RestrictedBlockView from "../components/editor/RestrictedBlockView";
+import PlaceholderContentView from "../features/pages/PlaceholderContentView";
+import MermaidView from "../components/editor/MermaidView";
 
 interface User {
   groups: string[];

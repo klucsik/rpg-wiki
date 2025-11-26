@@ -4,7 +4,7 @@ import Link from "next/link";
 import React from "react";
 import GroupsAdminPage from "../groups/page";
 import UsersAdminPage from "../users/UsersAdminPage";
-import BackupSettingsPage from "../../components/BackupSettingsPage";
+import { BackupSettingsPage } from "../../features/backup";
 
 function AdminSidebar() {
   return (

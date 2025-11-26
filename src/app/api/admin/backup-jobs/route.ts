@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../lib/auth';
-import { GitBackupService } from '../../../../gitBackupService';
+import { GitBackupService } from '../../../../features/backup/gitBackupService';
 
 export async function GET() {
   try {

@@ -1,5 +1,5 @@
 "use client";
-import PagesView from "../../../PagesView";
+import { PagesView } from "../../../features/pages";
 import { useParams } from "next/navigation";
 
 export default function PageIdRoute() {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../db';
+import { prisma } from '../../../lib/db/db';
 import bcrypt from 'bcryptjs';
 
 // GET all users (with groups)

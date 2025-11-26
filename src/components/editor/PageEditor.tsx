@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { TiptapEditor } from "./TiptapEditor";
+import { WikiPage } from "../../types";
+import { useUser } from "../../features/auth/userContext";
+import { useGroups } from "../../features/groups/groupsContext";
 import { useRouter } from "next/navigation";
-import { useUser } from "./userContext";
-import { useGroups } from "./groupsContext";
-import { WikiPage } from "./types";
-import { authenticatedFetch } from "./apiHelpers";
-import { isUserAuthenticated } from "./accessControl";
-import { useAutosave } from "./hooks/useAutosave";
-import PathAutocomplete from "./components/PathAutocomplete";
+import { authenticatedFetch } from "../../lib/api/apiHelpers";
+import { isUserAuthenticated } from "../../features/auth/accessControl";
+import { useAutosave } from "../../hooks/useAutosave";
+import PathAutocomplete from "../ui/PathAutocomplete";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
 export const styleTokens = {

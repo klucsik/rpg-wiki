@@ -2,10 +2,9 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import PageEditor from "../../../../PageEditor";
+import { PageEditor } from "../../../../components/editor";
 import { WikiPage } from "../../../../types";
-import { useUser } from "../../../../userContext";
-import { canUserEditPage, isUserAuthenticated } from "../../../../accessControl";
+import { useUser, canUserEditPage, isUserAuthenticated } from "../../../../features/auth";
 
 export default function EditPage() {
   const router = useRouter();

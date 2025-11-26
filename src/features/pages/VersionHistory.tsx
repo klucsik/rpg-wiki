@@ -1,5 +1,6 @@
+"use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import { authenticatedFetch } from './apiHelpers';
+import { authenticatedFetch } from '../../lib/api/apiHelpers';
 
 interface PageVersion {
   id: number;

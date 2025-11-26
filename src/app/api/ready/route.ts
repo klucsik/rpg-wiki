@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../db';
+import { prisma } from '../../../lib/db/db';
 
 /**
  * Readiness check endpoint for Kubernetes readiness probe

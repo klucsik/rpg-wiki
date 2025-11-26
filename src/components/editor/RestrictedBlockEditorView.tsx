@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NodeViewWrapper, NodeViewContent, type ReactNodeViewProps } from '@tiptap/react';
-import { useGroups } from "./groupsContext";
-import { useUser } from "./userContext";
+import { useGroups } from "../../features/groups/groupsContext";
+import { useUser } from "../../features/auth/userContext";
 import styles from './RestrictedBlock.module.css';
 
 // Remove custom props interface and use the generic ReactNodeViewProps from @tiptap/react

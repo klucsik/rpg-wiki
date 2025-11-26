@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { WikiPage } from "./types";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "./userContext";
+import { WikiPage } from "../../types";
+import { useUser } from "../auth/userContext";
 
 interface TreeNode {
   name: string;

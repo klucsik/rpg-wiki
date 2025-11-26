@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../../../db';
+import { prisma } from '../../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../../lib/auth-utils';
 import { filterRestrictedContent, hasRestrictedContent } from '../../../../../../lib/server-content-filter';
 

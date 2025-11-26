@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { authenticatedFetch } from '../apiHelpers';
+import { authenticatedFetch } from '../lib/api/apiHelpers';
 
 interface DraftStatus {
   hasDraft: boolean;

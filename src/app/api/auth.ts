@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '../../db';
+import { prisma } from '../../lib/db/db';
 
 export interface AuthenticatedUser {
   id: string;

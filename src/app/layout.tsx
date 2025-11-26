@@ -3,10 +3,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import React from "react";
-import { UserProvider } from "../userContext";
-import { GroupsProvider } from "../groupsContext";
-import HeaderNav from "../HeaderNav";
-import { AuthProvider } from "../components/AuthProvider";
+import { UserProvider, AuthProvider } from "../features/auth";
+import { GroupsProvider } from "../features/groups";
+import { HeaderNav } from "../components/layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import { prisma } from '../../../../db';
+import { prisma } from '../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
 import { filterRestrictedContent, hasRestrictedContent } from '../../../../lib/server-content-filter';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../lib/placeholder-restore';
@@ -255,7 +255,7 @@ export async function PUT(
   
   // Trigger backup after successful save
   try {
-    const { GitBackupService } = await import('../../../../gitBackupService');
+    const { GitBackupService } = await import('../../../../features/backup/gitBackupService');
     const backupService = GitBackupService.getInstance();
     const settings = await backupService.getSettings();
     
@@ -305,7 +305,7 @@ export async function DELETE(
 
   // Delete from backup first (before database deletion)
   try {
-    const { GitBackupService } = await import('../../../../gitBackupService');
+    const { GitBackupService } = await import('../../../../features/backup/gitBackupService');
     const backupService = GitBackupService.getInstance();
     await backupService.deletePageFromBackup(parseInt(id));
   } catch (error) {
@@ -318,7 +318,7 @@ export async function DELETE(
   
   // Trigger backup after successful deletion to commit the file deletion
   try {
-    const { GitBackupService } = await import('../../../../gitBackupService');
+    const { GitBackupService } = await import('../../../../features/backup/gitBackupService');
     const backupService = GitBackupService.getInstance();
     const settings = await backupService.getSettings();
     

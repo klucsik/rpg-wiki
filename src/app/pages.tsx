@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import PageList from "../PageList";
+import { PageList } from "../features/pages";
 import { WikiPage } from "../types";
-import { useUser } from "../userContext";
-import { authenticatedFetch } from "../apiHelpers";
-import { canUserEditPage } from "../accessControl";
+import { useUser } from "../features/auth";
+import { authenticatedFetch } from "../lib/api/apiHelpers";
+import { canUserEditPage } from "../features/auth";
 
 export default function Pages() {
 	const { user } = useUser();

@@ -1,23 +1,23 @@
-import React from 'react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import TipTapLink from '@tiptap/extension-link';
-import Placeholder from '@tiptap/extension-placeholder';
-import RestrictedBlock from './RestrictedBlock';
-import RestrictedBlockPlaceholder from './RestrictedBlockPlaceholder';
+import React from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
 import TextAlign from '@tiptap/extension-text-align';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
 import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
-import { FontSize, FontWeight } from './FontExtensions';
-import { useUser } from "./userContext";
-import styles from './Editor.module.css';
-import { MermaidNode } from './MermaidExtension';
-import LinkSearchModal from './components/search/LinkSearchModal';
+import Placeholder from '@tiptap/extension-placeholder';
+import { FontSize, FontWeight } from "./FontExtensions";
+import { useUser } from "../../features/auth/userContext";
+import { MermaidNode } from "./MermaidExtension";
+import RestrictedBlock from "./RestrictedBlock";
+import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
+import LinkSearchModal from "../search/LinkSearchModal";
+import styles from "./Editor.module.css";
 
 interface TiptapEditorProps {
   value: string;
@@ -100,7 +100,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         types: ['textStyle'],
       }),
       ResizableImage,
-      TipTapLink.configure({
+      Link.configure({
         openOnClick: false,
         HTMLAttributes: {
           class: 'wiki-link',
@@ -135,22 +135,6 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       editor.commands.setContent(value);
     }
   }, [value, editor]);
-
-  // Handle keyboard events for link modal
-  React.useEffect(() => {
-    if (!showLinkModal) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeLinkModal();
-      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        applyLink();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showLinkModal, linkUrl, linkText, isEditingLink, applyLink]);
 
   // Dropdown for block type selection
   const [blockType, setBlockType] = React.useState('paragraph');
@@ -401,6 +385,22 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     
     closeLinkModal();
   }, [editor, linkUrl, isEditingLink, linkText]);
+
+  // Handle keyboard events for link modal
+  React.useEffect(() => {
+    if (!showLinkModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLinkModal();
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        applyLink();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showLinkModal, linkUrl, linkText, isEditingLink, applyLink]);
 
   function closeLinkSearchModal() {
     setShowLinkSearchModal(false);

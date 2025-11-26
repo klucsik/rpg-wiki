@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect } from "react";
-import PageEditor from "../../../PageEditor";
+import { PageEditor } from "../../../components/editor";
 import { useRouter } from "next/navigation";
-import { useUser } from "../../../userContext";
-import { isUserAuthenticated } from "../../../accessControl";
+import { useUser, isUserAuthenticated } from "../../../features/auth";
 
 export default function CreatePage() {
   const { user } = useUser();

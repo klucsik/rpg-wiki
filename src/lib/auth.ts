@@ -1,5 +1,5 @@
 import { NextAuthOptions } from "next-auth";
-import { prisma } from "../db";
+import { prisma } from "./db/db";
 import CredentialsProvider from "next-auth/providers/credentials";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import bcrypt from "bcryptjs";

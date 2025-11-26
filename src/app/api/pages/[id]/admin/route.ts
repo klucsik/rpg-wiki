@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../../db';
+import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest } from '../../../../../lib/auth-utils';
 
 // GET unfiltered content for admin export/backup

@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth";
 import { NextRequest } from "next/server";
-import { prisma } from "../db";
+import { prisma } from "./db/db";
 
 export interface AuthResult {
   isAuthenticated: boolean;

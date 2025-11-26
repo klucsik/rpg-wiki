@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../db';
+import { prisma } from '../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
 
 // GET all images - requires authentication (for the image link fixer script)

@@ -1,5 +1,5 @@
-import { prisma } from '../../db';
-import { canUserViewPage } from '../../accessControl';
+import { prisma } from '../db/db';
+import { canUserViewPage } from '../../features/auth/accessControl';
 import { UserPermissions } from '../server-content-filter';
 import { ContentExtractor } from './ContentExtractor';
 import { SearchResult, SearchQuery, SearchOptions } from './types';

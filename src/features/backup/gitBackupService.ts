@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
-import { prisma } from './db';
+import { prisma } from '../../lib/db/db';
 import { createHash } from 'crypto';
 
 export interface GitBackupSettings {

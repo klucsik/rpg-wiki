@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './RestrictedBlock.module.css';
+import styles from '../../components/editor/RestrictedBlock.module.css';
 
 interface PlaceholderContentViewProps {
   blockId: string;

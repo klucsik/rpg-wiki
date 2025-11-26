@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../../lib/auth';
-import { GitBackupService } from '../../../../../gitBackupService';
+import { GitBackupService } from '../../../../../features/backup/gitBackupService';
 
 export async function POST(request: NextRequest) {
   try {

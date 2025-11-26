@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../db';
+import { prisma } from '../../../lib/db/db';
 
 // GET all groups
 export async function GET() {

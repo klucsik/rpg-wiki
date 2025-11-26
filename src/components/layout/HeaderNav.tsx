@@ -1,7 +1,7 @@
 import Link from "next/link";
 import UserMenu from "./UserMenu";
-import { useUser } from "./userContext";
-import SearchBar from "./components/search/SearchBar";
+import { useUser } from "../../features/auth/userContext";
+import SearchBar from "../search/SearchBar";
 
 interface HeaderNavProps {
   showSidebarToggle?: boolean;

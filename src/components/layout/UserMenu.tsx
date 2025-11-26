@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { useUser } from "./userContext";
+import { useUser } from "../../features/auth/userContext";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { isUserAuthenticated } from "./accessControl";
+import { isUserAuthenticated } from "../../features/auth/accessControl";
 
 export default function UserMenu() {
   const { user } = useUser();

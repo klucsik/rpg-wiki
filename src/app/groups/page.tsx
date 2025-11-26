@@ -3,8 +3,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useGroups } from "../../groupsContext";
-import { styleTokens } from "../../PageEditor";
+import { useGroups } from "../../features/groups/groupsContext";
+import { styleTokens } from "../../components/editor/PageEditor";
 
 const GroupsAdminPage = () => {
   const { groups, addGroup, removeGroup } = useGroups();

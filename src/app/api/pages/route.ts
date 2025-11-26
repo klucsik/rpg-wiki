@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import { prisma } from '../../../db';
+import { prisma } from '../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
-import { canUserViewPage } from '../../../accessControl';
+import { canUserViewPage } from '../../../features/auth/accessControl';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../lib/placeholder-restore';
 
 // GET all pages - filtered by user permissions

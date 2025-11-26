@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { authenticatedFetch } from '../apiHelpers';
+import { authenticatedFetch } from '../../lib/api/apiHelpers';
 
 interface PathSuggestion {
   id: number;
