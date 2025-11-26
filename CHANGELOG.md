@@ -3,6 +3,7 @@
 - Reorganized soruce code into feature-based architecture for better maintainability.
 - Only show changelog to admin users
 - On page creation or edit: If path is left empty, it defaults to /
+- Fix image resizer problems
 
 ## Version 20250825
 - Improved error handling for page creation and editing.

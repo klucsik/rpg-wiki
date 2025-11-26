@@ -297,7 +297,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
     if (node && node.type.name === 'image') {
-      editor.chain().focus().setNodeSelection(selection.from).updateAttributes('image', { width }).run();
+      // Don't refocus the editor, just update the attributes
+      editor.chain().setNodeSelection(selection.from).updateAttributes('image', { width }).run();
     }
   }
   function setImageAlign(align: 'left' | 'center' | 'right') {
@@ -632,15 +633,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             <input
               type="range"
               min="50"
-              max="800"
+              max="2500"
               value={parseInt(currentImageAttrs.width || '300', 10)}
               onChange={e => setImageWidth(e.target.value + 'px')}
               className={styles.imageWidthRange}
             />
             <input
               type="number"
-              min="50"
-              max="800"
               value={parseInt(currentImageAttrs.width || '300', 10)}
               onChange={e => setImageWidth(e.target.value + 'px')}
               className={styles.imageWidthInput}
