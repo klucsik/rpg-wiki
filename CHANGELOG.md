@@ -1,6 +1,7 @@
 # Changelog
 ## Version 20251126
 - Reorganized soruce code into feature-based architecture for better maintainability.
+- Only show changelog to admin users
 
 ## Version 20250825
 - Improved error handling for page creation and editing.

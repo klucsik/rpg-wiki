@@ -45,12 +45,14 @@ export default function HeaderNav({
         >
           Pages
         </Link>
-        <Link
-          href="/admin/changelog"
-          className="text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
-        >
-          Changelog
-        </Link>
+        {user?.groups?.includes("admin") && (
+          <Link
+            href="/admin/changelog"
+            className="text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
+          >
+            Changelog
+          </Link>
+        )}
         {user?.groups?.includes("admin") && (
           <Link
             href="/admin"

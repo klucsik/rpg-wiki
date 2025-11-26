@@ -1,30 +1,46 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function ChangelogPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [changelogContent, setChangelogContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchChangelog() {
-      try {
-        const response = await fetch('/api/admin/changelog');
-        if (!response.ok) {
-          throw new Error('Failed to fetch changelog');
-        }
-        const data = await response.json();
-        setChangelogContent(data.content);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
+    // Redirect to login if not authenticated
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/admin/changelog');
+      return;
     }
 
-    fetchChangelog();
-  }, []);
+    if (status === 'authenticated') {
+      fetchChangelog();
+    }
+  }, [status, router]);
+
+  async function fetchChangelog() {
+    try {
+      const response = await fetch('/api/admin/changelog');
+      if (response.status === 401) {
+        router.push('/auth/signin?callbackUrl=/admin/changelog');
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to fetch changelog');
+      }
+      const data = await response.json();
+      setChangelogContent(data.content);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -41,7 +57,7 @@ export default function ChangelogPage() {
           </div>
           
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-            {loading ? (
+            {status === 'loading' || loading ? (
               <div className="text-center text-indigo-200">
                 <p>Loading changelog...</p>
               </div>
