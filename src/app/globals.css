@@ -165,7 +165,6 @@ img[data-align="right"] {
 
 .prose * {
   max-width: 100% !important;
-  overflow-x: hidden !important;
 }
 
 .prose pre {
@@ -174,7 +173,6 @@ img[data-align="right"] {
 }
 
 .prose table {
-  width: 100% !important;
   table-layout: fixed !important;
 }
 
@@ -307,7 +305,6 @@ img[data-align="right"] {
   border-collapse: collapse !important;
   max-width: 100% !important;
   margin: 1.5rem 0 !important;
-  overflow: hidden !important;
   border: 2px solid #374151 !important;
   border-radius: 0.375rem !important;
 }
@@ -394,7 +391,6 @@ img[data-align="right"] {
 .prose .tableWrapper {
   margin: 1.5rem 0 !important;
   overflow-x: auto !important;
-  width: fit-content !important;
   max-width: 100% !important;
 }
 

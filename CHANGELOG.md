@@ -3,6 +3,7 @@
 - Added default page option (and settings admin page)
 - Support video embeds
 - fix editpage styling: overflow on the bottom
+- Fix table styling: tables now resizable, and not forced ot be 100% width
 
 ## Version 20251126
 - Reorganized soruce code into feature-based architecture for better maintainability.
