@@ -47,7 +47,7 @@ export default function PageEditor({
   
   const [editGroups, setEditGroups] = useState<string[]>(page?.edit_groups || getDefaultGroups());
   const [viewGroups, setViewGroups] = useState<string[]>(page?.view_groups || getDefaultGroups());
-  const [path, setPath] = useState(page?.path || "");
+  const [path, setPath] = useState(page?.path || "/");
   const [changeSummary, setChangeSummary] = useState("");
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -82,7 +82,7 @@ export default function PageEditor({
 
   // Validate path+title combination when either changes
   useEffect(() => {
-    if (!path.trim() || !title.trim()) {
+    if (!title.trim()) {
       setPathError(null);
       return;
     }
@@ -111,7 +111,7 @@ export default function PageEditor({
   }, [path, title, existingPages, mode, page]);
 
   // Check if save should be disabled
-  const isSaveDisabled = saving || isDisabled || !title || !content || !path || !!pathError;
+  const isSaveDisabled = saving || isDisabled || !title || !content || !!pathError;
 
   // Autosave functionality
   const { saveNow, deleteDraft } = useAutosave({
@@ -141,14 +141,15 @@ export default function PageEditor({
   });
 
   async function handleSave() {
-    if (!title || !content || !path) {
-      setValidationError("Title, Content, and Path are required.");
+    if (!title || !content) {
+      setValidationError("Title and Content are required.");
       return;
     }
     if (pathError) {
       setValidationError("Please fix the path and title combination error before saving.");
       return;
     }
+    
     setValidationError(null);
     setSaving(true);
     setError(null);
@@ -304,9 +305,9 @@ export default function PageEditor({
         <div className="mb-2">
           <label className={styleTokens.label}>Path</label>
           <PathAutocomplete
-            value={path}
+            value={mode === "create" && path === "/" ? "" : path}
             onChange={setPath}
-            placeholder="/lore/dragons"
+            placeholder={mode === "create" ? "/lore/dragons (leave empty for root)" : "/lore/dragons"}
             disabled={saving || isDisabled}
             className={`w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} font-mono text-base shadow-sm min-w-0 mb-2`}
           />
