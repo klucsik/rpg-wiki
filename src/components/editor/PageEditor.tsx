@@ -582,7 +582,7 @@ export default function PageEditor({
           </button>
         )}
         
-        <main className="flex-1 flex flex-col overflow-hidden p-0 m-0 h-[calc(100vh-64px)] w-full overscroll-contain">
+        <main className="flex flex-col overflow-hidden p-0 m-0 h-[calc(100vh-64px)] w-full overscroll-contain">
           <div className="flex-1 flex flex-col min-h-0 w-full h-full">
             <TiptapEditor value={content} onChange={setContent} pageEditGroups={editGroups} />
           </div>
