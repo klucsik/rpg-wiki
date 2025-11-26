@@ -118,14 +118,14 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           </button>
         )}
         
-        <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden" style={{height: 'calc(100vh - 64px)'}}>
+        <div className="w-full h-full flex flex-col min-h-0 min-w-0" style={{height: 'calc(100vh - 64px)'}}>
           {loading && <div className="text-indigo-400 p-4">Loading...</div>}
           {error && (
             <div className="text-red-400 font-semibold mb-2 p-4">{error}</div>
           )}
           {/* VIEW PAGE */}
           {selectedPage && canViewSelected && (
-            <div className={`prose prose-invert max-w-none ${styles.proseBox}`} style={{overflowX: 'hidden'}}>
+            <div className={`prose prose-invert max-w-none ${styles.proseBox}`}>
               <div className={styles.header}>
                 <div className="min-w-0 flex-1">
                   {selectedPage.path && (
@@ -178,17 +178,15 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                 </div>
               )}
               
-              <div className="flex-1 overflow-auto min-h-0 min-w-0 max-w-full">
-                {selectedPage.content ? (
-                  <div className="prose prose-invert max-w-none overflow-x-hidden break-words">
-                    {parseWikiContentWithRestrictedBlocks(selectedPage.content, {
-                      groups: user.groups,
-                    })}
-                  </div>
-                ) : (
-                  <div>No content</div>
-                )}
-              </div>
+              {selectedPage.content ? (
+                <div className="prose prose-invert max-w-none overflow-x-hidden break-words flex-1 overflow-auto min-h-0">
+                  {parseWikiContentWithRestrictedBlocks(selectedPage.content, {
+                    groups: user.groups,
+                  })}
+                </div>
+              ) : (
+                <div>No content</div>
+              )}
               <div className={styles.pageFooter}>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                   <span>Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""}</span>

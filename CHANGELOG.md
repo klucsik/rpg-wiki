@@ -5,6 +5,7 @@
 - On page creation or edit: If path is left empty, it defaults to /
 - Fix image resizer problems
 - Fix editable area doesn't fill the available space
+- Styling Improvements on the page view and editor
 
 ## Version 20250825
 - Improved error handling for page creation and editing.
