@@ -101,6 +101,8 @@
   padding: 1rem;
   color: #c7d2fe;
   cursor: text;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Link styles for editor content */
@@ -182,9 +184,11 @@
   padding-top: 4rem;
 }
 
-/* ProseMirror min height */
-.ProseMirror, .is-empty.is-editor-empty {
+/* ProseMirror fill available space */
+.editorContent :global(.ProseMirror) {
   min-height: 500px;
+  height: 100%;
+  outline: none;
 }
 
 .tableControls {
