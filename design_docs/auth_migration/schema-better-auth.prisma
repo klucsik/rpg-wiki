@@ -1,0 +1,194 @@
+// Updated Prisma schema for Better Auth
+// This is the target schema after migration
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// WIKI MODELS (Unchanged)
+// ============================================================================
+
+model Page {
+  id          Int           @id @default(autoincrement())
+  title       String
+  content     String
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  edit_groups String[]
+  view_groups String[]
+  path        String
+  versions    PageVersion[]
+}
+
+model PageVersion {
+  id             Int      @id @default(autoincrement())
+  page_id        Int
+  version        Int
+  title          String
+  content        String
+  path           String
+  edit_groups    String[]
+  view_groups    String[]
+  edited_by      String
+  edited_at      DateTime @default(now())
+  change_summary String?
+  content_hash   String?
+  is_draft       Boolean  @default(false)
+  page           Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+
+  @@unique([page_id, version])
+  @@map("page_versions")
+}
+
+model Group {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  userGroups UserGroup[]
+}
+
+model UserGroup {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  groupId Int
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  filename  String
+  mimetype  String
+  data      Bytes
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("Image")
+}
+
+model SiteSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String?  @db.Text
+  encrypted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BackupJob {
+  id          Int       @id @default(autoincrement())
+  status      String // 'pending', 'running', 'completed', 'failed'
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  error       String?   @db.Text
+  commitHash  String?
+  exportPath  String?
+  triggeredBy String // user ID who triggered the backup
+  jobType     String    @default("auto") // 'auto', 'manual'
+}
+
+// ============================================================================
+// BETTER AUTH MODELS (Core Schema)
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? // Better Auth expects boolean, but we'll handle in middleware
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Better Auth username plugin fields
+  username        String  @unique
+  displayUsername String?
+
+  // Better Auth doesn't store password in User (it's in Account table)
+  // Remove password field from User model
+  
+  // Relations
+  userGroups UserGroup[]
+  accounts   Account[]
+  sessions   Session[]
+  media      Media[]
+}
+
+// Better Auth Account model (OAuth + Credentials)
+model Account {
+  id        String   @id @default(cuid())
+  userId    String
+  accountId String // Provider's account ID or userId for credentials
+  providerId String // Provider identifier (e.g., "keycloak", "credentials")
+  
+  // OAuth tokens
+  accessToken            String?   @db.Text
+  refreshToken           String?   @db.Text
+  idToken                String?   @db.Text
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  
+  // Credentials (password stored here for username/password auth)
+  password String? @db.Text
+  
+  // Legacy NextAuth fields (kept for compatibility)
+  type          String? // Can be removed if not needed
+  provider      String? // Kept for backwards compatibility, use providerId instead
+  providerAccountId String? // Kept for backwards compatibility, use accountId instead
+  expiresAt     Int? // OAuth token expiry (can use accessTokenExpiresAt instead)
+  tokenType     String? // Can be removed
+  sessionState  String? // Can be removed
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId]) // Legacy constraint
+  @@unique([providerId, accountId]) // Better Auth constraint
+}
+
+// Better Auth Session model
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique // Renamed from sessionToken
+  userId    String
+  expiresAt DateTime // Renamed from expires
+  
+  // Better Auth security tracking
+  ipAddress String?
+  userAgent String? @db.Text
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Better Auth Verification model (renamed from VerificationToken)
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String   @unique // Renamed from token
+  expiresAt  DateTime // Renamed from expires
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Note: Better Auth uses single id PK, not composite [identifier, token]
+}
