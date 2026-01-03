@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { PageEditor } from "../../../../components/editor";
 import { WikiPage } from "../../../../types";
 import { useUser, canUserEditPage, isUserAuthenticated } from "../../../../features/auth";
@@ -15,19 +15,19 @@ export default function EditPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const hasRedirected = useRef(false);
 
   // Redirect unauthenticated users to login, but only after user context has loaded
   useEffect(() => {
     if (userLoading) return; // Wait for user context to load
-    if (hasRedirected) return; // Prevent multiple redirects
+    if (hasRedirected.current) return; // Prevent multiple redirects
     
     if (!isUserAuthenticated(user)) {
-      setHasRedirected(true);
+      hasRedirected.current = true;
       router.push("/login");
       return;
     }
-  }, [user, userLoading, router, hasRedirected]);
+  }, [user, userLoading, router]);
 
   // Fetch page data only for authenticated users, but only once or when user changes
   useEffect(() => {
@@ -35,8 +35,6 @@ export default function EditPage() {
     if (!isUserAuthenticated(user)) return; // Will redirect above
     if (page && page.id.toString() === id) return; // Don't refetch if we already have the right page
     
-    setLoading(true);
-    setError(null);
     fetch(`/api/pages/${id}/edit?draft=true`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch page");

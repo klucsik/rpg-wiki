@@ -8,15 +8,12 @@ interface DraftStatus {
 }
 
 export function useDraftStatus(pageId: number | undefined, enabled: boolean = true): DraftStatus {
-  const [status, setStatus] = useState<DraftStatus>({ hasDraft: false, loading: false });
+  const [status, setStatus] = useState<DraftStatus>({ hasDraft: false, loading: !!pageId && enabled });
 
   useEffect(() => {
     if (!pageId || !enabled) {
-      setStatus({ hasDraft: false, loading: false });
       return;
     }
-
-    setStatus(prev => ({ ...prev, loading: true }));
 
     authenticatedFetch(`/api/pages/${pageId}/autosave`)
       .then(res => {

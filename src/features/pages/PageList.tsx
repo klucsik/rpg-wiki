@@ -176,8 +176,10 @@ export default function PageList({
           newExpanded.add(partialPath);
         }
         
+        // Don't set state in useMemo - will be handled in useEffect
         if (newExpanded.size !== expandedPaths.size) {
-          setExpandedPaths(newExpanded);
+          // Store the new paths to be applied later
+          (treeRoot as any)._pendingExpansion = newExpanded;
         }
       }
     }

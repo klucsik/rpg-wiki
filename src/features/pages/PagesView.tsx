@@ -31,8 +31,6 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   );
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
     authenticatedFetch("/api/pages")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch pages");
@@ -50,8 +48,11 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
 
   // Fetch individual page data when selectedId changes to get version info
   useEffect(() => {
-    if (selectedId) {
-      authenticatedFetch(`/api/pages/${selectedId}`)
+    if (!selectedId) {
+      return;
+    }
+      
+    authenticatedFetch(`/api/pages/${selectedId}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to fetch page details");
           return res.json();
@@ -65,16 +66,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           const fallbackPage = pages.find((p) => p.id === selectedId) || null;
           setSelectedPage(fallbackPage);
         });
-    } else {
-      setSelectedPage(null);
-    }
   }, [selectedId, pages]);
-
-  useEffect(() => {
-    if (initialId !== undefined && initialId !== selectedId) {
-      setSelectedId(initialId);
-    }
-  }, [initialId, selectedId]);
 
   const canViewSelected = selectedPage && canUserViewPage(user, selectedPage);
 

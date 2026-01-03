@@ -15,8 +15,7 @@ export default function Pages() {
 	const [selectedId] = React.useState<number | null>(null);
 
 	useEffect(() => {
-		setLoading(true);
-		setError(null);
+
 		authenticatedFetch("/api/pages")
 			.then((res) => {
 				if (!res.ok) throw new Error("Failed to fetch pages");

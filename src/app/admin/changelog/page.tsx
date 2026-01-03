@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "@/lib/better-auth-client";
 import { useRouter } from "next/navigation";
@@ -11,19 +11,7 @@ export default function ChangelogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isPending && !session?.user) {
-      router.push('/auth/signin?callbackUrl=/admin/changelog');
-      return;
-    }
-
-    if (session?.user) {
-      fetchChangelog();
-    }
-  }, [session, isPending, router]);
-
-  async function fetchChangelog() {
+  const fetchChangelog = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/changelog');
       if (response.status === 401) {
@@ -40,6 +28,22 @@ export default function ChangelogPage() {
     } finally {
       setLoading(false);
     }
+  }, [router]);
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isPending && !session?.user) {
+      router.push('/auth/signin?callbackUrl=/admin/changelog');
+      return;
+    }
+
+    if (session?.user) {
+      fetchChangelog();
+    }
+  }, [session, isPending, router, fetchChangelog]);
+
+  if (loading) {
+    return <div className="text-indigo-400 p-8">Loading...</div>;
   }
 
   return (

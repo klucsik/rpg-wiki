@@ -42,15 +42,19 @@ export const auth = betterAuth({
       // Enable username-based authentication
       // This adds username field to User model and enables username login
     }),
-    genericOAuth({
-      config: [
-        keycloak({
-          clientId: process.env.KEYCLOAK_CLIENT_ID!,
-          clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
-          issuer: process.env.KEYCLOAK_ISSUER!,
-        }),
-      ],
-    }),
+    ...(process.env.KEYCLOAK_CLIENT_ID && process.env.KEYCLOAK_CLIENT_SECRET && process.env.KEYCLOAK_ISSUER
+      ? [
+          genericOAuth({
+            config: [
+              keycloak({
+                clientId: process.env.KEYCLOAK_CLIENT_ID,
+                clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+                issuer: process.env.KEYCLOAK_ISSUER,
+              }),
+            ],
+          }),
+        ]
+      : []),
   ],
 
   // Credentials provider (username/password)
