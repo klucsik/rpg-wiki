@@ -1,6 +1,7 @@
 # Changelog
 ### Version 20260103
 - Migrated to BetterAuth
+- Upgrade dependencies
 
 ## Version 20251127
 - Added default page option (and settings admin page)
