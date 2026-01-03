@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../../../lib/auth';
+import { getServerAuth } from '@/lib/better-auth';
 import { GitBackupService } from '../../../../../features/backup/gitBackupService';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuth();
     
     if (!session?.user?.groups?.includes('admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

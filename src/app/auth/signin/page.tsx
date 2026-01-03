@@ -1,44 +1,58 @@
 "use client";
 
-import { signIn, getSession, getProviders } from "next-auth/react";
+import { signIn, useSession, authClient } from "@/lib/better-auth-client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { BuiltInProviderType } from "next-auth/providers/index";
 
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [providers, setProviders] = useState<Record<string, { id: string; name: string; type: BuiltInProviderType }> | null>(null);
   const router = useRouter();
+  const { data: session } = useSession();
 
+  // Redirect if already signed in
   useEffect(() => {
-    getProviders().then(setProviders);
-  }, []);
+    if (session?.user) {
+      router.push("/");
+    }
+  }, [session, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const result = await signIn("credentials", {
+      await signIn.username({
         username,
         password,
-        redirect: false,
+      }, {
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: (ctx) => {
+          setError(ctx.error.message || "Invalid credentials");
+        },
       });
-
-      if (result?.error) {
-        setError("Invalid credentials");
-      } else {
-        // Refresh the session
-        await getSession();
-        router.push("/");
-      }
-    } catch {
+    } catch (err) {
       setError("An error occurred");
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeycloakLogin = async () => {
+    setLoading(true);
+    try {
+      await authClient.signIn.oauth2({
+        providerId: "keycloak",
+        callbackURL: "/",
+      });
+    } catch (err) {
+      console.error("Keycloak login error:", err);
+      setError("Failed to initiate Keycloak login");
       setLoading(false);
     }
   };
@@ -53,36 +67,29 @@ export default function SignIn() {
         </div>
 
         {/* SSO Login Options */}
-        {providers && Object.values(providers).filter(provider => provider.id !== "credentials").length > 0 && (
-          <div className="space-y-4">
-            {Object.values(providers)
-              .filter((provider: { id: string }) => provider.id !== "credentials")
-              .map((provider: { id: string; name: string }) => (
-                <button
-                  key={provider.name}
-                  onClick={() => signIn(provider.id, { callbackUrl: "/" })}
-                  className="w-full flex justify-center py-3 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Sign in with {provider.name}
-                </button>
-              ))}
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-950 text-gray-400">Or continue with credentials</span>
-              </div>
+        <div className="space-y-4">
+          <button
+            onClick={handleKeycloakLogin}
+            className="w-full flex justify-center py-3 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Sign in with Keycloak
+          </button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-950 text-gray-400">Or continue with credentials</span>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Credentials Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleCredentialsSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input

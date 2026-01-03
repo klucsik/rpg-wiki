@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260103
+- Migrated to BetterAuth
+
 ## Version 20251127
 - Added default page option (and settings admin page)
 - Support video embeds

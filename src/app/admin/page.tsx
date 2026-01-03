@@ -1,5 +1,7 @@
 "use client";
-import { useSession, signOut, signIn } from "next-auth/react";
+import { signOut } from "@/lib/better-auth-client";
+import { useUser } from "@/features/auth/userContext";
+import { isUserAuthenticated } from "@/features/auth/accessControl";
 import Link from "next/link";
 import React from "react";
 import GroupsAdminPage from "../groups/page";
@@ -28,7 +30,7 @@ function AdminSidebar() {
           ← Back to Wiki
         </Link>
         <button
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut()}
           className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition font-medium"
         >
           Sign Out
@@ -39,9 +41,9 @@ function AdminSidebar() {
 }
 
 export default function AdminPage() {
-  const { data: session, status } = useSession();
+  const { user, isLoading } = useUser();
   
-  if (status === "loading") {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
@@ -52,25 +54,25 @@ export default function AdminPage() {
     );
   }
 
-  if (!session?.user) {
+  if (!isUserAuthenticated(user)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
           <h1 className="text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
           <p className="text-indigo-100 mb-4">You must be logged in to access the admin page.</p>
-          <button 
-            onClick={() => signIn()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition font-medium"
+          <Link
+            href="/auth/signin"
+            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition font-medium"
           >
             Go to Login
-          </button>
+          </Link>
         </div>
       </div>
     );
   }
 
   // Check if user has admin permissions
-  const isAdmin = session.user.groups?.includes('admin');
+  const isAdmin = user.groups?.includes('admin');
   
   if (!isAdmin) {
     return (
@@ -78,7 +80,7 @@ export default function AdminPage() {
         <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
           <h1 className="text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
           <p className="text-indigo-100 mb-2">You do not have permission to access the admin page.</p>
-          <p className="text-indigo-100/80 text-sm">Current groups: {session.user.groups?.join(', ') || 'None'}</p>
+          <p className="text-indigo-100/80 text-sm">Current groups: {user.groups?.join(', ') || 'None'}</p>
         </div>
       </div>
     );
@@ -90,7 +92,7 @@ export default function AdminPage() {
       <main className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-indigo-100 mb-2">Admin Dashboard</h1>
-          <p className="text-indigo-300">Welcome back, <span className="font-semibold">{session.user.username}</span>!</p>
+          <p className="text-indigo-300">Welcome back, <span className="font-semibold">{user.username}</span>!</p>
         </div>
         
         <section id="users" className="mb-12">
@@ -115,11 +117,10 @@ export default function AdminPage() {
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-indigo-300 mb-4">Current User Session</h3>
             <div className="space-y-2 text-sm">
-              <p><span className="text-indigo-400 font-medium">Username:</span> <span className="text-indigo-100">{session.user.username}</span></p>
-              <p><span className="text-indigo-400 font-medium">Email:</span> <span className="text-indigo-100">{session.user.email}</span></p>
-              <p><span className="text-indigo-400 font-medium">Groups:</span> <span className="text-indigo-100">{session.user.groups?.join(', ') || 'None'}</span></p>
-              <p><span className="text-indigo-400 font-medium">All Groups:</span> <span className="text-indigo-100">{session.user.groups?.join(', ') || 'None'}</span></p>
-              <p><span className="text-indigo-400 font-medium">User ID:</span> <span className="text-indigo-100 font-mono text-xs">{session.user.id}</span></p>
+              <p><span className="text-indigo-400 font-medium">Username:</span> <span className="text-indigo-100">{user.username}</span></p>
+              <p><span className="text-indigo-400 font-medium">Name:</span> <span className="text-indigo-100">{user.name}</span></p>
+              <p><span className="text-indigo-400 font-medium">Groups:</span> <span className="text-indigo-100">{user.groups?.join(', ') || 'None'}</span></p>
+              <p><span className="text-indigo-400 font-medium">User ID:</span> <span className="text-indigo-100 font-mono text-xs">{user.id}</span></p>
             </div>
           </div>
         </section>

@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, useSession } from "@/lib/better-auth-client";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const { status } = useSession();
+  const { data: session, isPending } = useSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   // Redirect if already logged in
-  if (status === "authenticated") {
+  if (session?.user) {
     router.replace("/pages");
     return null;
   }
@@ -24,20 +24,20 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const result = await signIn("credentials", {
+      await signIn.username({
         username,
         password,
-        redirect: false,
+      }, {
+        onSuccess: () => {
+          router.replace("/pages");
+        },
+        onError: (ctx) => {
+          setError("Invalid username or password");
+          setIsLoading(false);
+        },
       });
-
-      if (result?.error) {
-        setError("Invalid username or password");
-      } else if (result?.ok) {
-        router.replace("/pages");
-      }
     } catch {
       setError("Login failed");
-    } finally {
       setIsLoading(false);
     }
   }

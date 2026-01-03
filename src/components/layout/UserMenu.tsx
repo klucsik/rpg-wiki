@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useUser } from "../../features/auth/userContext";
-import { signOut } from "next-auth/react";
+import { signOut } from "@/lib/better-auth-client";
 import Link from "next/link";
 import { isUserAuthenticated } from "../../features/auth/accessControl";
 
@@ -39,9 +39,9 @@ export default function UserMenu() {
           </div>
           <button
             className="w-full text-left px-4 py-2 hover:bg-gray-800 text-red-300"
-            onClick={() => {
-              signOut({ callbackUrl: "/" });
-              setOpen(false);
+            onClick={async () => {
+              await signOut();
+              window.location.replace("/");
             }}
           >
             Logout

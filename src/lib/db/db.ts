@@ -26,19 +26,44 @@ async function seedDefaults() {
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const hashedPassword = await bcrypt.hash(adminPassword, 12);
   
-  const adminUser = await prisma.user.upsert({
+  // Check if admin user exists
+  let adminUser = await prisma.user.findUnique({
     where: { username: 'admin' },
-    update: {
-      // Always update password to match environment variable
-      password: hashedPassword,
-    },
-    create: {
-      username: 'admin',
-      name: 'Administrator',
-      email: 'admin@example.com',
-      password: hashedPassword,
-    },
+    include: { accounts: true },
   });
+
+  if (!adminUser) {
+    // Create new admin user
+    adminUser = await prisma.user.create({
+      data: {
+        username: 'admin',
+        name: 'Administrator',
+        email: 'admin@example.com',
+      },
+      include: { accounts: true },
+    });
+  }
+
+  // Create or update credentials account for admin
+  const existingAccount = adminUser.accounts.find(acc => acc.providerId === 'credential');
+  
+  if (existingAccount) {
+    // Update existing password
+    await prisma.account.update({
+      where: { id: existingAccount.id },
+      data: { password: hashedPassword },
+    });
+  } else {
+    // Create new credentials account
+    await prisma.account.create({
+      data: {
+        userId: adminUser.id,
+        accountId: adminUser.id,
+        providerId: 'credential',
+        password: hashedPassword,
+      },
+    });
+  }
 
   // Ensure admin is assigned to admin group
   await prisma.userGroup.upsert({

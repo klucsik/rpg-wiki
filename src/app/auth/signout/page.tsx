@@ -1,11 +1,12 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { signOut } from "@/lib/better-auth-client";
 import { useEffect } from "react";
 
 export default function SignOut() {
   useEffect(() => {
-    signOut({ callbackUrl: "/" });
+// Call signOut (fire and forget)
+    signOut();
   }, []);
 
   return (

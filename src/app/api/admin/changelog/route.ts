@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerAuth } from '@/lib/better-auth';
 
 export async function GET() {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuth();
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentication required' },

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../../lib/auth';
-import { prisma } from '../../../../lib/db/db';
+import { getServerAuth } from '@/lib/better-auth';
+import { prisma } from '@/lib/db/db';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuth();
     
     if (!session?.user?.groups?.includes('admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -35,7 +34,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuth();
     
     if (!session?.user?.groups?.includes('admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

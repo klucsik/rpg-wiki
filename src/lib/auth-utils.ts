@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "./auth";
 import { NextRequest } from "next/server";
 import { prisma } from "./db/db";
+import { getSessionWithGroups } from "./better-auth";
 
 export interface AuthResult {
   isAuthenticated: boolean;
@@ -24,52 +23,61 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
     apiKey = apiKeyHeader;
   }
   
-  // Check against environment variable API key
-  const validApiKey = process.env.IMPORT_API_KEY;
-  
-  if (apiKey && validApiKey && apiKey === validApiKey) {
-    // API key authentication - find or create API user
-    let apiUser = await prisma.user.findUnique({
-      where: { username: 'api-import-user' }
+  // Check if API imports are enabled via settings
+  if (apiKey) {
+    const setting = await prisma.siteSetting.findUnique({
+      where: { key: "ENABLE_IMPORT_API" }
     });
 
-    if (!apiUser) {
-      // Create API user if it doesn't exist
-      console.log('Creating API import user...');
-      apiUser = await prisma.user.create({
-        data: {
-          username: 'api-import-user',
-          name: 'API Import User',
-          email: 'api@import.system',
-        }
+    const isApiEnabled = setting?.value === "true";
+    const validApiKey = process.env.IMPORT_API_KEY;
+    
+    if (isApiEnabled && validApiKey && apiKey === validApiKey) {
+      // API key authentication - find or create API user
+      let apiUser = await prisma.user.findUnique({
+        where: { username: 'api-import-user' }
       });
 
-      // Assign to admin group
-      const adminGroup = await prisma.group.findUnique({
-        where: { name: 'admin' }
-      });
-
-      if (adminGroup) {
-        await prisma.userGroup.create({
+      if (!apiUser) {
+        // Create API user if it doesn't exist
+        console.log('Creating API import user...');
+        apiUser = await prisma.user.create({
           data: {
-            userId: apiUser.id,
-            groupId: adminGroup.id
+            username: 'api-import-user',
+            name: 'API Import User',
+            email: 'api@import.system',
           }
         });
-      }
-    }
 
-    return {
-      isAuthenticated: true,
-      userGroups: ['admin', 'klucsik', 'public'],
-      username: 'API Import User',
-      userId: apiUser.id,
-      isApiKey: true
-    };
+        // Assign to admin group
+        const adminGroup = await prisma.group.findUnique({
+          where: { name: 'admin' }
+        });
+
+        if (adminGroup) {
+          await prisma.userGroup.create({
+            data: {
+              userId: apiUser.id,
+              groupId: adminGroup.id
+            }
+          });
+        }
+      }
+
+      return {
+        isAuthenticated: true,
+        userGroups: ['admin', 'klucsik', 'public'],
+        username: 'API Import User',
+        userId: apiUser.id,
+        isApiKey: true
+      };
+    } else if (apiKey && !isApiEnabled) {
+      console.warn('API key provided but ENABLE_IMPORT_API is disabled');
+    }
   }
 
-  // Get NextAuth session
-  const session = await getServerSession(authOptions);
+  // Get Better Auth session
+  const session = await getSessionWithGroups(req.headers);
   
   if (!session?.user) {
     return {
@@ -84,7 +92,7 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
   return {
     isAuthenticated: true,
     userGroups: session.user.groups || [],
-    username: session.user.username,
+    username: session.user.username || session.user.name || 'Unknown',
     userId: session.user.id,
     isApiKey: false
   };
