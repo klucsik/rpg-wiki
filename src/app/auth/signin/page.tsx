@@ -25,20 +25,24 @@ export default function SignIn() {
     setError("");
 
     try {
-      await signIn.username({
-        username,
-        password,
-      }, {
-        onSuccess: () => {
-          router.push("/");
-        },
-        onError: (ctx) => {
-          setError(ctx.error.message || "Invalid credentials");
-        },
+      const response = await fetch('/api/auth/signin-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Invalid credentials");
+        setLoading(false);
+        return;
+      }
+
+      // Successful login, redirect to home
+      router.push("/");
+      router.refresh(); // Refresh to update session
     } catch (err) {
       setError("An error occurred");
-    } finally {
       setLoading(false);
     }
   };

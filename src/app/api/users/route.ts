@@ -45,14 +45,50 @@ export async function POST(req: NextRequest) {
   }
   
   try {
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Create user email from username
+    const email = `${username}@localhost.local`;
+    
+    // Use better-auth to create the user and account
+    const signUpResult = await fetch(`${process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/sign-up/email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        name: name || username,
+      }),
+    });
+
+    if (!signUpResult.ok) {
+      const error = await signUpResult.json();
+      console.error('Better-auth signup error:', error);
+      if (error.code === 'USER_ALREADY_EXISTS' || signUpResult.status === 409) {
+        return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
+      }
+      return NextResponse.json({ error: error.message || 'Failed to create user' }, { status: 400 });
+    }
+
+    const userData = await signUpResult.json();
+    const userId = userData.user.id;
+    
+    // Update the user with username and ensure emailVerified is true
+    await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        username, 
+        emailVerified: true,
+        name: name || username, // Ensure name is set
+      },
+    });
     
     // Create or get personal group for this user
     const personalGroup = await prisma.group.upsert({
       where: { name: username },
-      update: {}, // If group exists, don't change it
-      create: { name: username }, // Create group with username as name
+      update: {},
+      create: { name: username },
     });
     
     // Combine personal group with any additional specified groups
@@ -61,15 +97,18 @@ export async function POST(req: NextRequest) {
       allGroupIds.push(...groupIds);
     }
     
-    const user = await prisma.user.create({
-      data: {
-        name: name || username,
-        username,
-        password: hashedPassword,
-        userGroups: {
-          create: allGroupIds.map(groupId => ({ groupId }))
-        },
-      },
+    // Add user to groups
+    await prisma.userGroup.createMany({
+      data: allGroupIds.map(groupId => ({
+        userId,
+        groupId,
+      })),
+      skipDuplicates: true,
+    });
+    
+    // Fetch user with groups
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
       include: { 
         userGroups: {
           include: {

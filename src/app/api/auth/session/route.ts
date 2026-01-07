@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionWithGroups } from "@/lib/better-auth";
+import { getSessionWithGroups, ensureUserHasUsername } from "@/lib/better-auth";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSessionWithGroups(request.headers);
     
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({ user: null, session: null }, { status: 200 });
     }
+
+    // Ensure OAuth users have a username
+    await ensureUserHasUsername(session.user.id, session.user.email, session.user.name);
 
     return NextResponse.json({
       user: session.user,

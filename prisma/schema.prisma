@@ -57,7 +57,7 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Better Auth username plugin fields
-  username        String  @unique
+  username        String?  @unique
   displayUsername String?
 
   // Relations

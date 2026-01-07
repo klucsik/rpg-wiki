@@ -44,28 +44,52 @@ export async function PUT(
   const { name, username, password, groupIds } = await req.json();
   
   try {
-    // Prepare the update data
+    // Prepare the update data for user
     const updateData: {
       name: string;
       username: string;
-      password?: string;
     } = {
       name: name || username,
       username,
     };
     
-    // Only hash and update password if provided
-    if (password && password.trim() !== '') {
-      updateData.password = await bcrypt.hash(password, 12);
-    }
-    
-    // Update user and handle group memberships
+    // Update user and handle group memberships and password
     const user = await prisma.$transaction(async (tx) => {
-      // Update user basic info
+      // Update user basic info (no password)
       await tx.user.update({
         where: { id },
         data: updateData,
       });
+      
+      // Update password if provided
+      if (password && password.trim() !== '') {
+        // Better-auth doesn't expose a direct password update API,
+        // so we need to hash it ourselves and update the account directly
+        const hashedPassword = await bcrypt.hash(password, 12);
+        
+        // Get user to construct email
+        const user = await tx.user.findUnique({ where: { id } });
+        const accountId = user?.email || `${username}@localhost.local`;
+        
+        // Update or create credential account
+        await tx.account.upsert({
+          where: {
+            providerId_accountId: {
+              providerId: 'credential',
+              accountId,
+            },
+          },
+          update: {
+            password: hashedPassword,
+          },
+          create: {
+            userId: id,
+            accountId,
+            providerId: 'credential',
+            password: hashedPassword,
+          },
+        });
+      }
       
       // Update group memberships if groupIds provided
       if (groupIds && Array.isArray(groupIds)) {

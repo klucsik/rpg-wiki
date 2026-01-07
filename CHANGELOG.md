@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260107
+- Fix local authentication issues after migrating to BetterAuth
+
 ### Version 20260103
 - Migrated to BetterAuth
 - Upgrade dependencies

@@ -11,7 +11,8 @@ export const auth = betterAuth({
   
   // Email verification - disable for now, can enable later if needed
   emailAndPassword: {
-    enabled: false,
+    enabled: true,
+    autoSignUpEmailVerified: true,
   },
 
   // Secret for signing tokens
@@ -46,11 +47,34 @@ export const auth = betterAuth({
       ? [
           genericOAuth({
             config: [
-              keycloak({
-                clientId: process.env.KEYCLOAK_CLIENT_ID,
-                clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
-                issuer: process.env.KEYCLOAK_ISSUER,
-              }),
+              {
+                ...keycloak({
+                  clientId: process.env.KEYCLOAK_CLIENT_ID,
+                  clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+                  issuer: process.env.KEYCLOAK_ISSUER,
+                  // Request additional scopes to get more user info
+                  scopes: ["openid", "profile", "email"],
+                }),
+                mapProfileToUser: async (profile: any) => {
+                  // Generate username from email prefix
+                  let username = "";
+                  if (profile.email) {
+                    username = profile.email.split("@")[0].toLowerCase();
+                  } else if (profile.name) {
+                    username = profile.name.toLowerCase().replace(/\s+/g, ".");
+                  } else {
+                    username = profile.id.substring(0, 8);
+                  }
+                  
+                  return {
+                    email: profile.email,
+                    emailVerified: profile.emailVerified ?? false,
+                    name: profile.name,
+                    image: profile.picture,
+                    username,
+                  };
+                },
+              },
             ],
           }),
         ]
@@ -70,6 +94,35 @@ export const auth = betterAuth({
 // Export types for client-side usage
 export type Session = typeof auth.$Infer.Session.session;
 export type User = typeof auth.$Infer.Session.user;
+
+// Helper function to ensure user has a username (for OAuth users)
+export async function ensureUserHasUsername(userId: string, email?: string | null, name?: string | null) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || user.username) {
+    return user; // Already has username
+  }
+
+  // Generate username from email or name
+  let baseUsername = email?.split("@")[0] || name?.toLowerCase().replace(/\s+/g, "") || "user";
+  const sanitizedUsername = baseUsername.replace(/[^a-z0-9._-]/g, "").toLowerCase();
+
+  // Check if username already exists, if so add a random suffix
+  let username = sanitizedUsername;
+  let counter = 1;
+  while (await prisma.user.findUnique({ where: { username } })) {
+    username = `${sanitizedUsername}${counter}`;
+    counter++;
+  }
+
+  // Update user with generated username
+  return prisma.user.update({
+    where: { id: userId },
+    data: { username },
+  });
+}
 
 // Helper function to auto-provision groups for a user
 export async function autoProvisionUserGroups(userId: string, identifier: string) {
@@ -100,9 +153,16 @@ export async function autoProvisionUserGroups(userId: string, identifier: string
         });
       }
 
-      // Assign user to group
-      await prisma.userGroup.create({
-        data: {
+      // Add user to group (or skip if already exists)
+      await prisma.userGroup.upsert({
+        where: {
+          userId_groupId: {
+            userId,
+            groupId: group.id,
+          },
+        },
+        update: {},
+        create: {
           userId,
           groupId: group.id,
         },
@@ -116,7 +176,11 @@ export async function autoProvisionUserGroups(userId: string, identifier: string
 
 // Helper function to get session with groups
 export async function getSessionWithGroups(headers: Headers) {
+  // console.log('[getSessionWithGroups] Getting session from better-auth');
+  // console.log('[getSessionWithGroups] Cookie header:', headers.get('cookie'));
   const session = await auth.api.getSession({ headers });
+  // console.log('[getSessionWithGroups] Better-auth session:', session?.user?.id || 'null');
+  // console.log('[getSessionWithGroups] Session data:', JSON.stringify(session, null, 2));
   
   if (!session?.user?.id) {
     return null;
@@ -173,6 +237,8 @@ export async function getServerAuth() {
 
 // Helper for credentials sign-in (username/password)
 export async function signInWithCredentials(username: string, password: string) {
+  console.log('[signInWithCredentials] Looking for username:', username);
+  
   // Find user by username
   const user = await prisma.user.findUnique({
     where: { username },
@@ -185,12 +251,17 @@ export async function signInWithCredentials(username: string, password: string) 
     },
   });
 
+  console.log('[signInWithCredentials] Found user:', user?.id, 'accounts:', user?.accounts.length, 'has password:', !!user?.accounts[0]?.password);
+
   if (!user || user.accounts.length === 0 || !user.accounts[0].password) {
+    console.log('[signInWithCredentials] Failed: No user or no account or no password');
     return null;
   }
 
   // Verify password
   const isValid = await bcrypt.compare(password, user.accounts[0].password);
+
+  console.log('[signInWithCredentials] Password valid:', isValid);
 
   if (!isValid) {
     return null;
@@ -210,7 +281,7 @@ export async function createCredentialsAccount(
   return await prisma.account.create({
     data: {
       userId,
-      accountId: userId,
+      accountId: username, // Use username as accountId
       providerId: "credential",
       password: hashedPassword,
     },

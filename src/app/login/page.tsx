@@ -24,19 +24,22 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      await signIn.username({
-        username,
-        password,
-      }, {
-        onSuccess: () => {
-          router.replace("/pages");
-        },
-        onError: (ctx) => {
-          setError("Invalid username or password");
-          setIsLoading(false);
-        },
+      const response = await fetch('/api/auth/signin-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
-    } catch {
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Invalid username or password");
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirect after successful login
+      router.replace("/pages");
+    } catch (err) {
       setError("Login failed");
       setIsLoading(false);
     }
