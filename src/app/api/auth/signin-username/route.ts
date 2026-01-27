@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Custom endpoint for username/password signin
- * Uses better-auth's email/password provider by converting username to email
+ * Converts username to @localhost.local email and delegates to better-auth's trusted email/password endpoint
  */
 export async function POST(req: NextRequest) {
   try {
@@ -17,10 +17,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert username to email format for better-auth
+    // Normalize username to @localhost.local email
     const email = `${username}@localhost.local`;
     
-    // Use better-auth's email/password sign-in endpoint
+    // Use better-auth's trusted email/password sign-in endpoint
     const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
     const signInResult = await fetch(`${baseUrl}/api/auth/sign-in/email`, {
       method: 'POST',
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     if (!signInResult.ok) {
       const error = await signInResult.json();
-      console.error('[signin-username] Better-auth sign-in error:', error);
+      console.error('[signin-username] Sign-in error:', error);
       return NextResponse.json(
         { error: error.message || 'Invalid username or password' },
         { status: 401 }

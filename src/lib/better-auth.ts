@@ -66,9 +66,12 @@ export const auth = betterAuth({
                     username = profile.id.substring(0, 8);
                   }
                   
+                  // Normalize email to @localhost.local for username-based auth
+                  const normalizedEmail = `${username}@localhost.local`;
+                  
                   return {
-                    email: profile.email,
-                    emailVerified: profile.emailVerified ?? false,
+                    email: normalizedEmail,
+                    emailVerified: true,
                     name: profile.name,
                     image: profile.picture,
                     username,

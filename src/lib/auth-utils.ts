@@ -34,35 +34,37 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
     
     if (isApiEnabled && validApiKey && apiKey === validApiKey) {
       // API key authentication - find or create API user
-      let apiUser = await prisma.user.findUnique({
-        where: { username: 'api-import-user' }
+      const apiUser = await prisma.user.upsert({
+        where: { username: 'api-import-user' },
+        update: {}, // Don't update if exists
+        create: {
+          username: 'api-import-user',
+          name: 'API Import User',
+          email: 'api@import.system',
+          emailVerified: true,
+        }
       });
 
-      if (!apiUser) {
-        // Create API user if it doesn't exist
-        console.log('Creating API import user...');
-        apiUser = await prisma.user.create({
-          data: {
-            username: 'api-import-user',
-            name: 'API Import User',
-            email: 'api@import.system',
+      // Ensure user is in admin group
+      const adminGroup = await prisma.group.upsert({
+        where: { name: 'admin' },
+        update: {},
+        create: { name: 'admin' }
+      });
+
+      await prisma.userGroup.upsert({
+        where: {
+          userId_groupId: {
+            userId: apiUser.id,
+            groupId: adminGroup.id
           }
-        });
-
-        // Assign to admin group
-        const adminGroup = await prisma.group.findUnique({
-          where: { name: 'admin' }
-        });
-
-        if (adminGroup) {
-          await prisma.userGroup.create({
-            data: {
-              userId: apiUser.id,
-              groupId: adminGroup.id
-            }
-          });
+        },
+        update: {},
+        create: {
+          userId: apiUser.id,
+          groupId: adminGroup.id
         }
-      }
+      });
 
       return {
         isAuthenticated: true,
