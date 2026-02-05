@@ -1,0 +1,19 @@
+services:
+  test-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: rpg_wiki_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - "5433:5432"
+    volumes:
+      - test-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d rpg_wiki_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  test-pgdata:

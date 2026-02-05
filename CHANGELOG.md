@@ -1,4 +1,8 @@
 # Changelog
+### Version 20260205
+- Introduce BDD tests
+- Implemented auth related tests
+
 ### Version 20260107
 - Fix local authentication issues after migrating to BetterAuth
 

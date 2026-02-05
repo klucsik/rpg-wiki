@@ -24,7 +24,7 @@ export default function EditPage() {
     
     if (!isUserAuthenticated(user)) {
       hasRedirected.current = true;
-      router.push("/login");
+      router.push("/auth/signin");
       return;
     }
   }, [user, userLoading, router]);

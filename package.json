@@ -12,7 +12,12 @@
     "import:images": "tsx scripts/import/import-images.ts",
     "fix:image-links": "tsx scripts/utils/fix-image-links.ts",
     "export:filesystem": "tsx scripts/export/export-to-filesystem.ts",
-    "import:filesystem": "tsx scripts/import/import-from-filesystem.ts"
+    "import:filesystem": "tsx scripts/import/import-from-filesystem.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:db:seed": "tsx e2e/support/db/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
@@ -43,6 +48,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@faker-js/faker": "^10.2.0",
+    "@playwright/test": "^1.58.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.15.4",
@@ -50,6 +57,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.1.1",
+    "playwright-bdd": "^8.4.2",
     "prisma": "^6.9.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",

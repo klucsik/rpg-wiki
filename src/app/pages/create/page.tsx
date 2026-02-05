@@ -11,7 +11,7 @@ export default function CreatePage() {
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isUserAuthenticated(user)) {
-      router.push("/login");
+      router.push("/auth/signin");
       return;
     }
   }, [user, router]);
