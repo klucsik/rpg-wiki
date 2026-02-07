@@ -14,6 +14,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { FontSize, FontWeight } from "./FontExtensions";
 import { useUser } from "../../features/auth/userContext";
 import { MermaidNode } from "./MermaidExtension";
+import { DrawioNode } from "./DrawioExtension";
 import RestrictedBlock from "./RestrictedBlock";
 import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
 import { ResizableVideo } from "./VideoExtension";
@@ -119,6 +120,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       TableHeader,
       TableCell,
       MermaidNode, // Include Mermaid extension
+      DrawioNode, // Include Drawio extension
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -151,6 +153,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     { label: 'Heading 6', value: 'heading', level: 6 },
     { label: 'Restricted Block', value: 'restricted' },
     { label: 'Mermaid Diagram', value: 'mermaid' },
+    { label: 'Draw.io Diagram', value: 'drawio' },
   ];
 
   // Update blockType state to reflect current selection in the editor
@@ -177,6 +180,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               blockTypes.add('restricted');
             } else if (node.type.name === 'mermaid') {
               blockTypes.add('mermaid');
+            } else if (node.type.name === 'drawio') {
+              blockTypes.add('drawio');
             }
           }
         });
@@ -199,6 +204,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         setBlockType('paragraph');
       } else if (parent.type.name === 'restrictedBlock') {
         setBlockType('restricted');
+      } else if (parent.type.name === 'drawio') {
+        setBlockType('drawio');
       } else if (parent.type.name === 'mermaid') {
         setBlockType('mermaid');
       } else {
@@ -262,6 +269,10 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       editor.chain().focus().insertMermaid({
         code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
       }).run();
+      setBlockType('paragraph');
+    } else if (selected === 'drawio') {
+      // Insert a new Draw.io diagram
+      editor.chain().focus().insertDrawio().run();
       setBlockType('paragraph');
     }
   };
@@ -568,8 +579,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           editor.chain().focus().insertMermaid({
             code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
           }).run();
-        }} className={styles.toolbarButton}>📊 Diagram</button>
-        
+        }} className={styles.toolbarButton}>📊 Mermaid</button>
+        <button type="button" onClick={() => {
+          editor.chain().focus().insertDrawio().run();
+        }} className={styles.toolbarButton}>📊 Draw.io</button>
+                
         {/* Table controls */}
         <div className={styles.tableControls}>
           <button 
@@ -666,10 +680,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         )}
       </nav>
       {/* Offset for  toolbar (48px) */}
-      <div className={styles.editorOffset}>
+      <div className={styles.editorOffset} data-testid="tiptap-editor-wrapper">
         <EditorContent 
           editor={editor} 
           className={`${styles.editorContent} prose prose-invert max-w-none`}
+          data-testid="tiptap-editor"
         />
       </div>
 

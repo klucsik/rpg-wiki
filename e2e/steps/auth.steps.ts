@@ -3,15 +3,12 @@ import { createBdd } from 'playwright-bdd';
 import { test as base } from '../fixtures/test-base';
 import { LoginPage } from '../fixtures/pages/login.page';
 import { PERSONAS, getPersona } from '../fixtures/personas';
-import { createTestPage } from '../support/db/test-helpers';
+import { getCreatedPage } from './page-common.steps';
 import * as fs from 'fs';
 import * as path from 'path';
 import { prisma } from '../../src/lib/db/db';
 
 const { Given, When, Then } = createBdd(base);
-
-// Store created pages for reference within scenarios
-let createdPages: Map<string, { id: number; title: string }> = new Map();
 
 // ============================================
 // Login Feature Steps
@@ -142,25 +139,8 @@ Given('I am not logged in', async ({ page }) => {
   await page.context().clearCookies();
 });
 
-Given('a page {string} exists with view_groups [{string}]', async ({ page }, title: string, viewGroups: string) => {
-  // Parse the view groups - they come as "public" or "gm" etc
-  const groups = viewGroups.replace(/"/g, '').split(',').map(g => g.trim());
-  
-  // Create page via API or database
-  // Use root path "/" so pages appear directly in the list without needing to expand folders
-  const result = await createTestPage({
-    title,
-    content: `<p>Content of ${title}</p>`,
-    path: '/',
-    view_groups: groups,
-    edit_groups: ['admin', 'gm'],
-  });
-  
-  createdPages.set(title, { id: result.id, title });
-});
-
 When('I navigate to the {string} page', async ({ page }, title: string) => {
-  const pageInfo = createdPages.get(title);
+  const pageInfo = getCreatedPage(title);
   if (pageInfo) {
     await page.goto(`/pages/${pageInfo.id}`);
   } else {
@@ -171,7 +151,7 @@ When('I navigate to the {string} page', async ({ page }, title: string) => {
 });
 
 When('I navigate directly to the {string} page', async ({ page }, title: string) => {
-  const pageInfo = createdPages.get(title);
+  const pageInfo = getCreatedPage(title);
   if (!pageInfo) {
     throw new Error(`Page "${title}" was not created in this test. Use "Given a page exists" first.`);
   }
@@ -188,7 +168,7 @@ When('I navigate directly to URL {string}', async ({ page }, url: string) => {
   const idMatch = url.match(/\/pages\/(\d+)/);
   if (idMatch) {
     const placeholderId = idMatch[1];
-    const pageInfo = createdPages.get(`id:${placeholderId}`);
+    const pageInfo = getCreatedPage(`id:${placeholderId}`);
     if (pageInfo) {
       finalUrl = url.replace(`/pages/${placeholderId}`, `/pages/${pageInfo.id}`);
     }
@@ -204,7 +184,7 @@ When('I view the page navigation or page list', async ({ page }) => {
 });
 
 When('I navigate directly to edit the {string} page', async ({ page }, title: string) => {
-  const pageInfo = createdPages.get(title);
+  const pageInfo = getCreatedPage(title);
   if (!pageInfo) {
     throw new Error(`Page "${title}" was not created in this test. Use "Given a page exists" first.`);
   }

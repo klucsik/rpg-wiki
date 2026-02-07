@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../../lib/auth-utils';
-import { filterRestrictedContent, hasRestrictedContent } from '../../../../../../lib/server-content-filter';
+import { filterRestrictedContent, needsServerProcessing } from '../../../../../../lib/server-content-filter';
 
 // GET /api/pages/[id]/versions/[version] - Get specific version content
 export async function GET(
@@ -47,8 +47,8 @@ export async function GET(
   // Apply server-side content filtering for version history (use view mode)
   let processedContent = pageVersion.content;
   
-  if (hasRestrictedContent(pageVersion.content)) {
-    const filterResult = filterRestrictedContent(pageVersion.content, {
+  if (needsServerProcessing(pageVersion.content)) {
+    const filterResult = await filterRestrictedContent(pageVersion.content, {
       groups: auth.userGroups || ['public'],
       isAuthenticated: auth.isAuthenticated || false,
       username: auth.username

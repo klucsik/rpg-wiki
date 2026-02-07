@@ -28,7 +28,7 @@ Feature: Guest Access
 
   Scenario: Guest cannot view restricted pages via direct URL
     Given I am not logged in
-    And a page "GM Secret Plans" exists with view_groups ["gm"]
+    And a page "GM Secret Plans" exists with view_groups ["admin"]
     When I navigate directly to the "GM Secret Plans" page
     Then I should see the page list
     And I should NOT see "GM Secret Plans" in the navigation
@@ -38,7 +38,7 @@ Feature: Guest Access
   Scenario: Restricted pages do not appear in navigation for guest
     Given I am not logged in
     And a page "Public Welcome" exists with view_groups ["public"]
-    And a page "GM Secrets" exists with view_groups ["gm"]
+    And a page "GM Secrets" exists with view_groups ["admin"]
     When I view the page navigation or page list
     Then I should see "Public Welcome" in the navigation
     And I should NOT see "GM Secrets" in the navigation

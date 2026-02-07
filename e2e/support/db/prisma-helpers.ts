@@ -30,17 +30,20 @@ export async function hashPassword(password: string): Promise<string> {
 export async function resetDatabase(prisma: PrismaClient): Promise<void> {
   console.log('🗑️  Resetting test database...');
   
-  // Delete in order to respect foreign key constraints
-  await prisma.$transaction([
-    prisma.session.deleteMany(),
-    prisma.account.deleteMany(),
-    prisma.userGroup.deleteMany(),
-    prisma.user.deleteMany(),
-    prisma.group.deleteMany(),
-    prisma.pageVersion.deleteMany(),
-    prisma.page.deleteMany(),
-  ]);
-  
+  // Truncate all tables in public schema (except _prisma_migrations)
+  // Use TRUNCATE ... RESTART IDENTITY CASCADE to clear data and reset sequences
+  const tables: Array<{ tablename: string }> = await prisma.$queryRawUnsafe(
+    `SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename != '_prisma_migrations'`
+  );
+
+  const tableNames = tables.map((t) => t.tablename).filter(Boolean);
+
+  if (tableNames.length > 0) {
+    const quoted = tableNames.map((n) => `"${n}"`).join(', ');
+    const sql = `TRUNCATE TABLE ${quoted} RESTART IDENTITY CASCADE;`;
+    await prisma.$executeRawUnsafe(sql);
+  }
+
   console.log('✅ Database reset complete');
 }
 

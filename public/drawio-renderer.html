@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Draw.io Renderer</title>
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
+    iframe { width: 100vw; height: 100vh; border: none; }
+  </style>
+</head>
+<body>
+  <iframe id="drawio" src="/drawio/index.html?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1"></iframe>
+  <script>
+    (function() {
+      const iframe = document.getElementById('drawio');
+      let xmlToLoad = null;
+      let exportResolver = null;
+      
+      // Expose functions for puppeteer to call
+      window.loadDiagramXml = function(xml) {
+        xmlToLoad = xml;
+        console.log('XML set for loading, length:', xml.length);
+      };
+      
+      window.waitForSvgExport = function() {
+        console.log('Setting up export promise');
+        return new Promise((resolve) => {
+          exportResolver = resolve;
+        });
+      };
+      
+      // Handle messages from draw.io iframe
+      window.addEventListener('message', function(event) {
+        if (event.source !== iframe.contentWindow) return;
+        
+        const data = event.data;
+        if (!data) return;
+        
+        let msg;
+        try {
+          msg = typeof data === 'string' ? JSON.parse(data) : data;
+        } catch (e) {
+          return;
+        }
+        
+        if (!msg || !msg.event) return;
+        
+        console.log('Event received:', msg.event);
+        
+        if (msg.event === 'init') {
+          console.log('Draw.io initialized');
+          
+          // If XML was set, load it
+          if (xmlToLoad) {
+            console.log('Loading XML into draw.io');
+            iframe.contentWindow.postMessage(JSON.stringify({
+              action: 'load',
+              xml: xmlToLoad,
+              autosave: 0
+            }), '*');
+            
+            // Request export after loading
+            setTimeout(function() {
+              console.log('Requesting SVG export');
+              iframe.contentWindow.postMessage(JSON.stringify({
+                action: 'export',
+                format: 'svg'
+              }), '*');
+            }, 2000);
+          }
+        } else if (msg.event === 'export' && msg.format === 'svg') {
+          console.log('SVG export received, length:', msg.data?.length);
+          if (exportResolver && msg.data) {
+            exportResolver(msg.data);
+            exportResolver = null;
+          }
+        }
+      });
+      
+      console.log('Renderer page ready');
+    })();
+  </script>
+</body>
+</html>

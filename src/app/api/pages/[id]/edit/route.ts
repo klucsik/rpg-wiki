@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
-import { filterRestrictedContent, hasRestrictedContent } from '../../../../../lib/server-content-filter';
+import { filterRestrictedContent, needsServerProcessing } from '../../../../../lib/server-content-filter';
 
 // GET raw content for editing (no content filtering)
 export async function GET(
@@ -36,8 +36,8 @@ export async function GET(
       // Apply edit-based content filtering to draft
       let processedDraftContent = latestDraft.content;
       
-      if (hasRestrictedContent(latestDraft.content)) {
-        const filterResult = filterRestrictedContent(latestDraft.content, {
+      if (needsServerProcessing(latestDraft.content)) {
+        const filterResult = await filterRestrictedContent(latestDraft.content, {
           groups: auth.userGroups || [],
           isAuthenticated: auth.isAuthenticated || false,
           username: auth.username
@@ -82,8 +82,8 @@ export async function GET(
   // Apply edit-based content filtering
   let processedContent = latestVersion.content;
   
-  if (hasRestrictedContent(latestVersion.content)) {
-    const filterResult = filterRestrictedContent(latestVersion.content, {
+  if (needsServerProcessing(latestVersion.content)) {
+    const filterResult = await filterRestrictedContent(latestVersion.content, {
       groups: auth.userGroups || [],
       isAuthenticated: auth.isAuthenticated || false,
       username: auth.username

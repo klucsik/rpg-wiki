@@ -18,42 +18,30 @@ export interface Persona {
 export const PERSONAS: Record<string, Persona> = {
   /**
    * Game Master - full access via admin group
-   * Groups: admin, gm, players, public
+   * Groups: admin, diana, players, public
    */
   diana: {
     name: 'Diana',
     username: 'Diana',
     password: 'TestDiana123!',
-    groups: ['admin', 'gm', 'players', 'public'],
+    groups: ['admin', 'diana', 'public'],
     storageStatePath: 'e2e/.auth/diana.json',
   },
   
   /**
    * Regular player - limited access
-   * Groups: players, party-alpha, public
+   * Groups: alex, public
    */
   alex: {
     name: 'Alex',
     username: 'Alex',
     password: 'TestAlex123!',
-    groups: ['players', 'party-alpha', 'public'],
+    groups: ['alex', 'public'],
     storageStatePath: 'e2e/.auth/alex.json',
-  },
-  
-  /**
-   * Observer - view-only access
-   * Groups: observers, public
-   */
-  sam: {
-    name: 'Sam',
-    username: 'Sam',
-    password: 'TestSam123!',
-    groups: ['observers', 'public'],
-    storageStatePath: 'e2e/.auth/sam.json',
-  },
+  }
 };
 
-export type PersonaName = 'diana' | 'alex' | 'sam';
+export type PersonaName = 'diana' | 'alex';
 
 /**
  * Get persona by name (case-insensitive)
@@ -73,8 +61,7 @@ export function getPersona(name: string): Persona {
 export const ALL_GROUPS = [
   'admin',      // Super-access group - sees everything
   'public',     // Universal group - everyone has this
-  'gm',         // Game master group
-  'players',    // All players
-  'party-alpha', // Specific party
-  'observers',  // View-only users
+  'diana',      
+  'alex'  
+
 ];

@@ -43,6 +43,7 @@ function RestrictedBlock({
 export function parseWikiContentWithRestrictedBlocks(html: string, user?: User | null): React.ReactNode[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  let nodeCounter = 0;
   
   function walkNode(node: ChildNode): React.ReactNode {
     if (node.nodeType === Node.ELEMENT_NODE) {
@@ -78,7 +79,38 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
       // Handle Mermaid diagrams
       if (el.dataset.type === 'mermaid') {
         const code = el.getAttribute('data-code') || '';
-        return <MermaidView key={`mermaid-${Math.random()}`} code={code} />;
+        return <MermaidView key={`mermaid-${nodeCounter++}`} code={code} />;
+      }
+      
+      // Handle Draw.io diagrams - render the server-generated content
+      if (el.classList.contains('drawio-diagram')) {
+        let diagramHtml = el.innerHTML;
+        
+        // Fallback: if server didn't inject SVG into innerHTML, try data attributes
+        if (!diagramHtml || diagramHtml.trim() === '') {
+          const svgData = el.getAttribute('data-diagram-svg');
+          if (svgData && svgData.trim() !== '') {
+            if (svgData.startsWith('data:image/svg+xml;base64,')) {
+              diagramHtml = `<img src="${svgData}" alt="Diagram" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />`;
+            } else if (svgData.startsWith('<svg')) {
+              diagramHtml = svgData;
+            } else {
+              try {
+                diagramHtml = atob(svgData);
+              } catch (e) {
+                diagramHtml = '<p style="color: red;">Failed to display diagram</p>';
+              }
+            }
+          }
+        }
+        
+        return (
+          <div 
+            key={`drawio-${nodeCounter++}`}
+            className="drawio-diagram"
+            dangerouslySetInnerHTML={{ __html: diagramHtml }}
+          />
+        );
       }
       
       // Convert HTML attributes to React props

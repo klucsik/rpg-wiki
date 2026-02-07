@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { prisma } from '../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
-import { filterRestrictedContent, hasRestrictedContent } from '../../../../lib/server-content-filter';
+import { filterRestrictedContent, needsServerProcessing } from '../../../../lib/server-content-filter';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../lib/placeholder-restore';
 
 // GET latest version of a page by page_id
@@ -32,8 +32,8 @@ export async function GET(
       // Apply content filtering to draft as well
       let processedDraftContent = latestDraft.content;
       
-      if (hasRestrictedContent(latestDraft.content)) {
-        const filterResult = filterRestrictedContent(latestDraft.content, {
+      if (needsServerProcessing(latestDraft.content)) {
+        const filterResult = await filterRestrictedContent(latestDraft.content, {
           groups: auth.userGroups || ['public'],
           isAuthenticated: auth.isAuthenticated || false,
           username: auth.username
@@ -83,8 +83,8 @@ export async function GET(
   let processedContent = latestVersion.content;
   let removedBlocks: Array<{ title: string; groups: string[] }> = [];
   
-  if (hasRestrictedContent(latestVersion.content)) {
-    const filterResult = filterRestrictedContent(latestVersion.content, {
+  if (needsServerProcessing(latestVersion.content)) {
+    const filterResult = await filterRestrictedContent(latestVersion.content, {
       groups: auth?.userGroups || ['public'],
       isAuthenticated: auth?.isAuthenticated || false,
       username: auth?.username
@@ -113,7 +113,7 @@ export async function GET(
     // Include metadata about filtering for debugging (optional)
     _filtering: {
       removedBlocksCount: removedBlocks.length,
-      hasRestrictedContent: hasRestrictedContent(latestVersion.content)
+      hasRestrictedContent: needsServerProcessing(latestVersion.content)
     }
   });
 }

@@ -1,4 +1,5 @@
 import { JSDOM } from 'jsdom';
+import { renderDrawioToSvg } from './drawio-renderer';
 
 export interface UserPermissions {
   groups: string[];
@@ -26,11 +27,11 @@ export interface ContentFilterOptions {
  * @param options - Filtering options (view mode vs edit mode)
  * @returns Filtered content and metadata about removed blocks
  */
-export function filterRestrictedContent(
+export async function filterRestrictedContent(
   htmlContent: string, 
   userPermissions: UserPermissions,
   options: ContentFilterOptions = { filterMode: 'view' }
-): ContentFilterResult {
+): Promise<ContentFilterResult> {
   if (!htmlContent) {
     return { filteredContent: '', removedBlocks: [] };
   }
@@ -124,6 +125,45 @@ export function filterRestrictedContent(
     // If user has access, keep the block as-is for client-side reveal functionality
   });
   
+  // Process draw.io diagrams - use stored SVG or render if needed (only in view mode)
+  if (options.filterMode === 'view') {
+    const drawioDiagrams = document.querySelectorAll('.drawio-diagram');
+    
+    for (const diagram of Array.from(drawioDiagrams)) {
+      const svgData = diagram.getAttribute('data-diagram-svg');
+      const xmlData = diagram.getAttribute('data-diagram-xml');
+      
+      if (svgData && svgData.trim() !== '') {
+        // Use stored SVG - check if it's a data URL or raw SVG
+        if (svgData.startsWith('data:image/svg+xml;base64,')) {
+          // It's a data URL - render as an img tag
+          diagram.innerHTML = `<img src="${svgData}" alt="Diagram" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />`;
+        } else if (svgData.startsWith('<svg')) {
+          // It's raw SVG markup
+          diagram.innerHTML = svgData;
+        } else {
+          // Try to decode as base64
+          try {
+            const decoded = Buffer.from(svgData, 'base64').toString('utf-8');
+            diagram.innerHTML = decoded;
+          } catch (e) {
+            console.error('Failed to decode SVG data:', e);
+            diagram.innerHTML = '<p style="color: red;">Failed to display diagram</p>';
+          }
+        }
+      } else if (xmlData && xmlData.trim() !== '') {
+        // Fallback: render via API for old diagrams without stored SVG
+        try {
+          const svg = await renderDrawioToSvg(xmlData);
+          diagram.innerHTML = svg;
+        } catch (error) {
+          console.error('Failed to render draw.io diagram:', error);
+          diagram.innerHTML = '<p style="color: red;">Failed to render diagram</p>';
+        }
+      }
+    }
+  }
+  
   // Get the filtered HTML
   const filteredContent = document.body.innerHTML;
   
@@ -138,4 +178,18 @@ export function filterRestrictedContent(
  */
 export function hasRestrictedContent(htmlContent: string): boolean {
   return htmlContent.includes('data-block-type="restricted"');
+}
+
+/**
+ * Check if content contains any draw.io diagrams
+ */
+export function hasDrawioContent(htmlContent: string): boolean {
+  return htmlContent.includes('drawio-diagram');
+}
+
+/**
+ * Check if content needs any server-side processing (restricted blocks, drawio diagrams, etc.)
+ */
+export function needsServerProcessing(htmlContent: string): boolean {
+  return hasRestrictedContent(htmlContent) || hasDrawioContent(htmlContent);
 }

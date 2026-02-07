@@ -29,7 +29,7 @@ function buildTree(pages: WikiPage[]): TreeNode {
     if (pathParts.length === 0) {
       currentNode.children.push({
         name: page.title,
-        path: page.path,
+        path: `${page.path}#page-${page.id}`,
         page,
         children: [],
         isExpanded: false,
@@ -59,7 +59,7 @@ function buildTree(pages: WikiPage[]): TreeNode {
     // Add the page as a leaf node in the deepest folder
     currentNode.children.push({
       name: page.title, // Use the actual page title instead of path segment
-      path: page.path,
+      path: `${page.path}#page-${page.id}`,
       page,
       children: [],
       isExpanded: false,
