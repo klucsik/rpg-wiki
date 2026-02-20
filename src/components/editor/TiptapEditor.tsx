@@ -561,6 +561,28 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           <option value="800">Extra Bold (800)</option>
           <option value="900">Black (900)</option>
         </select>
+        {/* Text Alignment Selector */}
+        <select
+          value={
+            editor.isActive({ textAlign: 'left' }) ? 'left' :
+            editor.isActive({ textAlign: 'center' }) ? 'center' :
+            editor.isActive({ textAlign: 'right' }) ? 'right' :
+            editor.isActive({ textAlign: 'justify' }) ? 'justify' :
+            'left'
+          }
+          onChange={(e) => {
+            editor.chain().focus().setTextAlign(e.target.value).run();
+          }}
+          className={styles.toolbarSelect}
+          style={{ minWidth: '90px' }}
+          title="Text alignment"
+        >
+          <option value="left">⬅ Left</option>
+          <option value="center">↔ Center</option>
+          <option value="right">➡ Right</option>
+          <option value="justify">⬌ Justify</option>
+        </select>
+
         <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className={styles.toolbarButton}>• List</button>
         <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className={styles.toolbarButton}>1. List</button>
         <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={styles.toolbarButton}>―</button>

@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260220
+- Added textalign options
+
 ### Version 20260207
 Added draw.io diagram support. You can now create/edit draw.io diagrams directly in the editor, and they will be rendered as SVGs on the page view. 
 
