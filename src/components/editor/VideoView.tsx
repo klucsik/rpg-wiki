@@ -2,24 +2,19 @@ import React from 'react';
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { getEmbedStyleObject } from './embedFormatting';
 import { EmbedDragHandle } from './EmbedDragHandle';
-import { useFreefloatDrag } from './useFreefloatDrag';
 
-export const VideoView: React.FC<NodeViewProps> = ({ node, selected, updateAttributes }) => {
-  const { src, width, wrap, textBehaviour, x, y } = node.attrs as {
+export const VideoView: React.FC<NodeViewProps> = ({ node, selected }) => {
+  const { src, width, align, wrap } = node.attrs as {
     src: string;
     width?: string;
+    align?: string;
     wrap?: string;
-    textBehaviour?: string;
-    x?: string;
-    y?: string;
   };
 
-  const isFreefloat = wrap === 'freefloat';
-  const freefloatDrag = useFreefloatDrag({ x, y }, updateAttributes);
-
   const outerStyle: React.CSSProperties = {
-    ...getEmbedStyleObject({ width, wrap, textBehaviour, x, y }),
+    ...getEmbedStyleObject({ width, align, wrap }),
     position: 'relative',
+    display: 'block',
   };
 
   const videoStyle: React.CSSProperties = {
@@ -36,7 +31,7 @@ export const VideoView: React.FC<NodeViewProps> = ({ node, selected, updateAttri
 
   return (
     <NodeViewWrapper style={outerStyle} as="span">
-      <EmbedDragHandle onFreefloatMouseDown={isFreefloat ? freefloatDrag : undefined} />
+      <EmbedDragHandle />
       <video src={src} controls style={videoStyle} draggable={false} />
     </NodeViewWrapper>
   );

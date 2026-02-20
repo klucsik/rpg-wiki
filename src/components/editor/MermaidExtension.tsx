@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
 import { getEmbedCssStyle, getEmbedStyleObject, sharedEmbedAttributes } from './embedFormatting';
 import { EmbedDragHandle } from './EmbedDragHandle';
-import { useFreefloatDrag } from './useFreefloatDrag';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -38,11 +37,6 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   selected
 }) => {
   const [code, setCode] = useState(node.attrs.code || '');
-  const isFreefloat = node.attrs.wrap === 'freefloat';
-  const freefloatDrag = useFreefloatDrag(
-    { x: node.attrs.x, y: node.attrs.y },
-    updateAttributes,
-  );
   const [isEditing, setIsEditing] = useState(false);
   const [svgContent, setSvgContent] = useState('');
   const [error, setError] = useState('');
@@ -148,8 +142,8 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   }
 
   return (
-    <NodeViewWrapper style={{ ...getEmbedStyleObject({ width: node.attrs.width, wrap: node.attrs.wrap, textBehaviour: node.attrs.textBehaviour, x: node.attrs.x, y: node.attrs.y }), position: 'relative' }}>
-      <EmbedDragHandle onFreefloatMouseDown={isFreefloat ? freefloatDrag : undefined} />
+    <NodeViewWrapper style={{ ...getEmbedStyleObject({ width: node.attrs.width, align: node.attrs.align, wrap: node.attrs.wrap }), position: 'relative' }}>
+      <EmbedDragHandle />
       <div 
         className={`mermaid-diagram ${selected ? 'ring-2 ring-blue-500' : ''} rounded-lg p-4 bg-gray-900 my-4 cursor-pointer transition-all`}
         onClick={() => setIsEditing(true)}

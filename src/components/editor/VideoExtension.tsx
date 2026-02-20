@@ -65,30 +65,6 @@ export const ResizableVideo = Node.create<VideoOptions>({
           return { 'data-wrap': attributes.wrap };
         },
       },
-      textBehaviour: {
-        default: 'linebreak',
-        parseHTML: element => element.getAttribute('data-text-behaviour') || 'linebreak',
-        renderHTML: attributes => {
-          if (!attributes.textBehaviour || attributes.textBehaviour === 'linebreak') return {};
-          return { 'data-text-behaviour': attributes.textBehaviour };
-        },
-      },
-      x: {
-        default: '0',
-        parseHTML: element => element.getAttribute('data-x') || '0',
-        renderHTML: attributes => {
-          if (!attributes.x || attributes.x === '0') return {};
-          return { 'data-x': attributes.x };
-        },
-      },
-      y: {
-        default: '0',
-        parseHTML: element => element.getAttribute('data-y') || '0',
-        renderHTML: attributes => {
-          if (!attributes.y || attributes.y === '0') return {};
-          return { 'data-y': attributes.y };
-        },
-      },
     };
   },
 
@@ -103,10 +79,8 @@ export const ResizableVideo = Node.create<VideoOptions>({
   renderHTML({ HTMLAttributes }) {
     const style = getEmbedCssStyle({
       width: HTMLAttributes.width,
-      wrap: HTMLAttributes['data-wrap'] || HTMLAttributes.wrap,
-      textBehaviour: HTMLAttributes['data-text-behaviour'] || HTMLAttributes.textBehaviour,
-      x: HTMLAttributes['data-x'] || HTMLAttributes.x,
-      y: HTMLAttributes['data-y'] || HTMLAttributes.y,
+      align: HTMLAttributes.align || HTMLAttributes['data-align'],
+      wrap: HTMLAttributes.wrap || HTMLAttributes['data-wrap'],
     });
     
     return [

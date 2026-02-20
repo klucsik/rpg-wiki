@@ -2,26 +2,21 @@ import React from 'react';
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { getEmbedStyleObject } from './embedFormatting';
 import { EmbedDragHandle } from './EmbedDragHandle';
-import { useFreefloatDrag } from './useFreefloatDrag';
 
-export const ImageView: React.FC<NodeViewProps> = ({ node, selected, updateAttributes }) => {
-  const { src, alt, title, width, wrap, textBehaviour, x, y } = node.attrs as {
+export const ImageView: React.FC<NodeViewProps> = ({ node, selected }) => {
+  const { src, alt, title, width, align, wrap } = node.attrs as {
     src: string;
     alt?: string;
     title?: string;
     width?: string;
+    align?: string;
     wrap?: string;
-    textBehaviour?: string;
-    x?: string;
-    y?: string;
   };
 
-  const isFreefloat = wrap === 'freefloat';
-  const freefloatDrag = useFreefloatDrag({ x, y }, updateAttributes);
-
   const outerStyle: React.CSSProperties = {
-    ...getEmbedStyleObject({ width, wrap, textBehaviour, x, y }),
+    ...getEmbedStyleObject({ width, align, wrap }),
     position: 'relative',
+    display: 'block',
   };
 
   const imgStyle: React.CSSProperties = {
@@ -38,7 +33,7 @@ export const ImageView: React.FC<NodeViewProps> = ({ node, selected, updateAttri
 
   return (
     <NodeViewWrapper style={outerStyle} as="span">
-      <EmbedDragHandle onFreefloatMouseDown={isFreefloat ? freefloatDrag : undefined} />
+      <EmbedDragHandle />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt || ''} title={title} style={imgStyle} draggable={false} />
     </NodeViewWrapper>

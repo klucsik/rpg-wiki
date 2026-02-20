@@ -2,48 +2,25 @@
  * Shared formatting utilities for embeddable nodes:
  * image, video, mermaid, drawio
  */
-import type React from 'react';
 
 export type EmbedAlign = 'left' | 'center' | 'right';
-export type EmbedWrap = 'none' | 'left' | 'right' | 'freefloat';
-export type EmbedTextBehaviour = 'linebreak' | 'inline' | 'wrap' | 'behind' | 'front';
+export type EmbedWrap = 'none' | 'left' | 'right';
 
 export interface EmbedAttrs {
   width?: string;
   align?: EmbedAlign | string;
   wrap?: EmbedWrap | string;
-  textBehaviour?: EmbedTextBehaviour | string;
-  x?: string;
-  y?: string;
 }
 
 /**
  * Returns a CSS style string suitable for use in TipTap's renderHTML.
  */
 export function getEmbedCssStyle(attrs: EmbedAttrs): string {
-  const { width = 'auto', wrap = 'none', textBehaviour = 'linebreak', x = '0', y = '0' } = attrs;
+  const { width = 'auto', align = 'center', wrap = 'none' } = attrs;
   let style = '';
 
   if (width && width !== 'auto') {
     style += `width:${width};`;
-  }
-
-  if (wrap === 'freefloat') {
-    // Float-based free positioning: stays in document flow so text wraps.
-    // x controls left margin (horizontal push), y controls top margin (vertical push).
-    // Float direction is determined by x: left half → float left, right half → float right.
-    const xNum = parseInt(x || '0', 10);
-    const floatDir = xNum >= 0 ? 'left' : 'right';
-    const absX = Math.abs(xNum);
-    const yNum = Math.max(0, parseInt(y || '0', 10));
-    if (floatDir === 'left') {
-      style += `float:left;margin-left:${absX}px;margin-top:${yNum}px;margin-right:1rem;margin-bottom:0.5rem;`;
-    } else {
-      style += `float:right;margin-right:${absX}px;margin-top:${yNum}px;margin-left:1rem;margin-bottom:0.5rem;`;
-    }
-    if (textBehaviour === 'behind') style += 'position:relative;z-index:-1;';
-    else if (textBehaviour === 'front') style += 'position:relative;z-index:10;';
-    return style;
   }
 
   if (wrap === 'left') {
@@ -51,83 +28,59 @@ export function getEmbedCssStyle(attrs: EmbedAttrs): string {
   } else if (wrap === 'right') {
     style += 'float:right;margin-left:1rem;margin-bottom:0.5rem;';
   } else {
-    if (textBehaviour === 'inline') {
-      style += 'display:inline-block;vertical-align:middle;';
+    // 'none' — block display, alignment via margins
+    style += 'display:block;';
+    if (align === 'left') {
+      style += 'margin-left:0;margin-right:auto;';
+    } else if (align === 'right') {
+      style += 'margin-left:auto;margin-right:0;';
     } else {
-      style += 'display:block;margin-left:auto;margin-right:auto;';
+      // center (default)
+      style += 'margin-left:auto;margin-right:auto;';
     }
   }
-
-  if (textBehaviour === 'behind') style += 'position:relative;z-index:-1;';
-  else if (textBehaviour === 'front') style += 'position:relative;z-index:10;';
 
   return style;
 }
 
 /**
- * Returns a React-compatible CSSProperties style object for NodeView inline styles.
+ * Returns a plain CSS-properties-compatible object for use in React inline styles
+ * (e.g. NodeViewWrapper style prop).
  */
-export function getEmbedStyleObject(attrs: EmbedAttrs): React.CSSProperties {
-  const { width = 'auto', wrap = 'none', textBehaviour = 'linebreak', x = '0', y = '0' } = attrs;
-  const style: React.CSSProperties = {};
+export function getEmbedStyleObject(attrs: EmbedAttrs): Record<string, string> {
+  const { width = 'auto', align = 'center', wrap = 'none' } = attrs;
+  const style: Record<string, string> = {};
 
   if (width && width !== 'auto') {
-    style.width = width;
-    style.maxWidth = width;
-  }
-
-  if (wrap === 'freefloat') {
-    const xNum = parseInt(x || '0', 10);
-    const floatDir = xNum >= 0 ? 'left' : 'right';
-    const absX = Math.abs(xNum);
-    const yNum = Math.max(0, parseInt(y || '0', 10));
-    if (floatDir === 'left') {
-      style.float = 'left';
-      style.marginLeft = `${absX}px`;
-      style.marginTop = `${yNum}px`;
-      style.marginRight = '1rem';
-      style.marginBottom = '0.5rem';
-    } else {
-      style.float = 'right';
-      style.marginRight = `${absX}px`;
-      style.marginTop = `${yNum}px`;
-      style.marginLeft = '1rem';
-      style.marginBottom = '0.5rem';
-    }
-    if (textBehaviour === 'behind') { style.position = 'relative'; style.zIndex = -1; }
-    else if (textBehaviour === 'front') { style.position = 'relative'; style.zIndex = 10; }
-    return style;
+    style['width'] = width;
   }
 
   if (wrap === 'left') {
-    style.float = 'left';
-    style.marginRight = '1rem';
-    style.marginBottom = '0.5rem';
+    style['float'] = 'left';
+    style['marginRight'] = '1rem';
+    style['marginBottom'] = '0.5rem';
   } else if (wrap === 'right') {
-    style.float = 'right';
-    style.marginLeft = '1rem';
-    style.marginBottom = '0.5rem';
-  } else if (textBehaviour === 'inline') {
-    style.display = 'inline-block';
-    style.verticalAlign = 'middle';
+    style['float'] = 'right';
+    style['marginLeft'] = '1rem';
+    style['marginBottom'] = '0.5rem';
   } else {
-    style.display = 'block';
-    style.marginLeft = 'auto';
-    style.marginRight = 'auto';
-  }
-
-  if (textBehaviour === 'behind') {
-    style.position = 'relative';
-    style.zIndex = -1;
-  } else if (textBehaviour === 'front') {
-    style.position = 'relative';
-    style.zIndex = 10;
+    style['display'] = 'block';
+    if (align === 'left') {
+      style['marginLeft'] = '0';
+      style['marginRight'] = 'auto';
+    } else if (align === 'right') {
+      style['marginLeft'] = 'auto';
+      style['marginRight'] = '0';
+    } else {
+      style['marginLeft'] = 'auto';
+      style['marginRight'] = 'auto';
+    }
   }
 
   return style;
 }
 
-/** Shared TipTap attribute definitions for width / wrap / textBehaviour / x / y on embed nodes. */
+/** Shared attribute definitions for width / align / wrap on embed nodes (div-based). */
 export const sharedEmbedAttributes = {
   width: {
     default: 'auto',
@@ -157,34 +110,6 @@ export const sharedEmbedAttributes = {
       const w = attributes.wrap as string;
       if (!w || w === 'none') return {};
       return { 'data-wrap': w };
-    },
-  },
-  textBehaviour: {
-    default: 'linebreak' as EmbedTextBehaviour,
-    parseHTML: (element: HTMLElement) =>
-      (element.getAttribute('data-text-behaviour') || 'linebreak') as EmbedTextBehaviour,
-    renderHTML: (attributes: Record<string, unknown>) => {
-      const tb = attributes.textBehaviour as string;
-      if (!tb || tb === 'linebreak') return {};
-      return { 'data-text-behaviour': tb };
-    },
-  },
-  x: {
-    default: '0',
-    parseHTML: (element: HTMLElement) => element.getAttribute('data-x') || '0',
-    renderHTML: (attributes: Record<string, unknown>) => {
-      const v = attributes.x as string;
-      if (!v || v === '0') return {};
-      return { 'data-x': v };
-    },
-  },
-  y: {
-    default: '0',
-    parseHTML: (element: HTMLElement) => element.getAttribute('data-y') || '0',
-    renderHTML: (attributes: Record<string, unknown>) => {
-      const v = attributes.y as string;
-      if (!v || v === '0') return {};
-      return { 'data-y': v };
     },
   },
 };

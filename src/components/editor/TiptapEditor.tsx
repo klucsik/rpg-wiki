@@ -61,39 +61,13 @@ const ResizableImage = Image.extend({
           return { 'data-wrap': attributes.wrap };
         },
       },
-      textBehaviour: {
-        default: 'linebreak',
-        parseHTML: element => element.getAttribute('data-text-behaviour') || 'linebreak',
-        renderHTML: attributes => {
-          if (!attributes.textBehaviour || attributes.textBehaviour === 'linebreak') return {};
-          return { 'data-text-behaviour': attributes.textBehaviour };
-        },
-      },
-      x: {
-        default: '0',
-        parseHTML: element => element.getAttribute('data-x') || '0',
-        renderHTML: attributes => {
-          if (!attributes.x || attributes.x === '0') return {};
-          return { 'data-x': attributes.x };
-        },
-      },
-      y: {
-        default: '0',
-        parseHTML: element => element.getAttribute('data-y') || '0',
-        renderHTML: attributes => {
-          if (!attributes.y || attributes.y === '0') return {};
-          return { 'data-y': attributes.y };
-        },
-      },
     };
   },
   renderHTML({ HTMLAttributes }) {
     const style = getEmbedCssStyle({
       width: HTMLAttributes.width,
-      wrap: HTMLAttributes['data-wrap'] || HTMLAttributes.wrap,
-      textBehaviour: HTMLAttributes['data-text-behaviour'] || HTMLAttributes.textBehaviour,
-      x: HTMLAttributes['data-x'] || HTMLAttributes.x,
-      y: HTMLAttributes['data-y'] || HTMLAttributes.y,
+      align: HTMLAttributes.align || HTMLAttributes['data-align'],
+      wrap: HTMLAttributes.wrap || HTMLAttributes['data-wrap'],
     });
     return [
       'img',
@@ -352,7 +326,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       editor.chain().setNodeSelection(selection.from).updateAttributes(nodeType, { width }).run();
     }
   }
-  function setEmbedWrap(wrap: 'none' | 'left' | 'right' | 'freefloat', nodeType: string) {
+  function setEmbedWrap(wrap: 'none' | 'left' | 'right', nodeType: string) {
     if (!editor) return;
     const { state } = editor;
     const { selection } = state;
@@ -366,22 +340,6 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     }
     if (node && node.type.name === nodeType) {
       editor.chain().focus().updateAttributes(nodeType, { wrap }).run();
-    }
-  }
-  function setEmbedTextBehaviour(textBehaviour: 'linebreak' | 'inline' | 'wrap' | 'behind' | 'front', nodeType: string) {
-    if (!editor) return;
-    const { state } = editor;
-    const { selection } = state;
-    const pos = selection.from;
-    let node = state.doc.nodeAt(pos);
-    if (!node || node.type.name !== nodeType) {
-      let found = false;
-      state.doc.nodesBetween(selection.from, selection.to, (n) => {
-        if (n.type.name === nodeType && !found) { node = n; found = true; }
-      });
-    }
-    if (node && node.type.name === nodeType) {
-      editor.chain().focus().updateAttributes(nodeType, { textBehaviour }).run();
     }
   }
 
@@ -500,13 +458,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const embedType = isImageSelected ? 'image' : isVideoSelected ? 'video' : isMermaidSelected ? 'mermaid' : 'drawio';
 
   // Get selected embed node's attributes
-  let embedNode: { attrs?: { width?: string; wrap?: string; textBehaviour?: string; x?: string; y?: string } } = {};
+  let embedNode: { attrs?: { width?: string; align?: string; wrap?: string } } = {};
   if (isEmbedSelected) {
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
     if (node && ['image', 'video', 'mermaid', 'drawio'].includes(node.type.name)) {
-      embedNode = node as { attrs?: { width?: string; wrap?: string; textBehaviour?: string; x?: string; y?: string } };
+      embedNode = node as { attrs?: { width?: string; align?: string; wrap?: string } };
     }
   }
   const currentEmbedAttrs = embedNode.attrs || {};
@@ -741,7 +699,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             <label className={styles.imageAlignLabel}>Wrap:</label>
             <select
               value={currentEmbedAttrs.wrap || 'none'}
-              onChange={e => setEmbedWrap(e.target.value as 'none' | 'left' | 'right' | 'freefloat', embedType)}
+              onChange={e => setEmbedWrap(e.target.value as 'none' | 'left' | 'right', embedType)}
               className={styles.toolbarSelect}
               style={{ minWidth: '100px' }}
               title="Text wrap behavior"
@@ -749,21 +707,6 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               <option value="none">Block</option>
               <option value="left">Left</option>
               <option value="right">Right</option>
-              <option value="freefloat">Freefloat</option>
-            </select>
-            <label className={styles.imageAlignLabel}>Text behaviour:</label>
-            <select
-              value={currentEmbedAttrs.textBehaviour || 'linebreak'}
-              onChange={e => setEmbedTextBehaviour(e.target.value as 'linebreak' | 'inline' | 'wrap' | 'behind' | 'front', embedType)}
-              className={styles.toolbarSelect}
-              style={{ minWidth: '130px' }}
-              title="How surrounding text behaves"
-            >
-              <option value="linebreak">Line break</option>
-              <option value="inline">Inline with text</option>
-              <option value="wrap">Text wrapping</option>
-              <option value="behind">Behind text</option>
-              <option value="front">In front of text</option>
             </select>
           </div>
         )}

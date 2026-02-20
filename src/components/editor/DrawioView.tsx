@@ -3,7 +3,6 @@ import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { DrawioEditorDialog } from './DrawioEditorDialog';
 import { getEmbedStyleObject } from './embedFormatting';
 import { EmbedDragHandle } from './EmbedDragHandle';
-import { useFreefloatDrag } from './useFreefloatDrag';
 
 export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, deleteNode }) => {
   const [showEditor, setShowEditor] = useState(false);
@@ -13,12 +12,6 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
 
   const diagramXml = node.attrs.diagramXml as string;
   const diagramSvg = node.attrs.diagramSvg as string;
-  const wrap = node.attrs.wrap as string | undefined;
-  const isFreefloat = wrap === 'freefloat';
-  const freefloatDrag = useFreefloatDrag(
-    { x: node.attrs.x, y: node.attrs.y },
-    updateAttributes,
-  );
 
   // Render SVG preview - use stored SVG if available, otherwise render via API
   const renderSvg = useCallback(async () => {
@@ -132,10 +125,8 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
         style={{
           ...getEmbedStyleObject({
             width: node.attrs.width,
+            align: node.attrs.align,
             wrap: node.attrs.wrap,
-            textBehaviour: node.attrs.textBehaviour,
-            x: node.attrs.x,
-            y: node.attrs.y,
           }),
           border: selected ? '2px solid #3b82f6' : '1px solid #374151',
           borderRadius: '4px',
@@ -145,7 +136,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
           position: 'relative',
         }}
       >
-        <EmbedDragHandle onFreefloatMouseDown={isFreefloat ? freefloatDrag : undefined} />
+        <EmbedDragHandle />
         <div className="diagram-controls" style={{
           position: 'absolute',
           top: '8px',
