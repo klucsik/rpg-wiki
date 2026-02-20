@@ -2,6 +2,9 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
+import { getEmbedCssStyle, getEmbedStyleObject, sharedEmbedAttributes } from './embedFormatting';
+import { EmbedDragHandle } from './EmbedDragHandle';
+import { useFreefloatDrag } from './useFreefloatDrag';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -35,6 +38,11 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   selected
 }) => {
   const [code, setCode] = useState(node.attrs.code || '');
+  const isFreefloat = node.attrs.wrap === 'freefloat';
+  const freefloatDrag = useFreefloatDrag(
+    { x: node.attrs.x, y: node.attrs.y },
+    updateAttributes,
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [svgContent, setSvgContent] = useState('');
   const [error, setError] = useState('');
@@ -140,7 +148,8 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   }
 
   return (
-    <NodeViewWrapper>
+    <NodeViewWrapper style={{ ...getEmbedStyleObject({ width: node.attrs.width, wrap: node.attrs.wrap, textBehaviour: node.attrs.textBehaviour, x: node.attrs.x, y: node.attrs.y }), position: 'relative' }}>
+      <EmbedDragHandle onFreefloatMouseDown={isFreefloat ? freefloatDrag : undefined} />
       <div 
         className={`mermaid-diagram ${selected ? 'ring-2 ring-blue-500' : ''} rounded-lg p-4 bg-gray-900 my-4 cursor-pointer transition-all`}
         onClick={() => setIsEditing(true)}
@@ -177,6 +186,8 @@ export const MermaidNode = Node.create({
   group: 'block',
   
   atom: true,
+
+  draggable: true,
   
   addAttributes() {
     return {
@@ -187,6 +198,7 @@ export const MermaidNode = Node.create({
           'data-code': attributes.code,
         }),
       },
+      ...sharedEmbedAttributes,
     };
   },
   
@@ -199,7 +211,12 @@ export const MermaidNode = Node.create({
   },
   
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'mermaid' })];
+    const style = getEmbedCssStyle({
+      width: HTMLAttributes['data-width'],
+      align: HTMLAttributes['data-align'],
+      wrap: HTMLAttributes['data-wrap'],
+    });
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'mermaid', style })];
   },
   
   addNodeView() {

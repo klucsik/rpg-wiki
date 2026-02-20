@@ -317,3 +317,25 @@
 .editorContent table .selectedCell {
   background-color: #1e40af !important;
 }
+
+/* ── Embed drag-and-drop ──────────────────────────────────────── */
+
+/* Dragging state: dim the node being dragged */
+.editorContent .ProseMirror-selectednode img,
+.editorContent .ProseMirror-selectednode video {
+  outline: 2px solid #3b82f6;
+  border-radius: 2px;
+}
+
+/* Drop target placeholder line shown by ProseMirror during node drag */
+.editorContent .ProseMirror-dropcursor {
+  border-top: 2px solid #6366f1;
+}
+
+/* The drag handle itself already has cursor:grab inline;
+   show grab cursor over the whole embed wrapper on hover
+   so users know it can be repositioned. */
+.editorContent [data-drag-handle]:active {
+  cursor: grabbing !important;
+}
+

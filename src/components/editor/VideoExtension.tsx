@@ -1,4 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { getEmbedCssStyle } from './embedFormatting';
+import { VideoView } from './VideoView';
 
 export interface VideoOptions {
   HTMLAttributes: Record<string, any>;
@@ -54,6 +57,38 @@ export const ResizableVideo = Node.create<VideoOptions>({
           return { 'data-align': attributes.align };
         },
       },
+      wrap: {
+        default: 'none',
+        parseHTML: element => element.getAttribute('data-wrap') || 'none',
+        renderHTML: attributes => {
+          if (!attributes.wrap || attributes.wrap === 'none') return {};
+          return { 'data-wrap': attributes.wrap };
+        },
+      },
+      textBehaviour: {
+        default: 'linebreak',
+        parseHTML: element => element.getAttribute('data-text-behaviour') || 'linebreak',
+        renderHTML: attributes => {
+          if (!attributes.textBehaviour || attributes.textBehaviour === 'linebreak') return {};
+          return { 'data-text-behaviour': attributes.textBehaviour };
+        },
+      },
+      x: {
+        default: '0',
+        parseHTML: element => element.getAttribute('data-x') || '0',
+        renderHTML: attributes => {
+          if (!attributes.x || attributes.x === '0') return {};
+          return { 'data-x': attributes.x };
+        },
+      },
+      y: {
+        default: '0',
+        parseHTML: element => element.getAttribute('data-y') || '0',
+        renderHTML: attributes => {
+          if (!attributes.y || attributes.y === '0') return {};
+          return { 'data-y': attributes.y };
+        },
+      },
     };
   },
 
@@ -66,21 +101,13 @@ export const ResizableVideo = Node.create<VideoOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    let style = HTMLAttributes.style || '';
-    if (HTMLAttributes.width && HTMLAttributes.width !== 'auto') {
-      style += `width:${HTMLAttributes.width};`;
-    }
-    // Alignment logic: access align from either the attribute directly or data-align
-    const align = HTMLAttributes.align || HTMLAttributes['data-align'] || 'center';
-    if (align === 'left') {
-      style += 'display:block;margin-left:0;margin-right:auto;';
-    } else if (align === 'right') {
-      style += 'display:block;margin-left:auto;margin-right:0;';
-    } else if (align === 'center') {
-      style += 'display:block;margin-left:auto;margin-right:auto;';
-    } else {
-      style += 'display:block;';
-    }
+    const style = getEmbedCssStyle({
+      width: HTMLAttributes.width,
+      wrap: HTMLAttributes['data-wrap'] || HTMLAttributes.wrap,
+      textBehaviour: HTMLAttributes['data-text-behaviour'] || HTMLAttributes.textBehaviour,
+      x: HTMLAttributes['data-x'] || HTMLAttributes.x,
+      y: HTMLAttributes['data-y'] || HTMLAttributes.y,
+    });
     
     return [
       'video',
@@ -102,5 +129,9 @@ export const ResizableVideo = Node.create<VideoOptions>({
           });
         },
     };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(VideoView);
   },
 });

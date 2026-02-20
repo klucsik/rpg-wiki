@@ -1,5 +1,5 @@
 import React from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -20,6 +20,8 @@ import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
 import { ResizableVideo } from "./VideoExtension";
 import LinkSearchModal from "../search/LinkSearchModal";
 import styles from "./Editor.module.css";
+import { getEmbedCssStyle } from './embedFormatting';
+import { ImageView } from './ImageView';
 
 interface TiptapEditorProps {
   value: string;
@@ -30,6 +32,8 @@ interface TiptapEditorProps {
 import { mergeAttributes } from '@tiptap/core';
 
 const ResizableImage = Image.extend({
+  draggable: true,
+
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -49,27 +53,56 @@ const ResizableImage = Image.extend({
           return { 'data-align': attributes.align };
         },
       },
+      wrap: {
+        default: 'none',
+        parseHTML: element => element.getAttribute('data-wrap') || 'none',
+        renderHTML: attributes => {
+          if (!attributes.wrap || attributes.wrap === 'none') return {};
+          return { 'data-wrap': attributes.wrap };
+        },
+      },
+      textBehaviour: {
+        default: 'linebreak',
+        parseHTML: element => element.getAttribute('data-text-behaviour') || 'linebreak',
+        renderHTML: attributes => {
+          if (!attributes.textBehaviour || attributes.textBehaviour === 'linebreak') return {};
+          return { 'data-text-behaviour': attributes.textBehaviour };
+        },
+      },
+      x: {
+        default: '0',
+        parseHTML: element => element.getAttribute('data-x') || '0',
+        renderHTML: attributes => {
+          if (!attributes.x || attributes.x === '0') return {};
+          return { 'data-x': attributes.x };
+        },
+      },
+      y: {
+        default: '0',
+        parseHTML: element => element.getAttribute('data-y') || '0',
+        renderHTML: attributes => {
+          if (!attributes.y || attributes.y === '0') return {};
+          return { 'data-y': attributes.y };
+        },
+      },
     };
   },
   renderHTML({ HTMLAttributes }) {
-    let style = HTMLAttributes.style || '';
-    if (HTMLAttributes.width && HTMLAttributes.width !== 'auto') {
-      style += `width:${HTMLAttributes.width};`;
-    }
-    // Alignment logic: only set margin for the selected alignment
-    if (HTMLAttributes.align === 'left') {
-      style += 'display:block;margin-left:0;margin-right:auto;';
-    } else if (HTMLAttributes.align === 'right') {
-      style += 'display:block;margin-left:auto;margin-right:0;';
-    } else if (HTMLAttributes.align === 'center') {
-      style += 'display:block;margin-left:auto;margin-right:auto;';
-    } else {
-      style += 'display:block;';
-    }
+    const style = getEmbedCssStyle({
+      width: HTMLAttributes.width,
+      wrap: HTMLAttributes['data-wrap'] || HTMLAttributes.wrap,
+      textBehaviour: HTMLAttributes['data-text-behaviour'] || HTMLAttributes.textBehaviour,
+      x: HTMLAttributes['data-x'] || HTMLAttributes.x,
+      y: HTMLAttributes['data-y'] || HTMLAttributes.y,
+    });
     return [
       'img',
       mergeAttributes(HTMLAttributes, { style }),
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageView);
   },
 });
 
@@ -309,37 +342,46 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  // Image/Video resizing and alignment controls
-  function setMediaWidth(width: string, mediaType: 'image' | 'video') {
+  // Embed (image/video/mermaid/drawio) resizing, alignment, and wrap controls
+  function setEmbedWidth(width: string, nodeType: string) {
     if (!editor) return;
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
-    if (node && node.type.name === mediaType) {
-      // Don't refocus the editor, just update the attributes
-      editor.chain().setNodeSelection(selection.from).updateAttributes(mediaType, { width }).run();
+    if (node && node.type.name === nodeType) {
+      editor.chain().setNodeSelection(selection.from).updateAttributes(nodeType, { width }).run();
     }
   }
-  function setMediaAlign(align: 'left' | 'center' | 'right', mediaType: 'image' | 'video') {
+  function setEmbedWrap(wrap: 'none' | 'left' | 'right' | 'freefloat', nodeType: string) {
     if (!editor) return;
     const { state } = editor;
     const { selection } = state;
-    // Try to find the media node in the selection or its parent
     const pos = selection.from;
     let node = state.doc.nodeAt(pos);
-    if (!node || node.type.name !== mediaType) {
-      // Try to find a media node in the selection range
+    if (!node || node.type.name !== nodeType) {
       let found = false;
       state.doc.nodesBetween(selection.from, selection.to, (n) => {
-        if (n.type.name === mediaType && !found) {
-          node = n;
-          found = true;
-        }
+        if (n.type.name === nodeType && !found) { node = n; found = true; }
       });
     }
-    if (node && node.type.name === mediaType) {
-      // Use updateAttributes directly, don't setNodeSelection (which can cause issues in some cases)
-      editor.chain().focus().updateAttributes(mediaType, { align }).run();
+    if (node && node.type.name === nodeType) {
+      editor.chain().focus().updateAttributes(nodeType, { wrap }).run();
+    }
+  }
+  function setEmbedTextBehaviour(textBehaviour: 'linebreak' | 'inline' | 'wrap' | 'behind' | 'front', nodeType: string) {
+    if (!editor) return;
+    const { state } = editor;
+    const { selection } = state;
+    const pos = selection.from;
+    let node = state.doc.nodeAt(pos);
+    if (!node || node.type.name !== nodeType) {
+      let found = false;
+      state.doc.nodesBetween(selection.from, selection.to, (n) => {
+        if (n.type.name === nodeType && !found) { node = n; found = true; }
+      });
+    }
+    if (node && node.type.name === nodeType) {
+      editor.chain().focus().updateAttributes(nodeType, { textBehaviour }).run();
     }
   }
 
@@ -449,25 +491,27 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
 
   if (!editor) return null;
 
-  // Check if image or video is selected
+  // Check which embed node is selected (image, video, mermaid, drawio)
   const isImageSelected = editor.isActive('image');
   const isVideoSelected = editor.isActive('video');
-  const isMediaSelected = isImageSelected || isVideoSelected;
-  const mediaType = isImageSelected ? 'image' : 'video';
-  
-  // Add type for currentMediaAttrs
-  let mediaNode: { attrs?: { width?: string; align?: string } } = {};
-  if (isMediaSelected) {
+  const isMermaidSelected = editor.isActive('mermaid');
+  const isDrawioSelected = editor.isActive('drawio');
+  const isEmbedSelected = isImageSelected || isVideoSelected || isMermaidSelected || isDrawioSelected;
+  const embedType = isImageSelected ? 'image' : isVideoSelected ? 'video' : isMermaidSelected ? 'mermaid' : 'drawio';
+
+  // Get selected embed node's attributes
+  let embedNode: { attrs?: { width?: string; wrap?: string; textBehaviour?: string; x?: string; y?: string } } = {};
+  if (isEmbedSelected) {
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
-    if (node && (node.type.name === 'image' || node.type.name === 'video')) {
-      mediaNode = node as { attrs?: { width?: string; align?: string } };
+    if (node && ['image', 'video', 'mermaid', 'drawio'].includes(node.type.name)) {
+      embedNode = node as { attrs?: { width?: string; wrap?: string; textBehaviour?: string; x?: string; y?: string } };
     }
   }
-  const currentMediaAttrs = mediaNode.attrs || {};
-  // Default width for images vs videos
-  const defaultWidth = mediaType === 'video' ? '640' : '300';
+  const currentEmbedAttrs = embedNode.attrs || {};
+  // Default width per embed type
+  const defaultWidth = embedType === 'video' ? '640' : embedType === 'image' ? '300' : '400';
 
   return (
     <div className={styles.editorRoot}>
@@ -676,28 +720,51 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             </>
           )}
         </div>
-        {/* Image/Video controls: only show if image or video is selected */}
-        {isMediaSelected && (
+        {/* Embed controls: shown when image, video, mermaid or drawio is selected */}
+        {isEmbedSelected && (
           <div className={styles.imageControls}>
             <label className={styles.imageAlignLabel}>Width:</label>
             <input
               type="range"
               min="50"
               max="2500"
-              value={parseInt(currentMediaAttrs.width || `${defaultWidth}`, 10)}
-              onChange={e => setMediaWidth(e.target.value + 'px', mediaType)}
+              value={parseInt(currentEmbedAttrs.width || `${defaultWidth}`, 10)}
+              onChange={e => setEmbedWidth(e.target.value + 'px', embedType)}
               className={styles.imageWidthRange}
             />
             <input
               type="number"
-              value={parseInt(currentMediaAttrs.width || `${defaultWidth}`, 10)}
-              onChange={e => setMediaWidth(e.target.value + 'px', mediaType)}
+              value={parseInt(currentEmbedAttrs.width || `${defaultWidth}`, 10)}
+              onChange={e => setEmbedWidth(e.target.value + 'px', embedType)}
               className={styles.imageWidthInput}
             />
-            <label className={styles.imageAlignLabel}>Align:</label>
-            <button type="button" onClick={() => setMediaAlign('left', mediaType)} className={`${styles.toolbarButton} ${currentMediaAttrs.align === 'left' ? styles.toolbarButtonActive : ''}`}>Left</button>
-            <button type="button" onClick={() => setMediaAlign('center', mediaType)} className={`${styles.toolbarButton} ${currentMediaAttrs.align === 'center' ? styles.toolbarButtonActive : ''}`}>Center</button>
-            <button type="button" onClick={() => setMediaAlign('right', mediaType)} className={`${styles.toolbarButton} ${currentMediaAttrs.align === 'right' ? styles.toolbarButtonActive : ''}`}>Right</button>
+            <label className={styles.imageAlignLabel}>Wrap:</label>
+            <select
+              value={currentEmbedAttrs.wrap || 'none'}
+              onChange={e => setEmbedWrap(e.target.value as 'none' | 'left' | 'right' | 'freefloat', embedType)}
+              className={styles.toolbarSelect}
+              style={{ minWidth: '100px' }}
+              title="Text wrap behavior"
+            >
+              <option value="none">Block</option>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+              <option value="freefloat">Freefloat</option>
+            </select>
+            <label className={styles.imageAlignLabel}>Text behaviour:</label>
+            <select
+              value={currentEmbedAttrs.textBehaviour || 'linebreak'}
+              onChange={e => setEmbedTextBehaviour(e.target.value as 'linebreak' | 'inline' | 'wrap' | 'behind' | 'front', embedType)}
+              className={styles.toolbarSelect}
+              style={{ minWidth: '130px' }}
+              title="How surrounding text behaves"
+            >
+              <option value="linebreak">Line break</option>
+              <option value="inline">Inline with text</option>
+              <option value="wrap">Text wrapping</option>
+              <option value="behind">Behind text</option>
+              <option value="front">In front of text</option>
+            </select>
           </div>
         )}
       </nav>

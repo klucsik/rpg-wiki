@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { DrawioView } from './DrawioView';
+import { getEmbedCssStyle, sharedEmbedAttributes } from './embedFormatting';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -34,6 +35,7 @@ export const DrawioNode = Node.create({
           return { 'data-diagram-svg': attrs.diagramSvg };
         },
       },
+      ...sharedEmbedAttributes,
     };
   },
 
@@ -42,7 +44,12 @@ export const DrawioNode = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { class: 'drawio-diagram' })];
+    const style = getEmbedCssStyle({
+      width: HTMLAttributes['data-width'],
+      align: HTMLAttributes['data-align'],
+      wrap: HTMLAttributes['data-wrap'],
+    });
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'drawio-diagram', style })];
   },
 
   addNodeView() {
