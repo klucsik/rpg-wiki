@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260222
+- Added edit lock
+
 ### Version 20260220
 - Added textalign options
 - Improve embeds (image/video/diagrams) styling

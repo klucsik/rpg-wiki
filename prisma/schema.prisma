@@ -19,6 +19,18 @@ model Page {
   view_groups String[]
   path        String
   versions    PageVersion[]
+  editLocks   EditLock[]
+}
+
+model EditLock {
+  id         Int      @id @default(autoincrement())
+  short_id   String   @default("")  // 4-char human-readable session token
+  page_id    Int
+  username   String
+  created_at DateTime @default(now())
+  page       Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+
+  @@map("edit_locks")
 }
 
 model PageVersion {

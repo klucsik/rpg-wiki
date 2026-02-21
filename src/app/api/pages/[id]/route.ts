@@ -252,7 +252,12 @@ export async function PUT(
       is_draft: true
     }
   });
-  
+
+  // Release edit lock held by this user on this page
+  await prisma.editLock.deleteMany({
+    where: { page_id: parseInt(id), username: auth.username },
+  });
+
   // Trigger backup after successful save
   try {
     const { GitBackupService } = await import('../../../../features/backup/gitBackupService');

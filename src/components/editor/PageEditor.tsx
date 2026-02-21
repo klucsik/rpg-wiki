@@ -27,11 +27,13 @@ export default function PageEditor({
   page,
   onSuccess,
   onCancel,
+  lockShortId,
 }: {
   mode: "edit" | "create";
   page?: WikiPage;
   onSuccess?: (page?: WikiPage) => void;
   onCancel: () => void;
+  lockShortId?: string;
 }) {
   const router = useRouter();
   const { user } = useUser();
@@ -458,8 +460,17 @@ export default function PageEditor({
               ))}
           </div>
         </div>
+        {/* Lock badge */}
+        {lockShortId && (
+          <div className="flex items-center gap-2 mt-4 mb-1 text-xs text-gray-400">
+            <span>This tab&apos;s editlock:</span>
+            <span className="font-mono text-gray-300 bg-gray-700 px-1.5 py-0.5 rounded select-all">
+              {lockShortId}
+            </span>
+          </div>
+        )}
         {/* Action buttons */}
-        <div className="flex flex-col gap-2 mt-4">
+        <div className="flex flex-col gap-2 mt-2">
           <button
             onClick={handleSave}
             disabled={isSaveDisabled}
