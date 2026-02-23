@@ -11,6 +11,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
 import { FontSize, FontWeight } from "./FontExtensions";
 import { useUser } from "../../features/auth/userContext";
 import { MermaidNode } from "./MermaidExtension";
@@ -128,6 +129,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       TableCell,
       MermaidNode, // Include Mermaid extension
       DrawioNode, // Include Drawio extension
+      Underline,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -491,6 +493,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonBold} ${editor.isActive('bold') ? styles.toolbarButtonActive : ''}`}>B</button>
         <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonItalic} ${editor.isActive('italic') ? styles.toolbarButtonActive : ''}`}>I</button>
         <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonStrike} ${editor.isActive('strike') ? styles.toolbarButtonActive : ''}`}>S</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} className={`${styles.toolbarButton} ${styles.toolbarButtonUnderline} ${editor.isActive('underline') ? styles.toolbarButtonActive : ''}`}>U</button>
         
         {/* Font Family Selector */}
         <select

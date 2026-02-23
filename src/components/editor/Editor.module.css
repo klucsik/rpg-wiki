@@ -68,6 +68,9 @@
 .toolbarButtonBold {
   font-weight: bold;
 }
+.toolbarButtonUnderline {
+  text-decoration: underline;
+}
 
 .imageControls {
   display: flex;

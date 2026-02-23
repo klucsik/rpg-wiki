@@ -1,6 +1,7 @@
 # Changelog
 ### Version 20260223
 - Empty lines now visible in view mode too
+- Added underline format option
 
 ### Version 20260222
 - Added edit lock
