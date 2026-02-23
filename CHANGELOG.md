@@ -2,6 +2,7 @@
 ### Version 20260223
 - Empty lines now visible in view mode too
 - Added underline format option
+- Fixed PageList view after opening a page 
 
 ### Version 20260222
 - Added edit lock

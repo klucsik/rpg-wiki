@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WikiPage } from "../../types";
 import { useUser } from "../auth/userContext";
@@ -159,30 +159,44 @@ export default function PageList({
 }) {
   const router = useRouter();
   const { user } = useUser();
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
-
-  const tree = useMemo(() => {
-    const treeRoot = buildTree(pages);
-    
-    // Auto-expand path to selected page
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => {
+    // Initialise with all ancestor folders of the selected page
     if (selectedId) {
       const selectedPage = pages.find(p => p.id === selectedId);
       if (selectedPage) {
         const pathParts = selectedPage.path.split('/').filter(Boolean);
-        const newExpanded = new Set(expandedPaths);
-        
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          const partialPath = '/' + pathParts.slice(0, i + 1).join('/');
-          newExpanded.add(partialPath);
+        const initial = new Set<string>();
+        for (let i = 0; i < pathParts.length; i++) {
+          initial.add('/' + pathParts.slice(0, i + 1).join('/'));
         }
-        
-        // Don't set state in useMemo - will be handled in useEffect
-        if (newExpanded.size !== expandedPaths.size) {
-          // Store the new paths to be applied later
-          (treeRoot as any)._pendingExpansion = newExpanded;
-        }
+        return initial;
       }
     }
+    return new Set<string>();
+  });
+
+  // When the selected page changes, ensure its full ancestor path is expanded
+  useEffect(() => {
+    if (!selectedId) return;
+    const selectedPage = pages.find(p => p.id === selectedId);
+    if (!selectedPage) return;
+    const pathParts = selectedPage.path.split('/').filter(Boolean);
+    setExpandedPaths(prev => {
+      const next = new Set(prev);
+      let changed = false;
+      for (let i = 0; i < pathParts.length; i++) {
+        const partialPath = '/' + pathParts.slice(0, i + 1).join('/');
+        if (!next.has(partialPath)) {
+          next.add(partialPath);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [selectedId, pages]);
+
+  const tree = useMemo(() => {
+    const treeRoot = buildTree(pages);
 
     // Apply expansion state to tree
     const applyExpansion = (node: TreeNode) => {
@@ -191,7 +205,7 @@ export default function PageList({
       }
       node.children.forEach(applyExpansion);
     };
-    
+
     applyExpansion(treeRoot);
     return treeRoot;
   }, [pages, expandedPaths, selectedId]);
