@@ -56,6 +56,14 @@ img[data-align="right"] {
 /* =========================
    Typography Styles for .prose
    ========================= */
+
+/* Empty paragraphs (no children) need minimum height so blank lines are visible.
+   TipTap adds a trailing <br> in the live editor DOM for this purpose, but that
+   element is not part of the serialised HTML, so view mode needs CSS compensation. */
+.prose p:empty {
+  min-height: 1em;
+}
+
 .prose h1 {
   font-size: 2.25rem !important; /* 36px */
   font-weight: 800 !important;

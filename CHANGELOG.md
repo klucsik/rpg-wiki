@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260223
+- Empty lines now visible in view mode too
+
 ### Version 20260222
 - Added edit lock
 
