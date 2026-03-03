@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260303
+- Shave off the docker image size.
+
 ### Version 20260223
 - Empty lines now visible in view mode too
 - Added underline format option

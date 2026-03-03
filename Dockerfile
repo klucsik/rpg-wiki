@@ -60,7 +60,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/CHANGELOG.md ./CHANGELOG.md
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=prisma --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Switch to non-root user
 USER nextjs
