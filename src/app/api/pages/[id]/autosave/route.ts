@@ -3,9 +3,10 @@ import { createHash } from 'crypto';
 import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../../lib/placeholder-restore';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // POST autosave draft version
-export async function POST(
+async function POSTHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -161,7 +162,7 @@ export async function POST(
 }
 
 // GET latest draft or published version
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -221,7 +222,7 @@ export async function GET(
 }
 
 // DELETE user's draft version
-export async function DELETE(
+async function DELETEHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -256,3 +257,7 @@ export async function DELETE(
     message: 'Draft deleted successfully' 
   });
 }
+
+export const GET = withMetrics('/api/pages/[id]/autosave', GETHandler);
+export const POST = withMetrics('/api/pages/[id]/autosave', POSTHandler);
+export const DELETE = withMetrics('/api/pages/[id]/autosave', DELETEHandler);

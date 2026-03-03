@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/better-auth';
 import { prisma } from '@/lib/db/db';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function GET() {
+async function GETHandler() {
   try {
     const session = await getServerAuth();
     
@@ -32,7 +33,7 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function PUTHandler(request: NextRequest) {
   try {
     const session = await getServerAuth();
     
@@ -74,3 +75,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/admin/settings', GETHandler);
+export const PUT = withMetrics('/api/admin/settings', PUTHandler);

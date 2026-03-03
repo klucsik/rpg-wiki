@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithGroups, ensureUserHasUsername } from "@/lib/better-auth";
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function GET(request: NextRequest) {
+async function GETHandler(request: NextRequest) {
   try {
     const session = await getSessionWithGroups(request.headers);
     
@@ -21,3 +22,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ user: null, session: null }, { status: 200 });
   }
 }
+
+export const GET = withMetrics('/api/auth/session', GETHandler);

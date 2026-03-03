@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/better-auth';
 import { GitBackupService } from '../../../../features/backup/gitBackupService';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function GET() {
+async function GETHandler() {
   try {
     const session = await getServerAuth();
     
@@ -20,7 +21,7 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+async function POSTHandler() {
   try {
     const session = await getServerAuth();
     
@@ -41,3 +42,6 @@ export async function POST() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/admin/backup-jobs', GETHandler);
+export const POST = withMetrics('/api/admin/backup-jobs', POSTHandler);

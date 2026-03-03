@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthFromRequest } from '../../../lib/auth-utils';
 import { SearchService } from '../../../lib/search/SearchService';
 import { SearchQuery } from '../../../lib/search/types';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET /api/search?q=query&type=content&limit=20&offset=0&sortBy=relevance
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   try {
     const auth = await getAuthFromRequest(req);
     const { searchParams } = new URL(req.url);
@@ -80,3 +81,5 @@ export async function GET(req: NextRequest) {
     }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/search', GETHandler);

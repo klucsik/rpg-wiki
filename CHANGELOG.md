@@ -1,6 +1,7 @@
 # Changelog
 ### Version 20260303
 - Shave off the docker image size.
+- Added metrics for monitoring the wiki's performance and usage. Metrics are exposed at the /metrics endpoint in Prometheus format, and include request duration, request count, and error count.
 
 ### Version 20260223
 - Empty lines now visible in view mode too

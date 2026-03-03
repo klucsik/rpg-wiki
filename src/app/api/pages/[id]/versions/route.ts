@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET /api/pages/[id]/versions - Get all versions for a page
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -72,3 +73,5 @@ export async function GET(
     edited_at: v.edited_at.toISOString(),
   })));
 }
+
+export const GET = withMetrics('/api/pages/[id]/versions', GETHandler);

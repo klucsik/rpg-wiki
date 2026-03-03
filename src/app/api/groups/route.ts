@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db/db';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET all groups
-export async function GET() {
+async function GETHandler() {
   const groups = await prisma.group.findMany({ orderBy: { name: 'asc' } });
   return NextResponse.json(groups);
 }
 
 // POST create new group
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const groupData: unknown = await req.json();
   const { name } = groupData as { name: string };
   if (!name || typeof name !== 'string') {
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 }
 
 // DELETE group by name
-export async function DELETE(req: NextRequest) {
+async function DELETEHandler(req: NextRequest) {
   const { searchParams } = new URL(req.url!);
   const name = searchParams.get('name');
   if (!name) {
@@ -39,3 +40,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to delete group' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/groups', GETHandler);
+export const POST = withMetrics('/api/groups', POSTHandler);
+export const DELETE = withMetrics('/api/groups', DELETEHandler);

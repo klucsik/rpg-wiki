@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db/db';
 import { getAuthFromRequest } from '../../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // POST cleanup old drafts
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const auth = await getAuthFromRequest(req);
   
   if (!auth.isAuthenticated || !auth.userGroups.includes('admin')) {
@@ -73,3 +74,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to cleanup drafts' }, { status: 500 });
   }
 }
+
+export const POST = withMetrics('/api/admin/cleanup-drafts', POSTHandler);

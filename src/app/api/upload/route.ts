@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   try {
     // Authenticate the request
     const auth = await getAuthFromRequest(req);
@@ -69,3 +70,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const POST = withMetrics('/api/upload', POSTHandler);

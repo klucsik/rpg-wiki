@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { getServerAuth } from '@/lib/better-auth';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function GET() {
+async function GETHandler() {
   try {
     // Check authentication
     const session = await getServerAuth();
@@ -27,3 +28,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withMetrics('/api/admin/changelog', GETHandler);

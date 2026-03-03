@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db/db';
 import bcrypt from 'bcryptjs';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET, PUT, DELETE for a single user by id
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -36,7 +37,7 @@ export async function GET(
   return NextResponse.json(transformedUser);
 }
 
-export async function PUT(
+async function PUTHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -145,7 +146,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
+async function DELETEHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -167,3 +168,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/users/[id]', GETHandler);
+export const PUT = withMetrics('/api/users/[id]', PUTHandler);
+export const DELETE = withMetrics('/api/users/[id]', DELETEHandler);

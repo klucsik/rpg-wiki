@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET all images - requires authentication (for the image link fixer script)
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const auth = await getAuthFromRequest(req);
   const authError = requireAuthentication(auth);
   if (authError) {
@@ -33,3 +34,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/images', GETHandler);

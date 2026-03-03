@@ -4,9 +4,10 @@ import { prisma } from '../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth-utils';
 import { filterRestrictedContent, needsServerProcessing } from '../../../../lib/server-content-filter';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../lib/placeholder-restore';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET latest version of a page by page_id
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -118,7 +119,7 @@ export async function GET(
   });
 }
 
-export async function PUT(
+async function PUTHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -286,7 +287,7 @@ export async function PUT(
   });
 }
 
-export async function DELETE(
+async function DELETEHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -337,3 +338,7 @@ export async function DELETE(
   
   return NextResponse.json({ success: true });
 }
+
+export const GET = withMetrics('/api/pages/[id]', GETHandler);
+export const PUT = withMetrics('/api/pages/[id]', PUTHandler);
+export const DELETE = withMetrics('/api/pages/[id]', DELETEHandler);

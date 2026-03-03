@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 /**
  * Health check endpoint for Kubernetes liveness probe
  * This is a basic check that the application is running
  */
-export async function GET() {
+async function GETHandler() {
   try {
     const health = {
       status: 'ok',
@@ -27,3 +28,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withMetrics('/api/health', GETHandler);

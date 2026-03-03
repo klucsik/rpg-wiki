@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db/db';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 /**
  * Readiness check endpoint for Kubernetes readiness probe
  * This checks that the application is ready to receive traffic
  * including database connectivity
  */
-export async function GET() {
+async function GETHandler() {
   try {
     // Check database connectivity
     await prisma.$queryRaw`SELECT 1`;
@@ -38,3 +39,5 @@ export async function GET() {
     return NextResponse.json(failedReadiness, { status: 503 });
   }
 }
+
+export const GET = withMetrics('/api/ready', GETHandler);

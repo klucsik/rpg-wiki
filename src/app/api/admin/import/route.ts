@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/better-auth';
 import { GitBackupService } from '../../../../features/backup/gitBackupService';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function POST(request: NextRequest) {
+async function POSTHandler(request: NextRequest) {
   try {
     const session = await getServerAuth();
     
@@ -31,3 +32,5 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
+export const POST = withMetrics('/api/admin/import', POSTHandler);

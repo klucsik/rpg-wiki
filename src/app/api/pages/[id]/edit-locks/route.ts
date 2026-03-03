@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 const LOCK_TIMEOUT_DAYS = 2;
 
@@ -19,7 +20,7 @@ async function cleanExpiredLocks(pageId: number) {
 }
 
 // GET /api/pages/[id]/edit-locks – list active locks (cleans expired ones first)
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -42,7 +43,7 @@ export async function GET(
 }
 
 // POST /api/pages/[id]/edit-locks – create a lock for the current user
-export async function POST(
+async function POSTHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -64,7 +65,7 @@ export async function POST(
 }
 
 // DELETE /api/pages/[id]/edit-locks – remove all locks belonging to the current user on this page
-export async function DELETE(
+async function DELETEHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -81,3 +82,7 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true });
 }
+
+export const GET = withMetrics('/api/pages/[id]/edit-locks', GETHandler);
+export const POST = withMetrics('/api/pages/[id]/edit-locks', POSTHandler);
+export const DELETE = withMetrics('/api/pages/[id]/edit-locks', DELETEHandler);

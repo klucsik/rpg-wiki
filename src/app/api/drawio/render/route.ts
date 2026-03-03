@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderDrawioToSvg } from '@/lib/drawio-renderer';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 /**
  * API endpoint for client-side SVG preview of draw.io diagrams
@@ -7,7 +8,7 @@ import { renderDrawioToSvg } from '@/lib/drawio-renderer';
  * Body: { diagramXml: string } (base64-encoded XML)
  * Returns: { svg: string }
  */
-export async function POST(request: NextRequest) {
+async function POSTHandler(request: NextRequest) {
   try {
     const body = await request.json();
     const { diagramXml } = body;
@@ -30,3 +31,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withMetrics('/api/drawio/render', POSTHandler);

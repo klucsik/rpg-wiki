@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db/db';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -32,3 +33,5 @@ export async function GET(
     },
   });
 }
+
+export const GET = withMetrics('/api/images/[id]', GETHandler);

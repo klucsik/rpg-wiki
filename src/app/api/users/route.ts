@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db/db';
 import bcrypt from 'bcryptjs';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET all users (with groups)
-export async function GET() {
+async function GETHandler() {
   const users = await prisma.user.findMany({
     include: { 
       userGroups: {
@@ -31,7 +32,7 @@ export async function GET() {
 }
 
 // POST create new user
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const userData: unknown = await req.json();
   const { name, username, password, groupIds } = userData as {
     name?: string;
@@ -139,3 +140,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/users', GETHandler);
+export const POST = withMetrics('/api/users', POSTHandler);

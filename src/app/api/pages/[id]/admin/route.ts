@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest } from '../../../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET unfiltered content for admin export/backup
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -74,3 +75,5 @@ export async function GET(
     edited_by: latestVersion.edited_by
   });
 }
+
+export const GET = withMetrics('/api/pages/[id]/admin', GETHandler);

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 /**
  * Custom endpoint for username/password signin
  * Converts username to @localhost.local email and delegates to better-auth's trusted email/password endpoint
  */
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   try {
     const { username, password } = await req.json();
 
@@ -69,3 +70,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const POST = withMetrics('/api/auth/signin-username', POSTHandler);

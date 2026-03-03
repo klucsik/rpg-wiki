@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../../../../lib/auth-utils';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // DELETE /api/pages/[id]/edit-locks/[lockId] – admin force-clear a specific lock
-export async function DELETE(
+async function DELETEHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string; lockId: string }> }
 ) {
@@ -28,3 +29,5 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = withMetrics('/api/pages/[id]/edit-locks/[lockId]', DELETEHandler);

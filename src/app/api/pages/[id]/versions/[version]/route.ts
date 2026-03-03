@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../../lib/auth-utils';
 import { filterRestrictedContent, needsServerProcessing } from '../../../../../../lib/server-content-filter';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET /api/pages/[id]/versions/[version] - Get specific version content
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string; version: string }> }
 ) {
@@ -62,3 +63,5 @@ export async function GET(
     edited_at: pageVersion.edited_at.toISOString(),
   });
 }
+
+export const GET = withMetrics('/api/pages/[id]/versions/[version]', GETHandler);

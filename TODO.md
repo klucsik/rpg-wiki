@@ -1,5 +1,4 @@
 facelift
-shirnk docker image size
 expand list viewfield if needed
 remove the admin group from all the ui selectors, but add it anyway, admin shuld have godaccess
 history view uses some other rendering... extract view rendering to make it DRY and working in the same way wherever its opened
@@ -44,6 +43,5 @@ Investigate:
     }
     Keycloak user synced: 77ca87ba-5870-427b-8fc2-118308e08b8c (keno_vs)
 
-Add telemetry and monitoring
 on link creation: search  add a search bar for existing pages.
 Search integration: full-text search, path and title search functions

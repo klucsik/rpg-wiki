@@ -61,11 +61,19 @@ kind: Service
 metadata:
   name: rpg-wiki
   namespace: rpg-wiki-demo
+  annotations:
+    # Standard Prometheus auto-discovery annotations.
+    # Works with the default kubernetes-service-endpoints scrape config.
+    # If you use kube-prometheus-stack, see the ServiceMonitor example at the bottom of this file instead.
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
+    prometheus.io/path: "/api/metrics"
 spec:
   type: ClusterIP
   ports:
     - port: 3000
       targetPort: 3000
+      name: http
   selector:
     app: rpg-wiki
 ---
@@ -174,3 +182,25 @@ spec:
                 name: rpg-wiki
                 port:
                   number: 3000
+---
+# ServiceMonitor for kube-prometheus-stack (Prometheus Operator) users.
+# Uncomment and apply if you use the kube-prometheus-stack Helm chart.
+# Requires: kubectl apply -f this file  (CRD must be installed first)
+#
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: rpg-wiki
+#   namespace: rpg-wiki-demo
+#   labels:
+#     # Must match the Prometheus Operator's serviceMonitorSelector label
+#     release: kube-prometheus-stack
+# spec:
+#   selector:
+#     matchLabels:
+#       app: rpg-wiki
+#   endpoints:
+#     - port: http
+#       path: /api/metrics
+#       interval: 30s
+#       scrapeTimeout: 10s

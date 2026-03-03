@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
 import { filterRestrictedContent, needsServerProcessing } from '../../../../../lib/server-content-filter';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET raw content for editing (no content filtering)
-export async function GET(
+async function GETHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -105,3 +106,5 @@ export async function GET(
     is_draft: false
   });
 }
+
+export const GET = withMetrics('/api/pages/[id]/edit', GETHandler);

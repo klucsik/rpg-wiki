@@ -4,9 +4,10 @@ import { prisma } from '../../../lib/db/db';
 import { getAuthFromRequest, requireAuthentication } from '../../../lib/auth-utils';
 import { canUserViewPage } from '../../../features/auth/accessControl';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../lib/placeholder-restore';
+import { withMetrics } from '@/lib/metrics/withMetrics';
 
 // GET all pages - filtered by user permissions
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const auth = await getAuthFromRequest(req);
   
   const pages = await prisma.page.findMany({ orderBy: { id: 'asc' } });
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST create new page or update existing - requires authentication
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const auth = await getAuthFromRequest(req);
   const authError = requireAuthentication(auth);
   if (authError) {
@@ -109,3 +110,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export const GET = withMetrics('/api/pages', GETHandler);
+export const POST = withMetrics('/api/pages', POSTHandler);
