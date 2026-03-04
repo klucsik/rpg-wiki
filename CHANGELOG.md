@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260304
+- Added graceful shutdown support: All editing sessions will be draft-saved before the server shuts down.
+
 ### Version 20260303
 - Added metrics for monitoring the wiki's performance and usage. Metrics are exposed at the /metrics endpoint in Prometheus format, and include request duration, request count, and error count.
 

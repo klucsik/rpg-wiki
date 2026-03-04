@@ -4,12 +4,15 @@ import { prisma } from '../../../../../lib/db/db';
 import { getAuthFromRequest, requireEditPermissions } from '../../../../../lib/auth-utils';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../../lib/placeholder-restore';
 import { withMetrics } from '@/lib/metrics/withMetrics';
+import { increment, decrement } from '@/lib/events/inflight-tracker';
 
 // POST autosave draft version
 async function POSTHandler(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  increment();
+  try {
   const auth = await getAuthFromRequest(req);
   const { id } = await context.params;
   
@@ -159,6 +162,9 @@ async function POSTHandler(
     saved_at: draftVersion.edited_at.toISOString(),
     is_draft: true
   });
+  } finally {
+    decrement();
+  }
 }
 
 // GET latest draft or published version

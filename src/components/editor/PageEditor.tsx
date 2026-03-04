@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { authenticatedFetch } from "../../lib/api/apiHelpers";
 import { isUserAuthenticated } from "../../features/auth/accessControl";
 import { useAutosave } from "../../hooks/useAutosave";
+import { useShutdownSave } from "../../hooks/useShutdownSave";
 import PathAutocomplete from "../ui/PathAutocomplete";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
@@ -140,6 +141,17 @@ export default function PageEditor({
       setAutosaveStatus(`Autosave failed: ${error}`);
       setTimeout(() => setAutosaveStatus(""), 5000);
     }
+  });
+
+  // Shutdown-triggered save: fires sendBeacon when the server broadcasts SIGTERM
+  const { shutdownBannerVisible } = useShutdownSave({
+    pageId: page?.id,
+    title,
+    content,
+    editGroups,
+    viewGroups,
+    path,
+    enabled: mode === "edit" && !isDisabled,
   });
 
   async function handleSave() {
@@ -276,6 +288,16 @@ export default function PageEditor({
 
   return (
     <div className="flex flex-row w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 relative">
+      {/* Shutdown save banner */}
+      {shutdownBannerVisible && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-4 py-3 bg-amber-900/90 border-b border-amber-700 text-amber-100 text-sm font-medium shadow-lg">
+          <svg className="w-4 h-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          Server restarting — saving your draft…
+        </div>
+      )}
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
