@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from '../../components/editor/RestrictedBlock.module.css';
 
 interface PlaceholderContentViewProps {
   blockId: string;
@@ -27,7 +26,7 @@ const PlaceholderContentView: React.FC<PlaceholderContentViewProps> = ({
 
   return (
     <div 
-      className={styles.restrictedBlock}
+      className="bg-[var(--color-restricted-bg)] p-3 rounded-md my-3"
       data-block-type="restricted-placeholder"
       data-block-id={blockId}
       data-original-usergroups={originalUsergroups}
@@ -36,8 +35,8 @@ const PlaceholderContentView: React.FC<PlaceholderContentViewProps> = ({
       data-allowed-groups={allowedGroups}
       style={{ position: 'relative' }}
     >
-      <div className={styles.restrictedTitle}>🔒 {originalTitle || 'Restricted Content'}</div>
-      <div className={styles.restrictedNoAccess}>
+      <div className="font-semibold mb-1.5">🔒 {originalTitle || 'Restricted Content'}</div>
+        <div className="opacity-70 text-gray-400 mt-2">
         <span>You don&apos;t have permission to view this content.</span>
         {groups.length > 0 && (
           <div style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af' }}>

@@ -40,6 +40,7 @@
     "bcryptjs": "^3.0.2",
     "better-auth": "^1.4.10",
     "cheerio": "^1.2.0",
+    "clsx": "^2.1.1",
     "jsdom": "^26.1.0",
     "lowlight": "^3.3.0",
     "mermaid": "^11.8.0",

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from './RestrictedBlock.module.css';
+import { cn } from '../../lib/cn';
 
 interface RestrictedBlockViewProps {
   title: string;
@@ -13,17 +13,16 @@ const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergr
   const hasAccess = user.groups.some((g) => usergroups.includes(g));
 
   return (
-    <div className={`RestrictedBlockView-root ${styles.restrictedBlock}`} style={{ position: 'relative' }}>
-      <div className={`RestrictedBlockView-title ${styles.restrictedTitle}`}>{title}</div>
+    <div className="RestrictedBlockView-root relative bg-[var(--color-restricted-bg)] p-3 rounded-md my-3">
+      <div className="RestrictedBlockView-title font-semibold mb-1.5">{title}</div>
       {hasAccess ? (
         <>
           <button
             onClick={() => setRevealed((r) => !r)}
-          className={
-              revealed
-                ? `RestrictedBlockView-revealBtn ${styles.revealButton} ${styles.revealButtonActive}`
-                : `RestrictedBlockView-revealBtn ${styles.revealButton}`
-            }
+          className={cn(
+              "RestrictedBlockView-revealBtn absolute top-2.5 right-2.5 bg-gray-700 text-white rounded-md px-4 py-1 font-semibold shadow transition-colors cursor-pointer z-[1]",
+              revealed && "bg-indigo-600"
+            )}
             aria-label={revealed ? 'Hide restricted content' : 'Reveal restricted content'}
           >
             {revealed ? 'Hide' : 'Reveal'}
@@ -31,7 +30,7 @@ const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergr
           <div className="RestrictedBlockView-content" style={{ minHeight: 32, marginTop: 16 }}>{revealed && <div>{children}</div>}</div>
         </>
       ) : (
-        <div className={`RestrictedBlockView-noAccess ${styles.restrictedNoAccess}`}>
+        <div className="RestrictedBlockView-noAccess opacity-70 text-gray-400 mt-2">
           <span>Restricted</span>
         </div>
       )}

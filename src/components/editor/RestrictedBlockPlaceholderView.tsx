@@ -1,6 +1,5 @@
 import React from 'react';
 import { NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
-import styles from './RestrictedBlock.module.css';
 
 const RestrictedBlockPlaceholderView = (props: ReactNodeViewProps) => {
   const { node } = props;
@@ -16,7 +15,7 @@ const RestrictedBlockPlaceholderView = (props: ReactNodeViewProps) => {
 
   return (
     <NodeViewWrapper as="div"
-      className={`RestrictedBlockPlaceholder-root ${styles.restrictedBlock}`}
+      className="RestrictedBlockPlaceholder-root relative bg-[var(--color-restricted-bg)] p-3 rounded-md my-3"
       data-block-type="restricted-placeholder"
       data-block-id={node.attrs.blockId}
       data-original-usergroups={node.attrs.originalUsergroups}
@@ -26,8 +25,8 @@ const RestrictedBlockPlaceholderView = (props: ReactNodeViewProps) => {
       data-allowed-groups={node.attrs.allowedGroups}
       style={{ position: 'relative' }}
     >
-      <div className={`RestrictedBlockPlaceholder-title ${styles.restrictedTitle}`}>🔒 {node.attrs.originalTitle || 'Restricted Content'}</div>
-      <div className={`RestrictedBlockPlaceholder-noAccess ${styles.restrictedNoAccess}`}>
+      <div className="RestrictedBlockPlaceholder-title font-semibold mb-1.5">🔒 {node.attrs.originalTitle || 'Restricted Content'}</div>
+      <div className="RestrictedBlockPlaceholder-noAccess opacity-70 text-gray-400 mt-2">
         <span>You don&apos;t have permission to view or edit this content.</span>
         {allowedGroups.length > 0 && (
           <div className="RestrictedBlockPlaceholder-groupsHint" style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af' }}>

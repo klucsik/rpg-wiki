@@ -20,7 +20,7 @@ import RestrictedBlock from "./RestrictedBlock";
 import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
 import { ResizableVideo } from "./VideoExtension";
 import LinkSearchModal from "../search/LinkSearchModal";
-import styles from "./Editor.module.css";
+import { cn } from "../../lib/cn";
 import { getEmbedCssStyle } from './embedFormatting';
 import { ImageView } from './ImageView';
 
@@ -474,13 +474,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const defaultWidth = embedType === 'video' ? '640' : embedType === 'image' ? '300' : '400';
 
   return (
-    <div className={`TiptapEditor-root ${styles.editorRoot}`}>
+    <div className="TiptapEditor-root flex flex-col h-full w-full min-h-0">
       {/* Toolbar pinned below the main navbar, right of sidebar */}
-      <nav className={`TiptapEditor-toolbar ${styles.toolbar}`}>
+      <nav className="TiptapEditor-toolbar flex flex-wrap items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700 z-20 overflow-x-auto">
         <select
           value={blockType}
           onChange={handleBlockTypeChange}
-          className={`TiptapEditor-blockTypeSelect ${styles.toolbarSelect}`}
+          className="TiptapEditor-blockTypeSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
         >
           {blockOptions.map(opt =>
             opt.value === 'heading' ? (
@@ -490,10 +490,10 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             )
           )}
         </select>
-        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={`TiptapEditor-boldBtn ${styles.toolbarButton} ${styles.toolbarButtonBold} ${editor.isActive('bold') ? styles.toolbarButtonActive : ''}`}>B</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={`TiptapEditor-italicBtn ${styles.toolbarButton} ${styles.toolbarButtonItalic} ${editor.isActive('italic') ? styles.toolbarButtonActive : ''}`}>I</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={`TiptapEditor-strikeBtn ${styles.toolbarButton} ${styles.toolbarButtonStrike} ${editor.isActive('strike') ? styles.toolbarButtonActive : ''}`}>S</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} className={`TiptapEditor-underlineBtn ${styles.toolbarButton} ${styles.toolbarButtonUnderline} ${editor.isActive('underline') ? styles.toolbarButtonActive : ''}`}>U</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={cn("TiptapEditor-boldBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 font-bold", editor.isActive('bold') && "bg-indigo-600 text-white")}>B</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={cn("TiptapEditor-italicBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 italic", editor.isActive('italic') && "bg-indigo-600 text-white")}>I</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={cn("TiptapEditor-strikeBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 line-through", editor.isActive('strike') && "bg-indigo-600 text-white")}>S</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} className={cn("TiptapEditor-underlineBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 underline", editor.isActive('underline') && "bg-indigo-600 text-white")}>U</button>
         
         {/* Font Family Selector */}
         <select
@@ -505,7 +505,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               editor.chain().focus().setFontFamily(e.target.value).run();
             }
           }}
-          className={`TiptapEditor-fontFamilySelect ${styles.toolbarSelect}`}
+          className="TiptapEditor-fontFamilySelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
         >
           <option value="">Default Font</option>
           <option value="Arial, sans-serif">Arial</option>
@@ -527,7 +527,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               editor.chain().focus().setFontSize(e.target.value).run();
             }
           }}
-          className={`TiptapEditor-fontSizeSelect ${styles.toolbarSelect}`}
+          className="TiptapEditor-fontSizeSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
         >
           <option value="">Default Size</option>
           <option value="10px">10px</option>
@@ -553,7 +553,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               editor.chain().focus().setFontWeight(e.target.value).run();
             }
           }}
-          className={`TiptapEditor-fontWeightSelect ${styles.toolbarSelect}`}
+          className="TiptapEditor-fontWeightSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
         >
           <option value="">Default Weight</option>
           <option value="100">Thin (100)</option>
@@ -578,7 +578,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           onChange={(e) => {
             editor.chain().focus().setTextAlign(e.target.value).run();
           }}
-          className={`TiptapEditor-alignSelect ${styles.toolbarSelect}`}
+          className="TiptapEditor-alignSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
           style={{ minWidth: '90px' }}
           title="Text alignment"
         >
@@ -588,10 +588,10 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           <option value="justify">⬌ Justify</option>
         </select>
 
-        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className={`TiptapEditor-bulletListBtn ${styles.toolbarButton}`}>• List</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className={`TiptapEditor-orderedListBtn ${styles.toolbarButton}`}>1. List</button>
-        <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={`TiptapEditor-hrBtn ${styles.toolbarButton}`}>―</button>
-        <button type="button" onClick={() => fileInputRef.current?.click()} className={`TiptapEditor-mediaBtn ${styles.toolbarButton}`}>Img/Vid</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className="TiptapEditor-bulletListBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">• List</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className="TiptapEditor-orderedListBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">1. List</button>
+        <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className="TiptapEditor-hrBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">―</button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="TiptapEditor-mediaBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">Img/Vid</button>
         <input
           type="file"
           accept="image/*,video/*"
@@ -600,24 +600,24 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           className="TiptapEditor-fileInput"
           onChange={handleMediaUpload}
         />
-        <button type="button" onClick={openLinkModal} className={`TiptapEditor-linkBtn ${styles.toolbarButton}`}>Link</button>
-        <button type="button" onClick={openLinkSearchModal} className={`TiptapEditor-linkPageBtn ${styles.toolbarButton}`}>Link Page</button>
-        <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className={`TiptapEditor-unlinkBtn ${styles.toolbarButton}`}>Unlink</button>
+        <button type="button" onClick={openLinkModal} className="TiptapEditor-linkBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">Link</button>
+        <button type="button" onClick={openLinkSearchModal} className="TiptapEditor-linkPageBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">Link Page</button>
+        <button type="button" onClick={() => editor.chain().focus().unsetLink().run()} className="TiptapEditor-unlinkBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">Unlink</button>
         <button type="button" onClick={() => {
           editor.chain().focus().insertMermaid({
             code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
           }).run();
-        }} className={`TiptapEditor-mermaidBtn ${styles.toolbarButton}`}>📊 Mermaid</button>
+        }} className="TiptapEditor-mermaidBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">📊 Mermaid</button>
         <button type="button" onClick={() => {
           editor.chain().focus().insertDrawio().run();
-        }} className={`TiptapEditor-drawioBtn ${styles.toolbarButton}`}>📊 Draw.io</button>
+        }} className="TiptapEditor-drawioBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">📊 Draw.io</button>
                 
         {/* Table controls */}
-        <div className={`TiptapEditor-tableControls ${styles.tableControls}`}>
+        <div className="TiptapEditor-tableControls flex items-center gap-2 ml-4">
           <button 
             type="button" 
             onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-            className={`TiptapEditor-tableInsertBtn ${styles.toolbarButton}`}
+            className="TiptapEditor-tableInsertBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
           >
             Table
           </button>
@@ -626,56 +626,56 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().addColumnBefore().run()}
-                className={`TiptapEditor-tableAddColBeforeBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableAddColBeforeBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 +Col
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().addColumnAfter().run()}
-                className={`TiptapEditor-tableAddColAfterBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableAddColAfterBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 Col+
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().deleteColumn().run()}
-                className={`TiptapEditor-tableDeleteColBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableDeleteColBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 Col-
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().addRowBefore().run()}
-                className={`TiptapEditor-tableAddRowBeforeBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableAddRowBeforeBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 Row⁺
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().addRowAfter().run()}
-                className={`TiptapEditor-tableAddRowAfterBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableAddRowAfterBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 Row₊
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().deleteRow().run()}
-                className={`TiptapEditor-tableDeleteRowBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableDeleteRowBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 Row-
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().toggleHeaderRow().run()}
-                className={`TiptapEditor-tableToggleHeaderBtn ${styles.toolbarButton} ${editor.isActive('table') && editor.can().toggleHeaderRow() ? styles.toolbarButtonActive : ''}`}
+                className={cn("TiptapEditor-tableToggleHeaderBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600", editor.isActive('table') && editor.can().toggleHeaderRow() && "bg-indigo-600 text-white")}
               >
                 Header
               </button>
               <button 
                 type="button" 
                 onClick={() => editor.chain().focus().deleteTable().run()}
-                className={`TiptapEditor-tableDeleteBtn ${styles.toolbarButton}`}
+                className="TiptapEditor-tableDeleteBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
               >
                 Del Table
               </button>
@@ -684,27 +684,27 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         </div>
         {/* Embed controls: shown when image, video, mermaid or drawio is selected */}
         {isEmbedSelected && (
-          <div className={`TiptapEditor-embedControls ${styles.imageControls}`}>
-            <label className={styles.imageAlignLabel}>Width:</label>
+          <div className="TiptapEditor-embedControls flex items-center gap-2 ml-4">
+            <label className="text-indigo-200 text-xs ml-2">Width:</label>
             <input
               type="range"
               min="50"
               max="2500"
               value={parseInt(currentEmbedAttrs.width || `${defaultWidth}`, 10)}
               onChange={e => setEmbedWidth(e.target.value + 'px', embedType)}
-              className={`TiptapEditor-embedWidthSlider ${styles.imageWidthRange}`}
+              className="TiptapEditor-embedWidthSlider w-32"
             />
             <input
               type="number"
               value={parseInt(currentEmbedAttrs.width || `${defaultWidth}`, 10)}
               onChange={e => setEmbedWidth(e.target.value + 'px', embedType)}
-              className={`TiptapEditor-embedWidthInput ${styles.imageWidthInput}`}
+              className="TiptapEditor-embedWidthInput w-16 px-1 py-0.5 rounded bg-gray-900 text-indigo-200 border border-gray-700 text-sm"
             />
-            <label className={styles.imageAlignLabel}>Wrap:</label>
+            <label className="text-indigo-200 text-xs ml-2">Wrap:</label>
             <select
               value={currentEmbedAttrs.wrap || 'none'}
               onChange={e => setEmbedWrap(e.target.value as 'none' | 'left' | 'right', embedType)}
-              className={`TiptapEditor-embedWrapSelect ${styles.toolbarSelect}`}
+              className="TiptapEditor-embedWrapSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
               style={{ minWidth: '100px' }}
               title="Text wrap behavior"
             >
@@ -716,10 +716,10 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         )}
       </nav>
       {/* Offset for  toolbar (48px) */}
-      <div className={`TiptapEditor-editorOffset ${styles.editorOffset}`} data-testid="tiptap-editor-wrapper">
+      <div className="TiptapEditor-editorOffset flex-1 min-h-0 overflow-y-auto" data-testid="tiptap-editor-wrapper">
         <EditorContent 
           editor={editor} 
-          className={`TiptapEditor-editor ${styles.editorContent} prose prose-invert max-w-none`}
+          className="TiptapEditor-editor tiptap-content h-full w-full bg-transparent p-4 text-indigo-200 cursor-text flex flex-col prose prose-invert max-w-none"
           data-testid="tiptap-editor"
         />
       </div>

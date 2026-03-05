@@ -8,7 +8,6 @@ import { canUserViewPage, canUserEditPage, isUserAuthenticated } from "../auth/a
 import { parseWikiContentWithRestrictedBlocks } from "../../lib/restricted-content-parser";
 import { useRouter } from "next/navigation";
 import VersionHistory from "./VersionHistory";
-import styles from "./PageView.module.css";
 import { authenticatedFetch } from "../../lib/api/apiHelpers";
 import { useDraftStatus } from "../../hooks/useDraftStatus";
 
@@ -75,7 +74,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   }
 
   return (
-    <div className={styles.container}>
+    <div className="min-h-screen h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex relative overflow-hidden max-w-[100vw]">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
@@ -96,7 +95,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           onClose={() => setSidebarOpen(false)}
         />
       </div>
-      <main className={`${styles.main} ml-0 lg:ml-80`}>
+      <main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-screen w-full overflow-hidden max-w-full overscroll-contain box-border ml-0 lg:ml-80">
         {/* Sidebar toggle button for mobile */}
         {!sidebarOpen && (
           <button
@@ -117,11 +116,11 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           )}
           {/* VIEW PAGE */}
           {selectedPage && canViewSelected && (
-            <div className={`prose prose-invert max-w-none ${styles.proseBox}`}>
-              <div className={styles.header}>
+            <div className="prose prose-invert max-w-none bg-gray-900/80 rounded-lg p-4 shadow-xl border border-gray-800 w-full flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden max-w-full box-border">
+              <div className="flex items-start justify-between mb-4 gap-4 min-w-0 max-sm:flex-col max-sm:items-stretch max-sm:gap-3">
                 <div className="min-w-0 flex-1">
                   {selectedPage.path && (
-                    <div className={styles.path}>{selectedPage.path}</div>
+                    <div className="text-xs text-gray-400 mb-1 font-mono bg-gray-800 px-2 py-0.5 rounded">{selectedPage.path}</div>
                   )}
                   <h2 className="text-2xl font-bold text-indigo-200 break-words">
                     {selectedPage.title}
@@ -150,7 +149,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
                         </button>
                         <button
                           onClick={() => handleEdit(selectedPage.id)}
-                          className={styles.editButton}
+                          className="bg-amber-700 hover:bg-amber-800 text-white py-1 px-3 rounded-md font-semibold text-sm shadow transition-colors"
                         >
                           <span className="hidden sm:inline">Edit</span>
                           <span className="sm:hidden">✏️</span>
@@ -179,7 +178,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
               ) : (
                 <div>No content</div>
               )}
-              <div className={styles.pageFooter}>
+              <div className="mt-6 text-xs text-gray-500">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                   <span>Last updated: {selectedPage.updated_at ? new Date(selectedPage.updated_at).toLocaleString() : ""}</span>
                   {selectedPage.version && (
@@ -193,8 +192,8 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           )}
           {/* NO ACCESS */}
           {selectedPage && !canViewSelected && (
-            <div className={styles.noAccess}>
-              <div className={styles.noAccessBox}>
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-xl text-center">
                 <h1 className="text-3xl font-bold text-red-400 mb-4">No Access</h1>
                 <p className="text-indigo-100 mb-2">
                   You do not have permission to view this page.

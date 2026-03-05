@@ -11,19 +11,6 @@ import { useShutdownSave } from "../../hooks/useShutdownSave";
 import { useLocalDraft } from "../../hooks/useLocalDraft";
 import PathAutocomplete from "../ui/PathAutocomplete";
 
-// Extract shared style constants for use in both PageEditor and GroupsAdminPage
-export const styleTokens = {
-  card: "bg-gray-900/80 rounded-lg p-8 shadow-lg border border-gray-800 max-w-2xl mx-auto",
-  header: "flex items-center justify-between gap-4 px-8 py-4 bg-gray-800 border-b border-gray-700 sticky top-0 z-40",
-  label: "text-xs text-indigo-200 font-semibold mb-1",
-  input: "px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1",
-  button: "bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-50 text-lg border border-indigo-700",
-  tag: "bg-indigo-700 text-white px-2 py-0.5 rounded text-xs flex items-center gap-1",
-  tagRemove: "ml-1 text-red-200 hover:text-red-400",
-  groupList: "flex flex-wrap gap-1 mb-1",
-  groupButton: "bg-gray-700 text-indigo-100 px-2 py-0.5 rounded text-xs hover:bg-indigo-800",
-};
-
 export default function PageEditor({
   mode,
   page,
@@ -419,7 +406,7 @@ export default function PageEditor({
         
         {/* Path */}
         <div className="PageEditor-pathSection mb-2">
-          <label className={styleTokens.label}>Path</label>
+          <label className="text-xs text-indigo-200 font-semibold mb-1">Path</label>
           <PathAutocomplete
             value={mode === "create" && path === "/" ? "" : path}
             onChange={setPath}
@@ -435,7 +422,7 @@ export default function PageEditor({
         </div>
         {/* Title */}
         <div className="PageEditor-titleSection mb-2">
-          <label className={styleTokens.label}>Title</label>
+          <label className="text-xs text-indigo-200 font-semibold mb-1">Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -453,7 +440,7 @@ export default function PageEditor({
         {/* Change Summary (only show for edits) */}
         {mode === "edit" && (
           <div className="PageEditor-changeSummarySection mb-2">
-            <label className={styleTokens.label}>Change Summary (optional)</label>
+            <label className="text-xs text-indigo-200 font-semibold mb-1">Change Summary (optional)</label>
             <input
               value={changeSummary}
               onChange={(e) => setChangeSummary(e.target.value)}
@@ -466,7 +453,7 @@ export default function PageEditor({
         
         {/* Who can edit? */}
         <div className="PageEditor-editGroupsSection mb-2">
-          <label className={styleTokens.label}>Who can edit?</label>
+          <label className="text-xs text-indigo-200 font-semibold mb-1">Who can edit?</label>
           {mode === "create" && (
             <div className="text-xs text-gray-400 mb-1">
               Default: admin + you ({user.username || 'your username'})
@@ -477,17 +464,17 @@ export default function PageEditor({
             placeholder="Search groups..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={`PageEditor-editGroupsSearch ${styleTokens.input} w-full`}
+            className="PageEditor-editGroupsSearch px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 w-full"
             disabled={isDisabled}
           />
-          <div className={`PageEditor-editGroupsTags ${styleTokens.groupList}`}>
+          <div className="PageEditor-editGroupsTags flex flex-wrap gap-1 mb-1">
             {editGroups?.map((g) => (
-              <span key={g} className={`PageEditor-editGroupTag ${styleTokens.tag}`}>
+              <span key={g} className="PageEditor-editGroupTag bg-indigo-700 text-white px-2 py-0.5 rounded text-xs flex items-center gap-1">
                 {g}
                 {!isDisabled && (
                   <button
                     type="button"
-                    className={`PageEditor-editGroupTagRemoveBtn ${styleTokens.tagRemove}`}
+                    className="PageEditor-editGroupTagRemoveBtn ml-1 text-red-200 hover:text-red-400"
                     onClick={() =>
                       setEditGroups &&
                       setEditGroups(
@@ -508,7 +495,7 @@ export default function PageEditor({
                 <button
                   key={g}
                   type="button"
-                  className={`PageEditor-editGroupAddBtn ${styleTokens.groupButton}`}
+                  className="PageEditor-editGroupAddBtn bg-gray-700 text-indigo-100 px-2 py-0.5 rounded text-xs hover:bg-indigo-800"
                   disabled={isDisabled}
                   onClick={() =>
                     setEditGroups && setEditGroups([...editGroups, g])
@@ -521,7 +508,7 @@ export default function PageEditor({
         </div>
         {/* Who can see? */}
         <div className="PageEditor-viewGroupsSection mb-2">
-          <label className={styleTokens.label}>Who can see?</label>
+          <label className="text-xs text-indigo-200 font-semibold mb-1">Who can see?</label>
           {mode === "create" && (
             <div className="text-xs text-gray-400 mb-1">
               Default: admin + you ({user.username || 'your username'})
@@ -532,17 +519,17 @@ export default function PageEditor({
             placeholder="Search groups..."
             value={viewSearch}
             onChange={(e) => setViewSearch(e.target.value)}
-            className={`PageEditor-viewGroupsSearch ${styleTokens.input} w-full`}
+            className="PageEditor-viewGroupsSearch px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 w-full"
             disabled={isDisabled}
           />
-          <div className={`PageEditor-viewGroupsTags ${styleTokens.groupList}`}>
+          <div className="PageEditor-viewGroupsTags flex flex-wrap gap-1 mb-1">
             {viewGroups?.map((g) => (
-              <span key={g} className={`PageEditor-viewGroupTag ${styleTokens.tag}`}>
+              <span key={g} className="PageEditor-viewGroupTag bg-indigo-700 text-white px-2 py-0.5 rounded text-xs flex items-center gap-1">
                 {g}
                 {!isDisabled && (
                   <button
                     type="button"
-                    className={`PageEditor-viewGroupTagRemoveBtn ${styleTokens.tagRemove}`}
+                    className="PageEditor-viewGroupTagRemoveBtn ml-1 text-red-200 hover:text-red-400"
                     onClick={() =>
                       setViewGroups &&
                       setViewGroups(
@@ -563,7 +550,7 @@ export default function PageEditor({
                 <button
                   key={g}
                   type="button"
-                  className={`PageEditor-viewGroupAddBtn ${styleTokens.groupButton}`}
+                  className="PageEditor-viewGroupAddBtn bg-gray-700 text-indigo-100 px-2 py-0.5 rounded text-xs hover:bg-indigo-800"
                   disabled={isDisabled}
                   onClick={() =>
                     setViewGroups && setViewGroups([...viewGroups, g])
@@ -588,7 +575,7 @@ export default function PageEditor({
           <button
             onClick={handleSave}
             disabled={isSaveDisabled}
-            className={`PageEditor-saveBtn ${styleTokens.button}`}
+            className="PageEditor-saveBtn bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-50 text-lg border border-indigo-700"
           >
             {mode === "edit" ? "Save" : "Create"}
           </button>

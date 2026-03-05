@@ -4,7 +4,6 @@
 
 import React, { useState } from "react";
 import { useGroups } from "../../features/groups/groupsContext";
-import { styleTokens } from "../../components/editor/PageEditor";
 
 const GroupsAdminPage = () => {
   const { groups, addGroup, removeGroup } = useGroups();
@@ -12,7 +11,7 @@ const GroupsAdminPage = () => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   return (
-    <div className={`GroupsAdminPage-root ${styleTokens.card}`}>
+    <div className="GroupsAdminPage-root bg-gray-900/80 rounded-lg p-8 shadow-lg border border-gray-800 max-w-2xl mx-auto">
       <h1 className="GroupsAdminPage-heading text-2xl font-bold mb-4">Manage Groups</h1>
       <ul className="GroupsAdminPage-list mb-6">
         {groups.map((g: string) => (
@@ -70,13 +69,13 @@ const GroupsAdminPage = () => {
         className="GroupsAdminPage-addForm flex gap-2"
       >
         <input
-          className={`GroupsAdminPage-addInput ${styleTokens.input} flex-1`}
+          className="GroupsAdminPage-addInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 flex-1"
           placeholder="New group name"
           value={newGroup}
           onChange={(e) => setNewGroup(e.target.value)}
         />
         <button
-          className={`GroupsAdminPage-addBtn ${styleTokens.button} btn btn-primary`}
+          className="GroupsAdminPage-addBtn bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-50 text-lg border border-indigo-700"
           type="submit"
         >
           Add Group

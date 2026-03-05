@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { NodeViewWrapper, NodeViewContent, type ReactNodeViewProps } from '@tiptap/react';
 import { useGroups } from "../../features/groups/groupsContext";
 import { useUser } from "../../features/auth/userContext";
-import styles from './RestrictedBlock.module.css';
 
 // Remove custom props interface and use the generic ReactNodeViewProps from @tiptap/react
 const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
@@ -98,27 +97,27 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
 
   return (
     <NodeViewWrapper as="div"
-      className={`RestrictedBlockEditor-root ${styles.restrictedBlockEditor}`}
+      className="RestrictedBlockEditor-root bg-[var(--color-restricted-bg)] p-2 border border-dashed border-red-600 relative rounded-md my-2"
       data-block-type="restricted"
       data-usergroups={node.attrs.usergroups}
       data-editgroups={node.attrs.editgroups}
       data-title={title}
     >
-      <div className={`RestrictedBlockEditor-header ${styles.restrictedBlockHeader}`}>
+      <div className="RestrictedBlockEditor-header flex items-center justify-between mb-2">
         <input
           type="text"
           value={title}
           onChange={handleTitleChange}
           placeholder="Restricted Block Title"
-          className={`RestrictedBlockEditor-titleInput ${styles.restrictedTitleInput}`}
+          className="RestrictedBlockEditor-titleInput font-bold text-white bg-black/20 border border-red-600 rounded px-2 py-0.5 min-w-[120px]"
         />
         <div className="RestrictedBlockEditor-headerControls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {editingGroups ? (
-            <div className={`RestrictedBlockEditor-groupsPanel ${styles.restrictedGroupsPanel}`}>
+            <div className="RestrictedBlockEditor-groupsPanel relative z-10 bg-[var(--color-restricted-panel-bg)] border border-[var(--color-restricted-action)] rounded p-2 min-w-[120px] shadow-lg">
               <div style={{ marginBottom: 12 }}>
                 <div style={{ marginBottom: 8, color: '#e0e7ff', fontWeight: 500 }}>View Groups (who can see content)</div>
                 {groups.map((g: string) => (
-                  <label key={`view-${g}`} className={`RestrictedBlockEditor-viewGroupRow ${styles.restrictedGroupsLabel}`}>
+                  <label key={`view-${g}`} className="RestrictedBlockEditor-viewGroupRow block text-indigo-100 text-[13px] mb-0.5">
                     <input
                       type="checkbox"
                       checked={pendingUserGroups.includes(g)}
@@ -132,7 +131,7 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
               <div style={{ marginBottom: 12 }}>
                 <div style={{ marginBottom: 8, color: '#e0e7ff', fontWeight: 500 }}>Edit Groups (who can edit this block)</div>
                 {groups.map((g: string) => (
-                  <label key={`edit-${g}`} className={`RestrictedBlockEditor-editGroupRow ${styles.restrictedGroupsLabel}`}>
+                  <label key={`edit-${g}`} className="RestrictedBlockEditor-editGroupRow block text-indigo-100 text-[13px] mb-0.5">
                     <input
                       type="checkbox"
                       checked={pendingEditGroups.includes(g)}
@@ -146,7 +145,7 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
               <button
                 type="button"
                 onClick={handleSaveGroups}
-                className={`RestrictedBlockEditor-saveGroupsBtn ${styles.restrictedGroupsSave}`}
+                className="RestrictedBlockEditor-saveGroupsBtn mt-2 bg-[var(--color-restricted-action)] text-white rounded px-4 py-1 font-medium cursor-pointer min-w-[80px] h-8 text-sm shadow"
               >
                 Save
               </button>
@@ -164,13 +163,13 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
                   setPendingEditGroups(selectedEditGroups);
                   setEditingGroups(true);
                 }}
-                className={`RestrictedBlockEditor-editGroupsBtn ${styles.restrictedGroupsEdit}`}
+                className="RestrictedBlockEditor-editGroupsBtn mr-2 bg-[var(--color-restricted-action)] text-white rounded px-4 py-1 font-medium cursor-pointer min-w-[80px] h-8 text-sm shadow"
               >
                 Edit Groups
               </button>
             </>
           )}
-          <button type="button" onClick={removeRestriction} className={`RestrictedBlockEditor-removeBtn ${styles.restrictedRemove}`}>Remove restriction</button>
+          <button type="button" onClick={removeRestriction} className="RestrictedBlockEditor-removeBtn bg-gray-700 text-indigo-100 rounded px-4 py-1 font-medium cursor-pointer min-w-[80px] h-8 text-sm shadow">Remove restriction</button>
         </div>
       </div>
       <NodeViewContent as="div" className="RestrictedBlockEditor-content" />
