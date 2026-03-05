@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { TiptapEditor } from "./TiptapEditor";
 import { WikiPage } from "../../types";
 import { useUser } from "../../features/auth/userContext";
@@ -8,6 +8,7 @@ import { authenticatedFetch } from "../../lib/api/apiHelpers";
 import { isUserAuthenticated } from "../../features/auth/accessControl";
 import { useAutosave } from "../../hooks/useAutosave";
 import { useShutdownSave } from "../../hooks/useShutdownSave";
+import { useLocalDraft } from "../../hooks/useLocalDraft";
 import PathAutocomplete from "../ui/PathAutocomplete";
 
 // Extract shared style constants for use in both PageEditor and GroupsAdminPage
@@ -60,7 +61,9 @@ export default function PageEditor({
   const [search, setSearch] = useState("");
   const [viewSearch, setViewSearch] = useState("");
   const [autosaveStatus, setAutosaveStatus] = useState<string>("");
+  const [autosaveIsError, setAutosaveIsError] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const draftRecoveredRef = useRef(false);
   const [pathError, setPathError] = useState<string | null>(null);
   const [existingPages, setExistingPages] = useState<WikiPage[]>([]);
   const filteredGroups = groups.filter((g) => g.includes(search));
@@ -116,6 +119,39 @@ export default function PageEditor({
   // Check if save should be disabled
   const isSaveDisabled = saving || isDisabled || !title || !content || !!pathError;
 
+  // ── Local draft (localStorage write buffer) ──────────────────────────
+  const { readDraft, clearDraft, isOffline, markOffline, markOnline } = useLocalDraft({
+    pageId: page?.id,
+    title,
+    content,
+    path,
+    editGroups,
+    viewGroups,
+    lockShortId,
+    enabled: !isDisabled,
+  });
+
+  // Recover local draft on mount (silently pre-fill)
+  useEffect(() => {
+    if (draftRecoveredRef.current) return;
+    draftRecoveredRef.current = true;
+
+    const draft = readDraft();
+    if (!draft) return;
+
+    // Only restore if the local draft is newer than the server version
+    const serverUpdated = page?.updated_at ? new Date(page.updated_at).getTime() : 0;
+    const draftUpdated = new Date(draft.savedAt).getTime();
+    if (draftUpdated <= serverUpdated) return;
+
+    // Silently pre-fill editor state
+    if (draft.title) setTitle(draft.title);
+    if (draft.content) setContent(draft.content);
+    if (draft.path) setPath(draft.path);
+    if (draft.editGroups?.length) setEditGroups(draft.editGroups);
+    if (draft.viewGroups?.length) setViewGroups(draft.viewGroups);
+  }, [readDraft, page?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Autosave functionality
   const { saveNow, deleteDraft } = useAutosave({
     pageId: page?.id,
@@ -125,22 +161,36 @@ export default function PageEditor({
     viewGroups,
     path,
     enabled: mode === "edit" && !isDisabled,
+    getPayload: readDraft,
     onSaveSuccess: (data) => {
       // Handle no_change response for manual draft saves
       if (data.no_change) {
         setError(null);
+        setAutosaveIsError(false);
         setAutosaveStatus("No changes detected - draft is already up to date.");
         setTimeout(() => setAutosaveStatus(""), 3000);
         return;
       }
       
+      setAutosaveIsError(false);
       setAutosaveStatus(`Draft saved at ${new Date(data.saved_at).toLocaleTimeString()}`);
       setTimeout(() => setAutosaveStatus(""), 3000);
     },
     onSaveError: (error) => {
+      setAutosaveIsError(true);
       setAutosaveStatus(`Autosave failed: ${error}`);
       setTimeout(() => setAutosaveStatus(""), 5000);
-    }
+    },
+    onNetworkError: (error) => {
+      markOffline();
+      setAutosaveIsError(true);
+      setAutosaveStatus(`Server unreachable — changes saved in browser only`);
+      // Don't auto-clear: the offline banner handles the persistent message
+    },
+    onSynced: () => {
+      markOnline();
+      clearDraft();
+    },
   });
 
   // Shutdown-triggered save: fires sendBeacon when the server broadcasts SIGTERM
@@ -153,6 +203,24 @@ export default function PageEditor({
     path,
     enabled: mode === "edit" && !isDisabled,
   });
+
+  // Warn before leaving the page while offline so the user doesn't accidentally
+  // discard in-progress work — with reassurance that the local draft is safe.
+  useEffect(() => {
+    if (!isOffline) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const message =
+        "You are currently offline. Your changes are saved in this browser — you won't lose them. Reload anyway?";
+      e.preventDefault();
+      // returnValue is still shown by some browsers (Firefox, older Edge)
+      e.returnValue = message;
+      return message;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isOffline]);
 
   async function handleSave() {
     if (!title || !content) {
@@ -167,17 +235,26 @@ export default function PageEditor({
     setValidationError(null);
     setSaving(true);
     setError(null);
+
+    // Read latest payload from localStorage (source of truth)
+    const draft = readDraft();
+    const saveTitle = draft?.title ?? title;
+    const saveContent = draft?.content ?? content;
+    const savePath = draft?.path ?? path;
+    const saveEditGroups = draft?.editGroups ?? editGroups;
+    const saveViewGroups = draft?.viewGroups ?? viewGroups;
+
     try {
       let res, saved;
       if (mode === "edit" && page) {
         res = await authenticatedFetch(`/api/pages/${page.id}`, {
           method: "PUT",
           body: JSON.stringify({ 
-            title, 
-            content, 
-            edit_groups: editGroups, 
-            view_groups: viewGroups, 
-            path,
+            title: saveTitle, 
+            content: saveContent, 
+            edit_groups: saveEditGroups, 
+            view_groups: saveViewGroups, 
+            path: savePath,
             change_summary: changeSummary || undefined
           }),
         });
@@ -199,11 +276,11 @@ export default function PageEditor({
         res = await authenticatedFetch("/api/pages", {
           method: "POST",
           body: JSON.stringify({ 
-            title, 
-            content, 
-            edit_groups: editGroups, 
-            view_groups: viewGroups, 
-            path,
+            title: saveTitle, 
+            content: saveContent, 
+            edit_groups: saveEditGroups, 
+            view_groups: saveViewGroups, 
+            path: savePath,
             change_summary: changeSummary || undefined
           }),
         });
@@ -222,11 +299,21 @@ export default function PageEditor({
           return;
         }
       }
+      // Successful server save — clear the localStorage draft
+      clearDraft();
+      markOnline();
       if (onSuccess) onSuccess(saved);
       else if (mode === "edit" && page) router.push(`/pages/${page.id}`);
       else router.push(`/pages/${saved.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      const isNetworkErr = err instanceof TypeError && /failed to fetch|networkerror|network request failed/i.test(msg);
+      if (isNetworkErr) {
+        markOffline();
+        setError("Server unreachable — your changes are saved in the browser. Try again when the connection is restored.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -297,8 +384,7 @@ export default function PageEditor({
           </svg>
           Server restarting — saving your draft…
         </div>
-      )}
-      {/* Mobile overlay */}
+      )}      {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
@@ -528,7 +614,11 @@ export default function PageEditor({
         </div>
         {/* Autosave status */}
         {autosaveStatus && (
-          <div className="text-sm text-green-400 mt-2 p-2 bg-green-900/20 rounded border border-green-800">
+          <div className={`text-sm mt-2 p-2 rounded border ${
+            autosaveIsError
+              ? 'text-orange-400 bg-orange-900/20 border-orange-800'
+              : 'text-green-400 bg-green-900/20 border-green-800'
+          }`}>
             {autosaveStatus}
           </div>
         )}

@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { authenticatedFetch } from '../lib/api/apiHelpers';
 
+/** Payload shape returned by `getPayload` (matches what the server expects). */
+export interface AutosavePayload {
+  title: string;
+  content: string;
+  editGroups: string[];
+  viewGroups: string[];
+  path: string;
+}
+
 interface AutosaveOptions {
   pageId?: number;
   title: string;
@@ -9,8 +18,18 @@ interface AutosaveOptions {
   viewGroups: string[];
   path: string;
   enabled: boolean;
+  /**
+   * When supplied, the autosave will call this at save-time to obtain the
+   * payload (e.g. read from localStorage).  Falls back to the closure values
+   * when not provided or when it returns `null`.
+   */
+  getPayload?: () => AutosavePayload | null;
   onSaveSuccess?: (data: { id: number; version: number; saved_at: string; is_draft: boolean; no_change?: boolean }) => void;
   onSaveError?: (error: string) => void;
+  /** Called when a save attempt fails due to a network error (e.g. offline). */
+  onNetworkError?: (error: string) => void;
+  /** Called when a save succeeds (so caller can clear the local draft). */
+  onSynced?: () => void;
 }
 
 export function useAutosave({
@@ -21,8 +40,11 @@ export function useAutosave({
   viewGroups,
   path,
   enabled,
+  getPayload,
   onSaveSuccess,
-  onSaveError
+  onSaveError,
+  onNetworkError,
+  onSynced,
 }: AutosaveOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastSavedRef = useRef<string>('');
@@ -33,11 +55,30 @@ export function useAutosave({
       return;
     }
 
+    // Resolve the payload – prefer getPayload() (reads from localStorage),
+    // fall back to the closure-captured React state values.
+    const externalPayload = getPayload?.() ?? null;
+    const saveTitle = externalPayload?.title ?? title;
+    const saveContent = externalPayload?.content ?? content;
+    const savePath = externalPayload?.path ?? path;
+    const saveEditGroups = externalPayload?.editGroups ?? editGroups;
+    const saveViewGroups = externalPayload?.viewGroups ?? viewGroups;
+
     // Create a hash of the current content to check if it's changed
-    const currentHash = JSON.stringify({ title, content, path, editGroups, viewGroups });
+    const currentHash = JSON.stringify({
+      title: saveTitle,
+      content: saveContent,
+      path: savePath,
+      editGroups: saveEditGroups,
+      viewGroups: saveViewGroups,
+    });
     
     // Don't save if content hasn't changed
     if (currentHash === lastSavedRef.current) {
+      // Content matches the last successful server save — we're in sync.
+      // Signal this so any offline flag can be cleared (e.g. server came back
+      // but no new content was typed since the last successful save).
+      if (onSynced) onSynced();
       // For manual saves, notify user that no changes were detected
       if (isManual && onSaveSuccess) {
         onSaveSuccess({
@@ -52,7 +93,7 @@ export function useAutosave({
     }
 
     // Don't save if content is empty/too short
-    if (!title.trim() || content.length < 10) {
+    if (!saveTitle.trim() || saveContent.length < 10) {
       return;
     }
 
@@ -62,11 +103,11 @@ export function useAutosave({
       const response = await authenticatedFetch(`/api/pages/${pageId}/autosave`, {
         method: 'POST',
         body: JSON.stringify({
-          title,
-          content,
-          edit_groups: editGroups,
-          view_groups: viewGroups,
-          path
+          title: saveTitle,
+          content: saveContent,
+          edit_groups: saveEditGroups,
+          view_groups: saveViewGroups,
+          path: savePath,
         })
       });
 
@@ -85,17 +126,27 @@ export function useAutosave({
       
       lastSavedRef.current = currentHash;
       
+      if (onSynced) onSynced();
       if (onSaveSuccess) {
         onSaveSuccess(data);
       }
     } catch (error) {
-      if (onSaveError) {
-        onSaveError(error instanceof Error ? error.message : 'Autosave failed');
+      // Distinguish network errors (offline / DNS / connection refused) from
+      // server-side errors.  `TypeError: Failed to fetch` is what the Fetch
+      // API throws when the request cannot be sent at all.
+      const msg = error instanceof Error ? error.message : 'Autosave failed';
+      const isNetworkError =
+        error instanceof TypeError && /failed to fetch|networkerror|network request failed/i.test(msg);
+
+      if (isNetworkError && onNetworkError) {
+        onNetworkError(msg);
+      } else if (onSaveError) {
+        onSaveError(msg);
       }
     } finally {
       isSavingRef.current = false;
     }
-  }, [pageId, title, content, editGroups, viewGroups, path, enabled, onSaveSuccess, onSaveError]);
+  }, [pageId, title, content, editGroups, viewGroups, path, enabled, getPayload, onSaveSuccess, onSaveError, onNetworkError, onSynced]);
 
   // Debounced autosave effect
   useEffect(() => {
@@ -158,13 +209,14 @@ export function useAutosave({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (enabled && pageId) {
-        // Use sendBeacon for reliable sending when page is closing
+        // Prefer localStorage-backed payload if available
+        const externalPayload = getPayload?.() ?? null;
         const payload = JSON.stringify({
-          title,
-          content,
-          edit_groups: editGroups,
-          view_groups: viewGroups,
-          path
+          title: externalPayload?.title ?? title,
+          content: externalPayload?.content ?? content,
+          edit_groups: externalPayload?.editGroups ?? editGroups,
+          view_groups: externalPayload?.viewGroups ?? viewGroups,
+          path: externalPayload?.path ?? path,
         });
         
         navigator.sendBeacon(`/api/pages/${pageId}/autosave`, payload);
@@ -173,7 +225,7 @@ export function useAutosave({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [pageId, title, content, editGroups, viewGroups, path, enabled]);
+  }, [pageId, title, content, editGroups, viewGroups, path, enabled, getPayload]);
 
   return {
     saveNow,

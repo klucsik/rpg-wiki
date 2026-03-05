@@ -1,6 +1,8 @@
 # Changelog
 ### Version 20260304
 - Added graceful shutdown support: All editing sessions will be draft-saved before the server shuts down.
+- Added local save on clients. Saves will be stored on browser local storage, and will be automatically loaded when users return to the editor. This provides a safety net against accidental data loss due to network issues or server problems.
+
 
 ### Version 20260303
 - Added metrics for monitoring the wiki's performance and usage. Metrics are exposed at the /metrics endpoint in Prometheus format, and include request duration, request count, and error count.
