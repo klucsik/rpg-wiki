@@ -259,6 +259,9 @@ export default function PageEditor({
           }),
         });
         if (!res.ok) {
+          if ([502, 503, 504].includes(res.status)) {
+            throw new TypeError(`Server unreachable (${res.status})`);
+          }
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to update page");
         }
@@ -285,6 +288,9 @@ export default function PageEditor({
           }),
         });
         if (!res.ok) {
+          if ([502, 503, 504].includes(res.status)) {
+            throw new TypeError(`Server unreachable (${res.status})`);
+          }
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to add page");
         }
@@ -307,7 +313,7 @@ export default function PageEditor({
       else router.push(`/pages/${saved.id}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      const isNetworkErr = err instanceof TypeError && /failed to fetch|networkerror|network request failed/i.test(msg);
+      const isNetworkErr = err instanceof TypeError && /failed to fetch|networkerror|network request failed|server unreachable/i.test(msg);
       if (isNetworkErr) {
         markOffline();
         setError("Server unreachable — your changes are saved in the browser. Try again when the connection is restored.");

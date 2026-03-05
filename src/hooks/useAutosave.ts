@@ -112,6 +112,11 @@ export function useAutosave({
       });
 
       if (!response.ok) {
+        // Treat gateway / service-unavailable responses the same as a network
+        // error so the caller can mark the session as offline.
+        if ([502, 503, 504].includes(response.status)) {
+          throw new TypeError(`Server unreachable (${response.status})`);
+        }
         throw new Error('Autosave failed');
       }
 
@@ -136,7 +141,8 @@ export function useAutosave({
       // API throws when the request cannot be sent at all.
       const msg = error instanceof Error ? error.message : 'Autosave failed';
       const isNetworkError =
-        error instanceof TypeError && /failed to fetch|networkerror|network request failed/i.test(msg);
+        error instanceof TypeError &&
+        /failed to fetch|networkerror|network request failed|server unreachable/i.test(msg);
 
       if (isNetworkError && onNetworkError) {
         onNetworkError(msg);
