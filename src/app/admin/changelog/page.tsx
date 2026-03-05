@@ -43,35 +43,35 @@ export default function ChangelogPage() {
   }, [session, isPending, router, fetchChangelog]);
 
   if (loading) {
-    return <div className="text-indigo-400 p-8">Loading...</div>;
+    return <div className="ChangelogPage-loadingText text-indigo-400 p-8">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-4xl font-bold text-indigo-100">Changelog</h1>
+    <div className="ChangelogPage-root min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="ChangelogPage-container container mx-auto px-4 py-8">
+        <div className="ChangelogPage-inner max-w-4xl mx-auto">
+          <div className="ChangelogPage-header mb-6 flex items-center justify-between">
+            <h1 className="ChangelogPage-heading text-4xl font-bold text-indigo-100">Changelog</h1>
             <Link 
               href="/admin"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition font-medium"
+              className="ChangelogPage-backBtn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition font-medium"
             >
               ← Back to Admin
             </Link>
           </div>
           
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <div className="ChangelogPage-card bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             {loading ? (
-              <div className="text-center text-indigo-200">
+              <div className="ChangelogPage-placeholder text-center text-indigo-200">
                 <p>Loading changelog...</p>
               </div>
             ) : error ? (
-              <div className="text-center text-red-400">
+              <div className="ChangelogPage-placeholder text-center text-red-400">
                 <p>Error loading changelog: {error}</p>
               </div>
             ) : (
               <div 
-                className="prose prose-invert prose-indigo max-w-none"
+                className="ChangelogPage-content prose prose-invert prose-indigo max-w-none"
                 dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(changelogContent) }}
               />
             )}

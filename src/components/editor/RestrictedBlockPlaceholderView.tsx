@@ -16,7 +16,7 @@ const RestrictedBlockPlaceholderView = (props: ReactNodeViewProps) => {
 
   return (
     <NodeViewWrapper as="div"
-      className={styles.restrictedBlock}
+      className={`RestrictedBlockPlaceholder-root ${styles.restrictedBlock}`}
       data-block-type="restricted-placeholder"
       data-block-id={node.attrs.blockId}
       data-original-usergroups={node.attrs.originalUsergroups}
@@ -26,11 +26,11 @@ const RestrictedBlockPlaceholderView = (props: ReactNodeViewProps) => {
       data-allowed-groups={node.attrs.allowedGroups}
       style={{ position: 'relative' }}
     >
-      <div className={styles.restrictedTitle}>🔒 {node.attrs.originalTitle || 'Restricted Content'}</div>
-      <div className={styles.restrictedNoAccess}>
+      <div className={`RestrictedBlockPlaceholder-title ${styles.restrictedTitle}`}>🔒 {node.attrs.originalTitle || 'Restricted Content'}</div>
+      <div className={`RestrictedBlockPlaceholder-noAccess ${styles.restrictedNoAccess}`}>
         <span>You don&apos;t have permission to view or edit this content.</span>
         {allowedGroups.length > 0 && (
-          <div style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af' }}>
+          <div className="RestrictedBlockPlaceholder-groupsHint" style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af' }}>
             Required groups: {allowedGroups.join(', ')}
           </div>
         )}

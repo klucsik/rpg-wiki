@@ -98,27 +98,27 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
 
   return (
     <NodeViewWrapper as="div"
-      className={styles.restrictedBlockEditor}
+      className={`RestrictedBlockEditor-root ${styles.restrictedBlockEditor}`}
       data-block-type="restricted"
       data-usergroups={node.attrs.usergroups}
       data-editgroups={node.attrs.editgroups}
       data-title={title}
     >
-      <div className={styles.restrictedBlockHeader}>
+      <div className={`RestrictedBlockEditor-header ${styles.restrictedBlockHeader}`}>
         <input
           type="text"
           value={title}
           onChange={handleTitleChange}
           placeholder="Restricted Block Title"
-          className={styles.restrictedTitleInput}
+          className={`RestrictedBlockEditor-titleInput ${styles.restrictedTitleInput}`}
         />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="RestrictedBlockEditor-headerControls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {editingGroups ? (
-            <div className={styles.restrictedGroupsPanel}>
+            <div className={`RestrictedBlockEditor-groupsPanel ${styles.restrictedGroupsPanel}`}>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ marginBottom: 8, color: '#e0e7ff', fontWeight: 500 }}>View Groups (who can see content)</div>
                 {groups.map((g: string) => (
-                  <label key={`view-${g}`} className={styles.restrictedGroupsLabel}>
+                  <label key={`view-${g}`} className={`RestrictedBlockEditor-viewGroupRow ${styles.restrictedGroupsLabel}`}>
                     <input
                       type="checkbox"
                       checked={pendingUserGroups.includes(g)}
@@ -132,7 +132,7 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
               <div style={{ marginBottom: 12 }}>
                 <div style={{ marginBottom: 8, color: '#e0e7ff', fontWeight: 500 }}>Edit Groups (who can edit this block)</div>
                 {groups.map((g: string) => (
-                  <label key={`edit-${g}`} className={styles.restrictedGroupsLabel}>
+                  <label key={`edit-${g}`} className={`RestrictedBlockEditor-editGroupRow ${styles.restrictedGroupsLabel}`}>
                     <input
                       type="checkbox"
                       checked={pendingEditGroups.includes(g)}
@@ -146,14 +146,14 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
               <button
                 type="button"
                 onClick={handleSaveGroups}
-                className={styles.restrictedGroupsSave}
+                className={`RestrictedBlockEditor-saveGroupsBtn ${styles.restrictedGroupsSave}`}
               >
                 Save
               </button>
             </div>
           ) : (
             <>
-              <div style={{ color: '#e0e7ff', fontSize: 13, marginRight: 8 }}>
+              <div className="RestrictedBlockEditor-groupsSummary" style={{ color: '#e0e7ff', fontSize: 13, marginRight: 8 }}>
                 <div>View: {selectedUserGroups.join(', ') || 'none'}</div>
                 <div>Edit: {selectedEditGroups.join(', ') || 'none'}</div>
               </div>
@@ -164,16 +164,16 @@ const RestrictedBlockEditorView = (props: ReactNodeViewProps) => {
                   setPendingEditGroups(selectedEditGroups);
                   setEditingGroups(true);
                 }}
-                className={styles.restrictedGroupsEdit}
+                className={`RestrictedBlockEditor-editGroupsBtn ${styles.restrictedGroupsEdit}`}
               >
                 Edit Groups
               </button>
             </>
           )}
-          <button type="button" onClick={removeRestriction} className={styles.restrictedRemove}>Remove restriction</button>
+          <button type="button" onClick={removeRestriction} className={`RestrictedBlockEditor-removeBtn ${styles.restrictedRemove}`}>Remove restriction</button>
         </div>
       </div>
-      <NodeViewContent as="div" />
+      <NodeViewContent as="div" className="RestrictedBlockEditor-content" />
     </NodeViewWrapper>
   );
 };

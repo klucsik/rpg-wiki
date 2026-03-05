@@ -18,7 +18,7 @@ export default function CreatePage() {
 
   // Show loading state while redirecting unauthenticated users
   if (!isUserAuthenticated(user)) {
-    return <div className="text-indigo-400 p-8">Redirecting to login...</div>;
+    return <div className="CreatePage-redirectText text-indigo-400 p-8">Redirecting to login...</div>;
   }
 
   return (

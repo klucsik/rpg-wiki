@@ -16,12 +16,12 @@ export default function HeaderNav({
 }: HeaderNavProps) {
   const { user } = useUser();
   return (
-    <header className="w-full bg-gray-900 border-b border-gray-800 shadow flex items-center justify-between px-4 sm:px-6 py-3 sticky top-0 z-50 h-16 min-w-0">
-      <nav className="flex items-center gap-3 sm:gap-6 min-w-0 flex-shrink">
+    <header className="HeaderNav-root w-full bg-gray-900 border-b border-gray-800 shadow flex items-center justify-between px-4 sm:px-6 py-3 sticky top-0 z-50 h-16 min-w-0">
+      <nav className="HeaderNav-nav flex items-center gap-3 sm:gap-6 min-w-0 flex-shrink">
         {showSidebarToggle && (
           <button
             onClick={onSidebarToggle}
-            className="text-indigo-300 hover:text-indigo-100 transition lg:hidden flex-shrink-0"
+            className="HeaderNav-sidebarToggleBtn text-indigo-300 hover:text-indigo-100 transition lg:hidden flex-shrink-0"
             aria-label="Toggle sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,20 +35,20 @@ export default function HeaderNav({
         )}
         <Link
           href="/"
-          className="text-indigo-300 font-bold text-lg hover:text-indigo-100 transition flex-shrink-0"
+          className="HeaderNav-brandLink text-indigo-300 font-bold text-lg hover:text-indigo-100 transition flex-shrink-0"
         >
           RPG Wiki
         </Link>
         <Link
           href="/pages"
-          className="text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
+          className="HeaderNav-pagesLink text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
         >
           Pages
         </Link>
         {user?.groups?.includes("admin") && (
           <Link
             href="/admin/changelog"
-            className="text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
+            className="HeaderNav-changelogLink text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
           >
             Changelog
           </Link>
@@ -56,7 +56,7 @@ export default function HeaderNav({
         {user?.groups?.includes("admin") && (
           <Link
             href="/admin"
-            className="text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
+            className="HeaderNav-adminLink text-indigo-300 hover:text-indigo-100 transition hidden sm:block"
           >
             Admin
           </Link>
@@ -64,11 +64,11 @@ export default function HeaderNav({
       </nav>
       
       {/* Search Bar */}
-      <div className="flex-1 max-w-md mx-4 hidden md:block">
+      <div className="HeaderNav-searchContainer flex-1 max-w-md mx-4 hidden md:block">
         <SearchBar placeholder="Search wiki..." />
       </div>
       
-      <div className="flex-shrink-0 ml-2">
+      <div className="HeaderNav-userArea flex-shrink-0 ml-2">
         <UserMenu />
       </div>
     </header>

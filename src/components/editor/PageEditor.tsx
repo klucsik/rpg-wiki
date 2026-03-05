@@ -380,10 +380,10 @@ export default function PageEditor({
   }
 
   return (
-    <div className="flex flex-row w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 relative">
+    <div className="PageEditor-root flex flex-row w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 relative">
       {/* Shutdown save banner */}
       {shutdownBannerVisible && (
-        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-4 py-3 bg-amber-900/90 border-b border-amber-700 text-amber-100 text-sm font-medium shadow-lg">
+        <div className="PageEditor-shutdownBanner fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-4 py-3 bg-amber-900/90 border-b border-amber-700 text-amber-100 text-sm font-medium shadow-lg">
           <svg className="w-4 h-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
@@ -393,13 +393,13 @@ export default function PageEditor({
       )}      {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          className="PageEditor-mobileOverlay fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
       
       {/* Sidebar */}
-            <div className={`
+            <div className={`PageEditor-sidebar
         fixed lg:fixed lg:translate-x-0 transition-transform duration-300 ease-in-out z-30
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         left-0 top-16 h-[calc(100vh-64px)] w-full max-w-xs min-w-[320px] bg-gray-800 border-r border-gray-700 flex flex-col gap-4 p-6 overflow-y-auto overscroll-contain
@@ -408,7 +408,7 @@ export default function PageEditor({
         <div className="flex justify-end lg:hidden mb-2">
           <button
             onClick={() => setSidebarOpen(false)}
-            className="text-gray-400 hover:text-white"
+            className="PageEditor-sidebarCloseBtn text-gray-400 hover:text-white"
             aria-label="Close sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,33 +418,33 @@ export default function PageEditor({
         </div>
         
         {/* Path */}
-        <div className="mb-2">
+        <div className="PageEditor-pathSection mb-2">
           <label className={styleTokens.label}>Path</label>
           <PathAutocomplete
             value={mode === "create" && path === "/" ? "" : path}
             onChange={setPath}
             placeholder={mode === "create" ? "/lore/dragons (leave empty for root)" : "/lore/dragons"}
             disabled={saving || isDisabled}
-            className={`w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} font-mono text-base shadow-sm min-w-0 mb-2`}
+            className={`PageEditor-pathInput w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} font-mono text-base shadow-sm min-w-0 mb-2`}
           />
           {pathError && (
-            <div className="text-red-400 text-sm mt-1 mb-2">
+            <div className="PageEditor-pathError text-red-400 text-sm mt-1 mb-2">
               {pathError}
             </div>
           )}
         </div>
         {/* Title */}
-        <div className="mb-2">
+        <div className="PageEditor-titleSection mb-2">
           <label className={styleTokens.label}>Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title"
             disabled={saving || isDisabled}
-            className={`w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} text-2xl font-bold shadow-sm min-w-0`}
+            className={`PageEditor-titleInput w-full px-4 py-2 border ${pathError ? 'border-red-500' : 'border-gray-700'} bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 ${pathError ? 'focus:ring-red-500' : 'focus:ring-indigo-700'} text-2xl font-bold shadow-sm min-w-0`}
           />
           {pathError && (
-            <div className="text-red-400 text-sm mt-1 mb-2">
+            <div className="PageEditor-titleError text-red-400 text-sm mt-1 mb-2">
               Path + Title combination must be unique
             </div>
           )}
@@ -452,20 +452,20 @@ export default function PageEditor({
         
         {/* Change Summary (only show for edits) */}
         {mode === "edit" && (
-          <div className="mb-2">
+          <div className="PageEditor-changeSummarySection mb-2">
             <label className={styleTokens.label}>Change Summary (optional)</label>
             <input
               value={changeSummary}
               onChange={(e) => setChangeSummary(e.target.value)}
               placeholder="Describe what you changed..."
               disabled={saving || isDisabled}
-              className="w-full px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-sm shadow-sm min-w-0"
+              className="PageEditor-changeSummaryInput w-full px-4 py-2 border border-gray-700 bg-gray-900 text-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-700 text-sm shadow-sm min-w-0"
             />
           </div>
         )}
         
         {/* Who can edit? */}
-        <div className="mb-2">
+        <div className="PageEditor-editGroupsSection mb-2">
           <label className={styleTokens.label}>Who can edit?</label>
           {mode === "create" && (
             <div className="text-xs text-gray-400 mb-1">
@@ -477,17 +477,17 @@ export default function PageEditor({
             placeholder="Search groups..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={styleTokens.input + " w-full"}
+            className={`PageEditor-editGroupsSearch ${styleTokens.input} w-full`}
             disabled={isDisabled}
           />
-          <div className={styleTokens.groupList}>
+          <div className={`PageEditor-editGroupsTags ${styleTokens.groupList}`}>
             {editGroups?.map((g) => (
-              <span key={g} className={styleTokens.tag}>
+              <span key={g} className={`PageEditor-editGroupTag ${styleTokens.tag}`}>
                 {g}
                 {!isDisabled && (
                   <button
                     type="button"
-                    className={styleTokens.tagRemove}
+                    className={`PageEditor-editGroupTagRemoveBtn ${styleTokens.tagRemove}`}
                     onClick={() =>
                       setEditGroups &&
                       setEditGroups(
@@ -501,14 +501,14 @@ export default function PageEditor({
               </span>
             ))}
           </div>
-          <div className="flex flex-wrap gap-1">
+          <div className="PageEditor-editGroupsAvailable flex flex-wrap gap-1">
             {filteredGroups
               .filter((g) => !editGroups?.includes(g))
               .map((g) => (
                 <button
                   key={g}
                   type="button"
-                  className={styleTokens.groupButton}
+                  className={`PageEditor-editGroupAddBtn ${styleTokens.groupButton}`}
                   disabled={isDisabled}
                   onClick={() =>
                     setEditGroups && setEditGroups([...editGroups, g])
@@ -520,7 +520,7 @@ export default function PageEditor({
           </div>
         </div>
         {/* Who can see? */}
-        <div className="mb-2">
+        <div className="PageEditor-viewGroupsSection mb-2">
           <label className={styleTokens.label}>Who can see?</label>
           {mode === "create" && (
             <div className="text-xs text-gray-400 mb-1">
@@ -532,17 +532,17 @@ export default function PageEditor({
             placeholder="Search groups..."
             value={viewSearch}
             onChange={(e) => setViewSearch(e.target.value)}
-            className={styleTokens.input + " w-full"}
+            className={`PageEditor-viewGroupsSearch ${styleTokens.input} w-full`}
             disabled={isDisabled}
           />
-          <div className={styleTokens.groupList}>
+          <div className={`PageEditor-viewGroupsTags ${styleTokens.groupList}`}>
             {viewGroups?.map((g) => (
-              <span key={g} className={styleTokens.tag}>
+              <span key={g} className={`PageEditor-viewGroupTag ${styleTokens.tag}`}>
                 {g}
                 {!isDisabled && (
                   <button
                     type="button"
-                    className={styleTokens.tagRemove}
+                    className={`PageEditor-viewGroupTagRemoveBtn ${styleTokens.tagRemove}`}
                     onClick={() =>
                       setViewGroups &&
                       setViewGroups(
@@ -556,14 +556,14 @@ export default function PageEditor({
               </span>
             ))}
           </div>
-          <div className="flex flex-wrap gap-1">
+          <div className="PageEditor-viewGroupsAvailable flex flex-wrap gap-1">
             {filteredViewGroups
               .filter((g) => !viewGroups?.includes(g))
               .map((g) => (
                 <button
                   key={g}
                   type="button"
-                  className={styleTokens.groupButton}
+                  className={`PageEditor-viewGroupAddBtn ${styleTokens.groupButton}`}
                   disabled={isDisabled}
                   onClick={() =>
                     setViewGroups && setViewGroups([...viewGroups, g])
@@ -576,19 +576,19 @@ export default function PageEditor({
         </div>
         {/* Lock badge */}
         {lockShortId && (
-          <div className="flex items-center gap-2 mt-4 mb-1 text-xs text-gray-400">
+          <div className="PageEditor-lockBadge flex items-center gap-2 mt-4 mb-1 text-xs text-gray-400">
             <span>This tab&apos;s editlock:</span>
-            <span className="font-mono text-gray-300 bg-gray-700 px-1.5 py-0.5 rounded select-all">
+            <span className="PageEditor-lockId font-mono text-gray-300 bg-gray-700 px-1.5 py-0.5 rounded select-all">
               {lockShortId}
             </span>
           </div>
         )}
         {/* Action buttons */}
-        <div className="flex flex-col gap-2 mt-2">
+        <div className="PageEditor-actions flex flex-col gap-2 mt-2">
           <button
             onClick={handleSave}
             disabled={isSaveDisabled}
-            className={styleTokens.button}
+            className={`PageEditor-saveBtn ${styleTokens.button}`}
           >
             {mode === "edit" ? "Save" : "Create"}
           </button>
@@ -596,7 +596,7 @@ export default function PageEditor({
             <button
               onClick={saveNow}
               disabled={saving || isDisabled}
-              className="bg-gray-700 text-gray-200 font-bold px-6 py-2 rounded-lg shadow hover:bg-gray-600 transition disabled:opacity-50 text-sm border border-gray-600"
+              className="PageEditor-saveDraftBtn bg-gray-700 text-gray-200 font-bold px-6 py-2 rounded-lg shadow hover:bg-gray-600 transition disabled:opacity-50 text-sm border border-gray-600"
             >
               Save Draft Now
             </button>
@@ -605,7 +605,7 @@ export default function PageEditor({
             <button
               onClick={() => setShowDeleteDraftModal(true)}
               disabled={saving || isDisabled}
-              className="bg-orange-700 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-orange-600 transition disabled:opacity-50 text-sm border border-orange-800"
+              className="PageEditor-deleteDraftBtn bg-orange-700 text-white font-bold px-6 py-2 rounded-lg shadow hover:bg-orange-600 transition disabled:opacity-50 text-sm border border-orange-800"
             >
               Delete Draft
             </button>
@@ -613,14 +613,14 @@ export default function PageEditor({
           <button
             onClick={onCancel}
             disabled={saving}
-            className="bg-gray-700 text-gray-200 font-bold px-6 py-2 rounded-lg shadow hover:bg-gray-600 transition disabled:opacity-50 text-lg border border-gray-600"
+            className="PageEditor-cancelBtn bg-gray-700 text-gray-200 font-bold px-6 py-2 rounded-lg shadow hover:bg-gray-600 transition disabled:opacity-50 text-lg border border-gray-600"
           >
             Cancel
           </button>
         </div>
         {/* Autosave status */}
         {autosaveStatus && (
-          <div className={`text-sm mt-2 p-2 rounded border ${
+          <div className={`PageEditor-autosaveStatus text-sm mt-2 p-2 rounded border ${
             autosaveIsError
               ? 'text-orange-400 bg-orange-900/20 border-orange-800'
               : 'text-green-400 bg-green-900/20 border-green-800'
@@ -629,16 +629,16 @@ export default function PageEditor({
           </div>
         )}
         {validationError && (
-          <div className="text-red-400 font-semibold mt-2">{validationError}</div>
+          <div className="PageEditor-validationError text-red-400 font-semibold mt-2">{validationError}</div>
         )}
         {error && (
-          <div className="text-red-400 font-semibold mt-2">{error}</div>
+          <div className="PageEditor-saveError text-red-400 font-semibold mt-2">{error}</div>
         )}
         {/* Delete button at the bottom */}
         {mode === "edit" && page && (
           <div className="mt-auto pt-8">
             <button
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold px-6 py-2 rounded-lg shadow border border-red-900 transition text-lg"
+              className="PageEditor-deletePageBtn w-full bg-red-700 hover:bg-red-800 text-white font-bold px-6 py-2 rounded-lg shadow border border-red-900 transition text-lg"
               onClick={() => setShowDeleteModal(true)}
               disabled={saving}
             >
@@ -648,19 +648,19 @@ export default function PageEditor({
         )}
         {/* Are you sure? modal */}
         {showDeleteModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
-              <h2 className="text-2xl font-bold text-red-400 mb-4">Are you sure you want to delete this page?</h2>
-              <div className="flex gap-4 justify-center mt-4">
+          <div className="PageEditorDeleteModal-overlay fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="PageEditorDeleteModal-card bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
+              <h2 className="PageEditorDeleteModal-heading text-2xl font-bold text-red-400 mb-4">Are you sure you want to delete this page?</h2>
+              <div className="PageEditorDeleteModal-actions flex gap-4 justify-center mt-4">
                 <button
-                  className="px-6 py-2 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900 text-lg"
+                  className="PageEditorDeleteModal-confirmBtn px-6 py-2 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900 text-lg"
                   onClick={() => { setShowDeleteModal(false); handleDelete(); }}
                   disabled={saving}
                 >
                   Yes, Delete
                 </button>
                 <button
-                  className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
+                  className="PageEditorDeleteModal-cancelBtn px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
                   onClick={() => setShowDeleteModal(false)}
                   disabled={saving}
                 >
@@ -672,20 +672,20 @@ export default function PageEditor({
         )}
         {/* Delete draft confirmation modal */}
         {showDeleteDraftModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
-              <h2 className="text-2xl font-bold text-orange-400 mb-4">Are you sure you want to delete your draft?</h2>
-              <p className="text-gray-300 mb-6">This will permanently delete your unsaved changes and revert to the last published version.</p>
-              <div className="flex gap-4 justify-center mt-4">
+          <div className="PageEditorDeleteDraftModal-overlay fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="PageEditorDeleteDraftModal-card bg-gray-900 border border-gray-700 rounded-lg p-8 shadow-lg text-center">
+              <h2 className="PageEditorDeleteDraftModal-heading text-2xl font-bold text-orange-400 mb-4">Are you sure you want to delete your draft?</h2>
+              <p className="PageEditorDeleteDraftModal-message text-gray-300 mb-6">This will permanently delete your unsaved changes and revert to the last published version.</p>
+              <div className="PageEditorDeleteDraftModal-actions flex gap-4 justify-center mt-4">
                 <button
-                  className="px-6 py-2 rounded bg-orange-700 hover:bg-orange-800 text-white font-semibold shadow border border-orange-900 text-lg"
+                  className="PageEditorDeleteDraftModal-confirmBtn px-6 py-2 rounded bg-orange-700 hover:bg-orange-800 text-white font-semibold shadow border border-orange-900 text-lg"
                   onClick={() => { setShowDeleteDraftModal(false); handleDeleteDraft(); }}
                   disabled={saving}
                 >
                   Yes, Delete Draft
                 </button>
                 <button
-                  className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
+                  className="PageEditorDeleteDraftModal-cancelBtn px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900 text-lg"
                   onClick={() => setShowDeleteDraftModal(false)}
                   disabled={saving}
                 >
@@ -697,12 +697,12 @@ export default function PageEditor({
         )}
       </div>
       {/* Main content area: Tiptap toolbar and editor */}
-      <div className="flex-1 flex flex-col min-h-0 ml-0 lg:ml-[320px]">
+      <div className="PageEditor-editorArea flex-1 flex flex-col min-h-0 ml-0 lg:ml-[320px]">
         {/* Mobile sidebar toggle button */}
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="fixed top-20 left-4 z-50 bg-gray-800 text-indigo-300 p-2 rounded-lg shadow-lg lg:hidden hover:bg-gray-700 transition"
+            className="PageEditor-sidebarOpenBtn fixed top-20 left-4 z-50 bg-gray-800 text-indigo-300 p-2 rounded-lg shadow-lg lg:hidden hover:bg-gray-700 transition"
             aria-label="Open sidebar"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -711,8 +711,8 @@ export default function PageEditor({
           </button>
         )}
         
-        <main className="flex flex-col overflow-hidden p-0 m-0 h-[calc(100vh-64px)] w-full overscroll-contain">
-          <div className="flex-1 flex flex-col min-h-0 w-full h-full">
+        <main className="PageEditor-editorMain flex flex-col overflow-hidden p-0 m-0 h-[calc(100vh-64px)] w-full overscroll-contain">
+          <div className="PageEditor-editorInner flex-1 flex flex-col min-h-0 w-full h-full">
             <TiptapEditor value={content} onChange={setContent} pageEditGroups={editGroups} />
           </div>
         </main>

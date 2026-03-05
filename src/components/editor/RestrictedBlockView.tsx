@@ -13,25 +13,25 @@ const RestrictedBlockView: React.FC<RestrictedBlockViewProps> = ({ title, usergr
   const hasAccess = user.groups.some((g) => usergroups.includes(g));
 
   return (
-    <div className={styles.restrictedBlock} style={{ position: 'relative' }}>
-      <div className={styles.restrictedTitle}>{title}</div>
+    <div className={`RestrictedBlockView-root ${styles.restrictedBlock}`} style={{ position: 'relative' }}>
+      <div className={`RestrictedBlockView-title ${styles.restrictedTitle}`}>{title}</div>
       {hasAccess ? (
         <>
           <button
             onClick={() => setRevealed((r) => !r)}
-            className={
+          className={
               revealed
-                ? `${styles.revealButton} ${styles.revealButtonActive}`
-                : styles.revealButton
+                ? `RestrictedBlockView-revealBtn ${styles.revealButton} ${styles.revealButtonActive}`
+                : `RestrictedBlockView-revealBtn ${styles.revealButton}`
             }
             aria-label={revealed ? 'Hide restricted content' : 'Reveal restricted content'}
           >
             {revealed ? 'Hide' : 'Reveal'}
           </button>
-          <div style={{ minHeight: 32, marginTop: 16 }}>{revealed && <div>{children}</div>}</div>
+          <div className="RestrictedBlockView-content" style={{ minHeight: 32, marginTop: 16 }}>{revealed && <div>{children}</div>}</div>
         </>
       ) : (
-        <div className={styles.restrictedNoAccess}>
+        <div className={`RestrictedBlockView-noAccess ${styles.restrictedNoAccess}`}>
           <span>Restricted</span>
         </div>
       )}

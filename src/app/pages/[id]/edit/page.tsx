@@ -179,11 +179,11 @@ export default function EditPage() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   if (userLoading || !isUserAuthenticated(user)) {
-    return <div className="text-indigo-400 p-8">Loading...</div>;
+    return <div className="EditPage-loadingText text-indigo-400 p-8">Loading...</div>;
   }
 
-  if (loading) return <div className="text-indigo-400 p-8">Loading...</div>;
-  if (error) return <div className="text-red-400 p-8">{error}</div>;
+  if (loading) return <div className="EditPage-loadingText text-indigo-400 p-8">Loading...</div>;
+  if (error) return <div className="EditPage-errorText text-red-400 p-8">{error}</div>;
   if (!page) return <div className="text-red-400 p-8">Page not found</div>;
 
   // Check if user has edit permissions for this specific page

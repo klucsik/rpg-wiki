@@ -58,8 +58,8 @@ export default function MermaidView({ code }: MermaidViewProps) {
 
   if (isLoading) {
     return (
-      <div className="mermaid-diagram">
-        <div className="text-center text-gray-400 py-4">
+      <div className="MermaidView-loading mermaid-diagram">
+        <div className="MermaidView-loadingText text-center text-gray-400 py-4">
           Rendering diagram...
         </div>
       </div>
@@ -68,17 +68,17 @@ export default function MermaidView({ code }: MermaidViewProps) {
 
   if (error) {
     return (
-      <div className="mermaid-error">
-        <div className="error-title">Mermaid Diagram Error</div>
-        <div className="error-message">{error}</div>
+      <div className="MermaidView-error mermaid-error">
+        <div className="MermaidView-errorTitle error-title">Mermaid Diagram Error</div>
+        <div className="MermaidView-errorMessage error-message">{error}</div>
       </div>
     );
   }
 
   if (!svgContent) {
     return (
-      <div className="mermaid-diagram">
-        <div className="text-center text-gray-400 py-4">
+      <div className="MermaidView-loading mermaid-diagram">
+        <div className="MermaidView-loadingText text-center text-gray-400 py-4">
           No diagram content
         </div>
       </div>
@@ -86,9 +86,9 @@ export default function MermaidView({ code }: MermaidViewProps) {
   }
 
   return (
-    <div className="mermaid-diagram">
+    <div className="MermaidView-root mermaid-diagram">
       <div 
-        className="mermaid-svg"
+        className="MermaidView-svg mermaid-svg"
         dangerouslySetInnerHTML={{ __html: svgContent }}
       />
     </div>

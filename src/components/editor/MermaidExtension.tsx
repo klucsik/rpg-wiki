@@ -102,9 +102,9 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   if (isEditing) {
     return (
       <NodeViewWrapper>
-        <div className="mermaid-editor border-2 border-blue-500 rounded-lg p-4 bg-gray-800 my-4">
+        <div className="MermaidEditor-root mermaid-editor border-2 border-blue-500 rounded-lg p-4 bg-gray-800 my-4">
           <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-200 mb-1">
+            <label className="MermaidEditor-label block text-sm font-medium text-gray-200 mb-1">
               Mermaid Diagram Code
             </label>
             <textarea
@@ -112,27 +112,27 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
               value={code}
               onChange={(e) => handleCodeChange(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full h-40 p-3 bg-gray-900 text-gray-100 border border-gray-600 rounded font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="MermaidEditor-textarea w-full h-40 p-3 bg-gray-900 text-gray-100 border border-gray-600 rounded font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter Mermaid diagram code here..."
               spellCheck={false}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="MermaidEditor-actions flex gap-2">
             <button
               onClick={handleSave}
-              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="MermaidEditor-saveBtn px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Save (Ctrl+Enter)
             </button>
             <button
               onClick={handleCancel}
-              className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="MermaidEditor-cancelBtn px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               Cancel (Esc)
             </button>
           </div>
           {error && (
-            <div className="mt-2 p-2 bg-red-900 border border-red-700 rounded text-red-200 text-sm">
+            <div className="MermaidEditor-error mt-2 p-2 bg-red-900 border border-red-700 rounded text-red-200 text-sm">
               {error}
             </div>
           )}
@@ -145,27 +145,27 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
     <NodeViewWrapper style={{ ...getEmbedStyleObject({ width: node.attrs.width, align: node.attrs.align, wrap: node.attrs.wrap }), position: 'relative' }}>
       <EmbedDragHandle />
       <div 
-        className={`mermaid-diagram ${selected ? 'ring-2 ring-blue-500' : ''} rounded-lg p-4 bg-gray-900 my-4 cursor-pointer transition-all`}
+        className={`MermaidNode-preview mermaid-diagram ${selected ? 'ring-2 ring-blue-500' : ''} rounded-lg p-4 bg-gray-900 my-4 cursor-pointer transition-all`}
         onClick={() => setIsEditing(true)}
         ref={mermaidRef}
       >
         {svgContent ? (
           <div 
             dangerouslySetInnerHTML={{ __html: svgContent }}
-            className="mermaid-svg [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:mx-auto"
+            className="MermaidNode-svg mermaid-svg [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:mx-auto"
           />
         ) : error ? (
-          <div className="p-4 bg-red-900 border border-red-700 rounded text-red-200">
+          <div className="MermaidNode-error p-4 bg-red-900 border border-red-700 rounded text-red-200">
             <p className="font-medium">Mermaid Error:</p>
             <p className="text-sm mt-1">{error}</p>
             <p className="text-xs mt-2 text-gray-400">Click to edit the diagram code</p>
           </div>
         ) : code ? (
-          <div className="p-4 bg-gray-800 border border-gray-600 rounded text-gray-300">
+          <div className="MermaidNode-loading p-4 bg-gray-800 border border-gray-600 rounded text-gray-300">
             <p className="text-sm">Rendering diagram...</p>
           </div>
         ) : (
-          <div className="p-4 bg-gray-800 border-2 border-dashed border-gray-600 rounded text-gray-400 text-center">
+          <div className="MermaidNode-emptyState p-4 bg-gray-800 border-2 border-dashed border-gray-600 rounded text-gray-400 text-center">
             <p className="text-sm">Click to add a Mermaid diagram</p>
           </div>
         )}

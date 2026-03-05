@@ -10,23 +10,23 @@ export default function UserMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="UserMenu-root relative">
       {isUserAuthenticated(user) ? (
         <button
-          className="bg-gray-800 text-indigo-100 px-2 sm:px-3 py-1 rounded flex items-center gap-1 sm:gap-2 hover:bg-gray-700 border border-gray-700 min-w-0 max-w-xs"
+          className="UserMenu-toggleBtn bg-gray-800 text-indigo-100 px-2 sm:px-3 py-1 rounded flex items-center gap-1 sm:gap-2 hover:bg-gray-700 border border-gray-700 min-w-0 max-w-xs"
           onClick={() => setOpen((o) => !o)}
           data-testid="user-menu-button"
         >
-          <span className="font-semibold truncate" data-testid="user-display-name">{user.name}</span>
-          <span className="text-xs px-1 sm:px-2 py-0.5 rounded bg-indigo-700 text-white ml-1 truncate max-w-20 sm:max-w-none">
+          <span className="UserMenu-displayName font-semibold truncate" data-testid="user-display-name">{user.name}</span>
+          <span className="UserMenu-groupsBadge text-xs px-1 sm:px-2 py-0.5 rounded bg-indigo-700 text-white ml-1 truncate max-w-20 sm:max-w-none">
             {user.groups.slice(0, 2).join(", ")}{user.groups.length > 2 ? "..." : ""}
           </span>
-          <svg className="w-4 h-4 ml-1 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+          <svg className="UserMenu-chevron w-4 h-4 ml-1 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </button>
       ) : (
-        <Link href="/auth/signin" data-testid="header-login-link">
+        <Link href="/auth/signin" className="UserMenu-loginLink" data-testid="header-login-link">
           <button
-            className="bg-indigo-700 text-white px-3 sm:px-4 py-1 rounded font-semibold hover:bg-indigo-800 border border-indigo-800"
+            className="UserMenu-loginBtn bg-indigo-700 text-white px-3 sm:px-4 py-1 rounded font-semibold hover:bg-indigo-800 border border-indigo-800"
             data-testid="header-login-button"
           >
             Login
@@ -34,13 +34,13 @@ export default function UserMenu() {
         </Link>
       )}
       {open && isUserAuthenticated(user) && (
-        <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded shadow-lg z-50" data-testid="user-dropdown">
-          <div className="px-4 py-2 border-b border-gray-700 text-sm">
-            <div className="font-semibold text-indigo-200 truncate">{user.name}</div>
-            <div className="text-xs text-gray-400 truncate">Groups: {user.groups.join(", ")}</div>
+        <div className="UserMenu-dropdown absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded shadow-lg z-50" data-testid="user-dropdown">
+          <div className="UserMenu-dropdownHeader px-4 py-2 border-b border-gray-700 text-sm">
+            <div className="UserMenu-dropdownName font-semibold text-indigo-200 truncate">{user.name}</div>
+            <div className="UserMenu-dropdownGroups text-xs text-gray-400 truncate">Groups: {user.groups.join(", ")}</div>
           </div>
           <button
-            className="w-full text-left px-4 py-2 hover:bg-gray-800 text-red-300"
+            className="UserMenu-logoutBtn w-full text-left px-4 py-2 hover:bg-gray-800 text-red-300"
             onClick={async () => {
               await signOut();
               window.location.replace("/");

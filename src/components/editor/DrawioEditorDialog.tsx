@@ -147,6 +147,7 @@ export const DrawioEditorDialog: React.FC<DrawioEditorDialogProps> = ({
 
   return (
     <div
+      className="DrawioEditorDialog-overlay"
       style={{
         position: 'fixed',
         top: 0,
@@ -161,6 +162,7 @@ export const DrawioEditorDialog: React.FC<DrawioEditorDialogProps> = ({
     >
       {/* Header with controls */}
       <div
+        className="DrawioEditorDialog-header"
         style={{
           backgroundColor: '#1f2937',
           padding: '12px 20px',
@@ -170,13 +172,14 @@ export const DrawioEditorDialog: React.FC<DrawioEditorDialogProps> = ({
           borderBottom: '1px solid #374151',
         }}
       >
-        <h2 style={{ margin: 0, color: '#f3f4f6', fontSize: '18px' }}>
+        <h2 className="DrawioEditorDialog-heading" style={{ margin: 0, color: '#f3f4f6', fontSize: '18px' }}>
           Edit Diagram
         </h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="DrawioEditorDialog-headerActions" style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={handleSave}
             disabled={!isReady}
+            className="DrawioEditorDialog-saveBtn"
             style={{
               padding: '8px 16px',
               backgroundColor: isReady ? '#10b981' : '#6b7280',
@@ -191,6 +194,7 @@ export const DrawioEditorDialog: React.FC<DrawioEditorDialogProps> = ({
           </button>
           <button
             onClick={handleCancel}
+            className="DrawioEditorDialog-cancelBtn"
             style={{
               padding: '8px 16px',
               backgroundColor: '#6b7280',
@@ -209,6 +213,7 @@ export const DrawioEditorDialog: React.FC<DrawioEditorDialogProps> = ({
       {/* Draw.io iframe */}
       <iframe
         ref={iframeRef}
+        className="DrawioEditorDialog-iframe"
         src="/drawio/index.html?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1&dark=1"
         style={{
           flex: 1,

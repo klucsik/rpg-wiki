@@ -62,19 +62,19 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="max-w-md w-full space-y-8 p-8">
+    <div className="SignIn-root min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="SignIn-card max-w-md w-full space-y-8 p-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="SignIn-heading mt-6 text-center text-3xl font-extrabold text-white">
             Sign in to RPG Wiki
           </h2>
         </div>
 
         {/* SSO Login Options */}
-        <div className="space-y-4">
+        <div className="SignIn-ssoSection space-y-4">
           <button
             onClick={handleKeycloakLogin}
-            className="w-full flex justify-center py-3 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="SignIn-keycloakBtn w-full flex justify-center py-3 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -82,7 +82,7 @@ export default function SignIn() {
             Sign in with Keycloak
           </button>
           
-          <div className="relative">
+          <div className="SignIn-divider relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-600" />
             </div>
@@ -93,13 +93,13 @@ export default function SignIn() {
         </div>
 
         {/* Credentials Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleCredentialsSubmit} data-testid="login-form">
-          <div className="rounded-md shadow-sm -space-y-px">
+        <form className="SignIn-credentialsForm mt-8 space-y-6" onSubmit={handleCredentialsSubmit} data-testid="login-form">
+          <div className="SignIn-inputGroup rounded-md shadow-sm -space-y-px">
             <div>
               <input
                 type="text"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-500 text-white bg-gray-800 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="SignIn-usernameInput appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-500 text-white bg-gray-800 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -110,7 +110,7 @@ export default function SignIn() {
               <input
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-500 text-white bg-gray-800 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="SignIn-passwordInput appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-500 text-white bg-gray-800 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -120,14 +120,14 @@ export default function SignIn() {
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm text-center" data-testid="login-error">{error}</div>
+            <div className="SignIn-errorMessage text-red-400 text-sm text-center" data-testid="login-error">{error}</div>
           )}
 
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="SignIn-submitBtn group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="login-button"
             >
               {loading ? "Signing in..." : "Sign in"}

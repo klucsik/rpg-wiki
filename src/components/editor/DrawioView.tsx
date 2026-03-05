@@ -121,7 +121,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
   return (
     <>
       <NodeViewWrapper
-        className={`drawio-diagram-wrapper ${selected ? 'ProseMirror-selectednode' : ''}`}
+        className={`DrawioView-root drawio-diagram-wrapper ${selected ? 'ProseMirror-selectednode' : ''}`}
         style={{
           ...getEmbedStyleObject({
             width: node.attrs.width,
@@ -137,7 +137,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
         }}
       >
         <EmbedDragHandle />
-        <div className="diagram-controls" style={{
+        <div className="DrawioView-controls diagram-controls" style={{
           position: 'absolute',
           top: '8px',
           right: '8px',
@@ -147,6 +147,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
         }}>
           <button
             onClick={handleEdit}
+            className="DrawioView-editBtn"
             style={{
               padding: '4px 12px',
               backgroundColor: '#3b82f6',
@@ -162,6 +163,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
           </button>
           <button
             onClick={handleDelete}
+            className="DrawioView-deleteBtn"
             style={{
               padding: '4px 12px',
               backgroundColor: '#ef4444',
@@ -178,20 +180,20 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
         </div>
 
         {isLoading && (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+          <div className="DrawioView-loading" style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
             Loading diagram...
           </div>
         )}
 
         {error && (
-          <div style={{ padding: '20px', color: '#ef4444', textAlign: 'center' }}>
+          <div className="DrawioView-error" style={{ padding: '20px', color: '#ef4444', textAlign: 'center' }}>
             Error: {error}
           </div>
         )}
 
         {!isLoading && !error && svgContent && (
           <div
-            className="diagram-preview"
+            className="DrawioView-preview diagram-preview"
             style={{
               marginTop: '40px',
               display: 'flex',
@@ -214,7 +216,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
         )}
 
         {!isLoading && !error && !svgContent && !diagramXml && (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+          <div className="DrawioView-emptyState" style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
             Click Edit to create your diagram
           </div>
         )}

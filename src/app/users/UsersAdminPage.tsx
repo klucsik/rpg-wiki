@@ -109,23 +109,23 @@ export default function UsersAdminPage() {
   };
 
   return (
-    <div className="bg-gray-900/80 rounded-lg p-8 shadow-lg border border-gray-800 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Manage Users</h2>
-      <div className="mb-6">
+    <div className="UsersAdminPage-root bg-gray-900/80 rounded-lg p-8 shadow-lg border border-gray-800 max-w-2xl mx-auto">
+      <h2 className="UsersAdminPage-heading text-2xl font-bold mb-4">Manage Users</h2>
+      <div className="UsersAdminPage-addForm mb-6">
         <input 
-          className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2" 
+          className="UsersAdminPage-addDisplayNameInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2" 
           placeholder="Display Name" 
           value={newUser.name} 
           onChange={e => setNewUser(u => ({ ...u, name: e.target.value }))} 
         />
         <input 
-          className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2" 
+          className="UsersAdminPage-addUsernameInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2" 
           placeholder="Username" 
           value={newUser.username} 
           onChange={e => setNewUser(u => ({ ...u, username: e.target.value }))} 
         />
         <input 
-          className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2" 
+          className="UsersAdminPage-addPasswordInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2" 
           placeholder="Password" 
           type="password" 
           value={newUser.password} 
@@ -133,16 +133,16 @@ export default function UsersAdminPage() {
         />
         <select 
           multiple 
-          className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2"
+          className="UsersAdminPage-addGroupsSelect px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm mb-1 mr-2 block mb-2"
           value={newUser.groupIds.map(String)}
           onChange={e => setNewUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
           {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
-        <button className="bg-green-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-green-800 transition text-sm" onClick={handleCreate}>Add User</button>
+        <button className="UsersAdminPage-addBtn bg-green-700 text-white px-3 py-1 rounded font-semibold shadow hover:bg-green-800 transition text-sm" onClick={handleCreate}>Add User</button>
       </div>
-      <table className="w-full text-indigo-100">
+      <table className="UsersAdminPage-table w-full text-indigo-100">
         <thead>
-          <tr>
+          <tr className="UsersAdminPage-tableHead">
             <th className="text-left">Display Name</th>
             <th className="text-left">Username</th>
             <th>Groups</th>
@@ -151,23 +151,23 @@ export default function UsersAdminPage() {
         </thead>
         <tbody>
           {users.map(user => (
-            <tr key={user.id}>
+            <tr key={user.id} className="UsersAdminPage-userRow">
               <td>{editingId === user.id ? (
-                <input className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.name} onChange={e => setEditUser(u => ({ ...u, name: e.target.value }))} />
+                <input className="UsersAdminPage-editDisplayNameInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.name} onChange={e => setEditUser(u => ({ ...u, name: e.target.value }))} />
               ) : user.name}</td>
               <td>{editingId === user.id ? (
-                <input className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.username} onChange={e => setEditUser(u => ({ ...u, username: e.target.value }))} />
+                <input className="UsersAdminPage-editUsernameInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm" value={editUser.username} onChange={e => setEditUser(u => ({ ...u, username: e.target.value }))} />
               ) : user.username}</td>
               <td>{editingId === user.id ? (
                 <div className="space-y-1">
                   <input 
-                    className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm block w-full" 
+                    className="UsersAdminPage-editPasswordInput px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm block w-full" 
                     placeholder="New password (leave empty to keep current)" 
                     type="password"
                     value={editUser.password} 
                     onChange={e => setEditUser(u => ({ ...u, password: e.target.value }))} 
                   />
-                  <select multiple className="px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm w-full" value={editUser.groupIds.map(String)} onChange={e => setEditUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
+                  <select multiple className="UsersAdminPage-editGroupsSelect px-2 py-1 rounded border border-gray-700 bg-gray-900 text-indigo-100 text-sm w-full" value={editUser.groupIds.map(String)} onChange={e => setEditUser(u => ({ ...u, groupIds: Array.from(e.target.selectedOptions, o => Number(o.value)) }))}>
                     {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
                 </div>
@@ -175,23 +175,23 @@ export default function UsersAdminPage() {
               <td>
                 {editingId === user.id ? (
                   <>
-                    <button className="bg-indigo-700 text-white px-2 py-1 rounded mr-2" onClick={handleUpdate}>Save</button>
-                    <button className="bg-gray-700 text-white px-2 py-1 rounded" onClick={() => setEditingId(null)}>Cancel</button>
+                    <button className="UsersAdminPage-saveRowBtn bg-indigo-700 text-white px-2 py-1 rounded mr-2" onClick={handleUpdate}>Save</button>
+                    <button className="UsersAdminPage-cancelRowBtn bg-gray-700 text-white px-2 py-1 rounded" onClick={() => setEditingId(null)}>Cancel</button>
                   </>
                 ) : (
                   <>
-                    <button className="bg-yellow-700 text-white px-2 py-1 rounded mr-2" onClick={() => handleEdit(user)}>Edit</button>
+                    <button className="UsersAdminPage-editRowBtn bg-yellow-700 text-white px-2 py-1 rounded mr-2" onClick={() => handleEdit(user)}>Edit</button>
                     <button
-                      className="px-2 py-1 text-xs rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900"
+                      className="UsersAdminPage-deleteRowBtn px-2 py-1 text-xs rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900"
                       style={{ minWidth: 0 }}
                       onClick={() => handleDelete(user.id)}
                     >
                       Delete
                     </button>
                     {confirmDelete === user.id && (
-                      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                        <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 shadow-lg text-center">
-                          <h2 className="text-lg font-bold text-red-400 mb-4">
+                      <div className="UsersAdminPageDeleteModal-overlay fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                        <div className="UsersAdminPageDeleteModal-card bg-gray-900 border border-gray-700 rounded-lg p-6 shadow-lg text-center">
+                          <h2 className="UsersAdminPageDeleteModal-heading text-lg font-bold text-red-400 mb-4">
                             {user.username === 'admin'
                               ? 'The admin user cannot be deleted.'
                               : `Are you sure you want to delete user "${user.name}" (${user.username})?`}
@@ -199,14 +199,14 @@ export default function UsersAdminPage() {
                           <div className="flex gap-4 justify-center">
                             {user.username !== 'admin' && (
                               <button
-                                className="px-4 py-1 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900"
+                                className="UsersAdminPageDeleteModal-confirmBtn px-4 py-1 rounded bg-red-700 hover:bg-red-800 text-white font-semibold shadow border border-red-900"
                                 onClick={() => confirmDeleteUser(user.id)}
                               >
                                 Yes, Delete
                               </button>
                             )}
                             <button
-                              className="px-4 py-1 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900"
+                              className="UsersAdminPageDeleteModal-cancelBtn px-4 py-1 rounded bg-gray-700 hover:bg-gray-800 text-white font-semibold shadow border border-gray-900"
                               onClick={() => setConfirmDelete(null)}
                             >
                               Cancel

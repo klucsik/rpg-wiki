@@ -11,27 +11,27 @@ import SiteSettingsPage from "../../components/admin/SiteSettings";
 
 function AdminSidebar() {
   return (
-    <aside className="w-64 min-w-56 max-w-xs bg-gray-900/90 border-r border-gray-800 h-full p-6 flex flex-col gap-4 sticky top-0">
-      <h2 className="text-xl font-bold text-indigo-200 mb-2">Admin Menu</h2>
-      <nav className="flex flex-col gap-2">
-        <a href="#users" className="text-indigo-300 hover:text-indigo-100 transition font-medium">User Management</a>
-        <a href="#groups" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Group Management</a>
-        <a href="#backup" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Git Backup Settings</a>
-        <a href="#settings" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Site Settings</a>
-        <a href="#session-info" className="text-indigo-300 hover:text-indigo-100 transition font-medium">Session Info</a>
+    <aside className="AdminSidebar-root w-64 min-w-56 max-w-xs bg-gray-900/90 border-r border-gray-800 h-full p-6 flex flex-col gap-4 sticky top-0">
+      <h2 className="AdminSidebar-heading text-xl font-bold text-indigo-200 mb-2">Admin Menu</h2>
+      <nav className="AdminSidebar-nav flex flex-col gap-2">
+        <a href="#users" className="AdminSidebar-usersLink text-indigo-300 hover:text-indigo-100 transition font-medium">User Management</a>
+        <a href="#groups" className="AdminSidebar-groupsLink text-indigo-300 hover:text-indigo-100 transition font-medium">Group Management</a>
+        <a href="#backup" className="AdminSidebar-backupLink text-indigo-300 hover:text-indigo-100 transition font-medium">Git Backup Settings</a>
+        <a href="#settings" className="AdminSidebar-settingsLink text-indigo-300 hover:text-indigo-100 transition font-medium">Site Settings</a>
+        <a href="#session-info" className="AdminSidebar-sessionLink text-indigo-300 hover:text-indigo-100 transition font-medium">Session Info</a>
         {/* Add more admin options here as needed */}
       </nav>
       
-      <div className="mt-auto pt-4 border-t border-gray-700 space-y-2">
+      <div className="AdminSidebar-actions mt-auto pt-4 border-t border-gray-700 space-y-2">
         <Link 
           href="/" 
-          className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition font-medium"
+          className="AdminSidebar-backBtn block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition font-medium"
         >
           ← Back to Wiki
         </Link>
         <button
           onClick={() => signOut()}
-          className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition font-medium"
+          className="AdminSidebar-signOutBtn w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition font-medium"
         >
           Sign Out
         </button>
@@ -45,10 +45,10 @@ export default function AdminPage() {
   
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-indigo-200 mb-4">Loading...</h1>
-          <p className="text-indigo-100">Please wait while we verify your permissions.</p>
+      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="AdminPage-stateCard bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
+          <h1 className="AdminPage-stateHeading text-2xl font-bold text-indigo-200 mb-4">Loading...</h1>
+          <p className="AdminPage-stateMessage text-indigo-100">Please wait while we verify your permissions.</p>
         </div>
       </div>
     );
@@ -56,13 +56,13 @@ export default function AdminPage() {
 
   if (!isUserAuthenticated(user)) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
-          <h1 className="text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
-          <p className="text-indigo-100 mb-4">You must be logged in to access the admin page.</p>
+      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="AdminPage-stateCard bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
+          <h1 className="AdminPage-stateHeading text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
+          <p className="AdminPage-stateMessage text-indigo-100 mb-4">You must be logged in to access the admin page.</p>
           <Link
             href="/auth/signin"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition font-medium"
+            className="AdminPage-loginLink inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition font-medium"
           >
             Go to Login
           </Link>
@@ -76,45 +76,45 @@ export default function AdminPage() {
   
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
-          <h1 className="text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
-          <p className="text-indigo-100 mb-2">You do not have permission to access the admin page.</p>
-          <p className="text-indigo-100/80 text-sm">Current groups: {user.groups?.join(', ') || 'None'}</p>
+      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="AdminPage-stateCard bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
+          <h1 className="AdminPage-stateHeading text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
+          <p className="AdminPage-stateMessage text-indigo-100 mb-2">You do not have permission to access the admin page.</p>
+          <p className="AdminPage-stateMessage text-indigo-100/80 text-sm">Current groups: {user.groups?.join(', ') || 'None'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="AdminPage-root flex min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       <AdminSidebar />
-      <main className="flex-1 p-8">
+      <main className="AdminPage-main flex-1 p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-indigo-100 mb-2">Admin Dashboard</h1>
-          <p className="text-indigo-300">Welcome back, <span className="font-semibold">{user.username}</span>!</p>
+          <h1 className="AdminPage-heading text-4xl font-bold text-indigo-100 mb-2">Admin Dashboard</h1>
+          <p className="AdminPage-welcome text-indigo-300">Welcome back, <span className="font-semibold">{user.username}</span>!</p>
         </div>
         
-        <section id="users" className="mb-12">
+        <section id="users" className="AdminPage-usersSection mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">User Management</h1>
           <UsersAdminPage />
         </section>
-        <section id="groups" className="mb-12">
+        <section id="groups" className="AdminPage-groupsSection mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Group Management</h1>
           <GroupsAdminPage />
         </section>
-        <section id="backup" className="mb-12">
+        <section id="backup" className="AdminPage-backupSection mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Git Backup Settings</h1>
           <BackupSettingsPage />
         </section>
-        <section id="settings" className="mb-12">
+        <section id="settings" className="AdminPage-settingsSection mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Site Settings</h1>
           <SiteSettingsPage />
         </section>
         
-        <section id="session-info" className="mb-12">
+        <section id="session-info" className="AdminPage-sessionSection mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Session Information</h1>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <div className="AdminPage-sessionInfo bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-indigo-300 mb-4">Current User Session</h3>
             <div className="space-y-2 text-sm">
               <p><span className="text-indigo-400 font-medium">Username:</span> <span className="text-indigo-100">{user.username}</span></p>

@@ -9,6 +9,7 @@ import React from 'react';
  */
 export const EmbedDragHandle: React.FC<{ label?: string }> = ({ label }) => (
   <div
+    className="EmbedDragHandle-root"
     data-drag-handle
     contentEditable={false}
     title={label ?? 'Drag to reposition'}
@@ -39,6 +40,6 @@ export const EmbedDragHandle: React.FC<{ label?: string }> = ({ label }) => (
       <circle cx="9" cy="6" r="1.2"/>
       <circle cx="9" cy="10" r="1.2"/>
     </svg>
-    {label && <span>{label}</span>}
+    {label && <span className="EmbedDragHandle-label">{label}</span>}
   </div>
 );

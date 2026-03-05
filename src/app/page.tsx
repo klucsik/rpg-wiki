@@ -38,8 +38,8 @@ export default function Page() {
 
   if (loading || shouldRedirect) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="text-indigo-400">Loading...</div>
+      <div className="Page-loadingOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="Page-loadingText text-indigo-400">Loading...</div>
       </div>
     );
   }
