@@ -170,7 +170,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
               )}
               
               {selectedPage.content ? (
-                <div className="prose prose-invert max-w-none overflow-x-hidden break-words flex-1 overflow-auto min-h-0">
+                <div className="prose prose-invert max-w-none overflow-x-hidden break-words flex-1 overflow-auto min-h-0 pr-2">
                   {parseWikiContentWithRestrictedBlocks(selectedPage.content, {
                     groups: user.groups,
                   })}
