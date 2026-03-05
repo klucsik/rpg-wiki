@@ -62,7 +62,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="SignIn-root min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="SignIn-root min-h-full flex items-center justify-center bg-gray-950">
       <div className="SignIn-card max-w-md w-full space-y-8 p-8">
         <div>
           <h2 className="SignIn-heading mt-6 text-center text-3xl font-extrabold text-white">

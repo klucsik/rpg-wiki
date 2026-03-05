@@ -2,6 +2,7 @@
 ### Version 20260305
 - Add per-page request count metrics
 - Make the editor server unreachable detection include 502-504 errors.
+- Improve styling
 
 ### Version 20260304
 - Added graceful shutdown support: All editing sessions will be draft-saved before the server shuts down.

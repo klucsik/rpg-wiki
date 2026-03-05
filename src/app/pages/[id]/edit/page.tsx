@@ -189,7 +189,7 @@ export default function EditPage() {
   // Check if user has edit permissions for this specific page
   if (!canUserEditPage(user, page)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center max-w-md">
           <h1 className="text-3xl font-bold text-red-400 mb-4">Edit Restricted</h1>
           <p className="text-indigo-100 mb-2">You don&apos;t have permission to edit this page.</p>
@@ -225,7 +225,7 @@ export default function EditPage() {
           onGoBack={handleLockWarningGoBack}
         />
       )}
-      <div className="min-h-screen min-w-0 w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex">
+      <div className="h-full min-w-0 w-full bg-gradient-to-br from-gray-900 to-gray-800 flex">
         <main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-full w-full">
           <div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">
             <PageEditor

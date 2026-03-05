@@ -74,7 +74,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
   }
 
   return (
-    <div className="min-h-screen h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex relative overflow-hidden max-w-[100vw]">
+    <div className="h-full bg-gradient-to-br from-gray-900 to-gray-800 flex relative overflow-hidden max-w-[100vw]">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
@@ -95,7 +95,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           onClose={() => setSidebarOpen(false)}
         />
       </div>
-      <main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-screen w-full overflow-hidden max-w-full overscroll-contain box-border ml-0 lg:ml-80">
+      <main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-full w-full overflow-hidden max-w-full overscroll-contain box-border ml-0 lg:ml-80">
         {/* Sidebar toggle button for mobile */}
         {!sidebarOpen && (
           <button
@@ -109,7 +109,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           </button>
         )}
         
-        <div className="w-full h-full flex flex-col min-h-0 min-w-0" style={{height: 'calc(100vh - 64px)'}}>
+        <div className="w-full h-full flex flex-col min-h-0 min-w-0">
           {loading && <div className="text-indigo-400 p-4">Loading...</div>}
           {error && (
             <div className="text-red-400 font-semibold mb-2 p-4">{error}</div>
@@ -192,7 +192,7 @@ export default function PagesView({ initialId }: { initialId?: number | null }) 
           )}
           {/* NO ACCESS */}
           {selectedPage && !canViewSelected && (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center h-full">
               <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-xl text-center">
                 <h1 className="text-3xl font-bold text-red-400 mb-4">No Access</h1>
                 <p className="text-indigo-100 mb-2">

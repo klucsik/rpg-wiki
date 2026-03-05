@@ -34,7 +34,7 @@ export default function Pages() {
 	}
 
 	return (
-		<div className="min-h-screen min-w-0 w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex">
+		<div className="h-full min-w-0 w-full bg-gradient-to-br from-gray-900 to-gray-800 flex">
 			<PageList pages={pages} selectedId={selectedId} />
 			<main className="flex-1 flex flex-col items-stretch justify-start p-0 min-h-0 min-w-0 h-full w-full">
 				<div className="w-full h-full flex-1 flex flex-col min-h-0 min-w-0">

@@ -45,7 +45,7 @@ export default function AdminPage() {
   
   if (isLoading) {
     return (
-      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-full bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="AdminPage-stateCard bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
           <h1 className="AdminPage-stateHeading text-2xl font-bold text-indigo-200 mb-4">Loading...</h1>
           <p className="AdminPage-stateMessage text-indigo-100">Please wait while we verify your permissions.</p>
@@ -56,7 +56,7 @@ export default function AdminPage() {
 
   if (!isUserAuthenticated(user)) {
     return (
-      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-full bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="AdminPage-stateCard bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
           <h1 className="AdminPage-stateHeading text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
           <p className="AdminPage-stateMessage text-indigo-100 mb-4">You must be logged in to access the admin page.</p>
@@ -76,7 +76,7 @@ export default function AdminPage() {
   
   if (!isAdmin) {
     return (
-      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="AdminPage-stateOverlay flex items-center justify-center min-h-full bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="AdminPage-stateCard bg-gray-900/90 border border-gray-800 rounded-lg p-10 shadow-lg text-center">
           <h1 className="AdminPage-stateHeading text-3xl font-bold text-red-400 mb-4">Unauthorized</h1>
           <p className="AdminPage-stateMessage text-indigo-100 mb-2">You do not have permission to access the admin page.</p>
@@ -87,7 +87,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="AdminPage-root flex min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="AdminPage-root flex min-h-full bg-gradient-to-br from-gray-900 to-gray-800">
       <AdminSidebar />
       <main className="AdminPage-main flex-1 p-8">
         <div className="mb-8">

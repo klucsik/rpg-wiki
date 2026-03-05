@@ -22,7 +22,7 @@ export default function SignOut() {
   }, [router]);
 
   return (
-    <div className="SignOut-root min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="SignOut-root min-h-full flex items-center justify-center bg-gray-950">
       <div className="SignOut-card text-center">
         <h2 className="SignOut-heading text-2xl font-bold text-white mb-4" data-testid="signout-message">
           {isSigningOut ? "Signing out..." : "Sign Out"}

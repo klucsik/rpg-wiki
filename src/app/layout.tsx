@@ -31,7 +31,7 @@ export default function RootLayout({
           <GroupsProvider>
             <UserProvider>
               <HeaderNav />
-              <main className="RootLayout-main w-full flex-1 min-h-0">{children}</main>
+              <main className="RootLayout-main w-full flex-1 min-h-0 overflow-y-auto">{children}</main>
             </UserProvider>
           </GroupsProvider>
         </AuthProvider>

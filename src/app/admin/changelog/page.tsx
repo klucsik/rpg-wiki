@@ -47,7 +47,7 @@ export default function ChangelogPage() {
   }
 
   return (
-    <div className="ChangelogPage-root min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="ChangelogPage-root min-h-full bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="ChangelogPage-container container mx-auto px-4 py-8">
         <div className="ChangelogPage-inner max-w-4xl mx-auto">
           <div className="ChangelogPage-header mb-6 flex items-center justify-between">
