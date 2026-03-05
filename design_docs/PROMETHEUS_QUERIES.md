@@ -134,6 +134,67 @@ process_open_fds{service="rpg-wiki"}
 
 ---
 
+## Per-Page Business Metrics
+
+These counters are emitted with labels `page_id`, `page_path`, and `page_title`.
+
+> **Note:** Labels are set at write time. If a page is renamed or its path changes,
+> old label combinations remain in Prometheus with their historical counts.
+> Use `page_id` for reliable identity across renames.
+
+### Top 10 most-viewed pages (all time)
+```promql
+topk(10,
+  sum by (page_id, page_path, page_title) (page_views_total{service="rpg-wiki"})
+)
+```
+
+### Top 10 most-viewed pages in the last 7 days
+```promql
+topk(10,
+  sum by (page_id, page_path, page_title) (
+    increase(page_views_total{service="rpg-wiki"}[7d])
+  )
+)
+```
+
+### View rate (views/hour) per page — last 24 hours
+```promql
+sort_desc(
+  sum by (page_path, page_title) (
+    rate(page_views_total{service="rpg-wiki"}[24h]) * 3600
+  )
+)
+```
+
+### Top 10 most-edited pages (all time)
+```promql
+topk(10,
+  sum by (page_id, page_path, page_title) (page_edits_total{service="rpg-wiki"})
+)
+```
+
+### Edit activity over time — all pages (1h buckets)
+```promql
+sum(increase(page_edits_total{service="rpg-wiki"}[1h]))
+```
+
+### View-to-edit ratio per page (high ratio = popular read-only content)
+```promql
+sum by (page_path, page_title) (page_views_total{service="rpg-wiki"})
+  /
+sum by (page_path, page_title) (page_edits_total{service="rpg-wiki"} + 1)
+```
+
+### Pages with zero edits but views (untouched-but-read pages)
+```promql
+sum by (page_path, page_title) (page_views_total{service="rpg-wiki"})
+  unless
+sum by (page_path, page_title) (page_edits_total{service="rpg-wiki"})
+```
+
+---
+
 ## Recommended Alerts
 
 | Alert | Condition | Suggested threshold |

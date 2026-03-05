@@ -69,3 +69,44 @@ export function getHttpRequestsTotal(): Counter {
   }
   return httpRequestsTotal;
 }
+
+// ---- Per-page business metrics ----
+
+let pageViewsTotal: Counter | undefined;
+let pageEditsTotal: Counter | undefined;
+
+export function getPageViewsTotal(): Counter {
+  if (!pageViewsTotal) {
+    const registry = getRegistry();
+    const existing = registry.getSingleMetric('page_views_total');
+    if (existing) {
+      pageViewsTotal = existing as Counter;
+    } else {
+      pageViewsTotal = new Counter({
+        name: 'page_views_total',
+        help: 'Total number of times a published page has been viewed',
+        labelNames: ['page_id', 'page_path', 'page_title'],
+        registers: [registry],
+      });
+    }
+  }
+  return pageViewsTotal;
+}
+
+export function getPageEditsTotal(): Counter {
+  if (!pageEditsTotal) {
+    const registry = getRegistry();
+    const existing = registry.getSingleMetric('page_edits_total');
+    if (existing) {
+      pageEditsTotal = existing as Counter;
+    } else {
+      pageEditsTotal = new Counter({
+        name: 'page_edits_total',
+        help: 'Total number of times a page has been published (saved)',
+        labelNames: ['page_id', 'page_path', 'page_title'],
+        registers: [registry],
+      });
+    }
+  }
+  return pageEditsTotal;
+}

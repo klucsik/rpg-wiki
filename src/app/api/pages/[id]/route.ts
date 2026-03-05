@@ -5,6 +5,7 @@ import { getAuthFromRequest, requireEditPermissions } from '../../../../lib/auth
 import { filterRestrictedContent, needsServerProcessing } from '../../../../lib/server-content-filter';
 import { restorePlaceholdersToRestrictedBlocks, hasRestrictedPlaceholders } from '../../../../lib/placeholder-restore';
 import { withMetrics } from '@/lib/metrics/withMetrics';
+import { getPageViewsTotal, getPageEditsTotal } from '@/lib/metrics/registry';
 
 // GET latest version of a page by page_id
 async function GETHandler(
@@ -98,6 +99,13 @@ async function GETHandler(
       console.log(`Filtered ${removedBlocks.length} restricted blocks for user ${auth?.username || 'anonymous'}`);
     }
   }
+
+  // Track page view (only for published pages, not draft loads)
+  getPageViewsTotal().inc({
+    page_id: String(latestVersion.page_id),
+    page_path: latestVersion.path,
+    page_title: latestVersion.title,
+  });
 
   // Convert date fields to string for API response
   return NextResponse.json({
@@ -257,6 +265,13 @@ async function PUTHandler(
   // Release edit lock held by this user on this page
   await prisma.editLock.deleteMany({
     where: { page_id: parseInt(id), username: auth.username },
+  });
+
+  // Track page edit (published save)
+  getPageEditsTotal().inc({
+    page_id: String(newVersion.page_id),
+    page_path: newVersion.path,
+    page_title: newVersion.title,
   });
 
   // Trigger backup after successful save
