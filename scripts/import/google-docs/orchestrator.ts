@@ -1,6 +1,7 @@
 import { prisma } from '../../../../src/src/lib/db/db';
 import { parseMarkdown, parseHtml } from './parser';
 import { GoogleDocsImageImporter } from './image-importer';
+import * as cheerio from 'cheerio';
 import AdmZip from 'adm-zip';
 import { join, basename, extname, dirname } from 'path';
 import { existsSync, mkdirSync, rmSync, readFileSync, readdirSync, statSync } from 'fs';
@@ -89,15 +90,31 @@ export class GoogleDocsOrchestrator {
 
   private async importImages(images: GoogleDocsImageReference[], baseDir: string): Promise<Map<string, ImageImportResult>> {
     const importer = new GoogleDocsImageImporter(baseDir);
-    return await importer.importImages(images);
+    const results = await importer.importImages(images);
+    console.log(`Imported ${results.size} images:`, Array.from(results.keys()));
+    return results;
   }
 
   private applyImageReplacements(pages: GoogleDocsPage[], imageMap: Map<string, ImageImportResult>): GoogleDocsPage[] {
+    console.log(`Applying replacements for ${imageMap.size} images...`);
     return pages.map(page => {
-      let newContent = page.content;
-      imageMap.forEach((result, originalSrc) => {
-        newContent = newContent.split(originalSrc).join(result.newUrl);
+      const $ = cheerio.load(page.content, null, false);
+      let replacedCount = 0;
+
+      $('img').each((_, el) => {
+        const $img = $(el);
+        const src = $img.attr('src');
+        if (src && imageMap.has(src)) {
+          const result = imageMap.get(src)!;
+          console.log(`Replacing image src "${src}" with "${result.newUrl}"`);
+          $img.attr('src', result.newUrl);
+          replacedCount++;
+        }
       });
+
+      const newContent = $.html();
+      console.log(`Page "${page.title}" replacement count: ${replacedCount}`);
+      console.log(`Final page content: ${newContent.substring(0, 200)}`);
       return { ...page, content: newContent };
     });
   }
@@ -105,6 +122,7 @@ export class GoogleDocsOrchestrator {
   private async createWikiPages(pages: GoogleDocsPage[]): Promise<void> {
     for (const page of pages) {
       console.log(`Creating page: ${page.title} at ${page.path}`);
+      console.log(`Content to save: ${page.content.substring(0, 100)}...`);
       await prisma.page.create({
         data: {
           title: page.title,

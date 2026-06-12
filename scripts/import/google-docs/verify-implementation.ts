@@ -3,6 +3,7 @@ import { prisma } from '../../../../src/src/lib/db/db';
 import { join } from 'path';
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
+import AdmZip from 'adm-zip';
 
 async function runTest() {
   const testDir = join(tmpdir(), `gdoc-test-${Date.now()}`);
@@ -10,7 +11,15 @@ async function runTest() {
   mkdirSync(testDir, { recursive: true });
 
   try {
-    // 1. Create sample Markdown file
+    // Cleanup database before test
+    console.log('Cleaning up database...');
+    await prisma.page.deleteMany({});
+    await prisma.media.deleteMany({});
+
+    // 1. Create sample Markdown file and image in a directory
+    const sampleDir = join(testDir, 'sample');
+    mkdirSync(sampleDir, { recursive: true });
+    
     const mdContent = `
 # Test Page 1
 This is the content of the first page.
@@ -20,20 +29,26 @@ This is the content of the second page. It has an image.
 
 ![Test Image](images/test-image.png)
 `;
-    const mdPath = join(testDir, 'test.md');
+    const mdPath = join(sampleDir, 'test.md');
     writeFileSync(mdPath, mdContent);
 
-    // 2. Create sample image
-    const imagesDir = join(testDir, 'images');
+    const imagesDir = join(sampleDir, 'images');
     mkdirSync(imagesDir, { recursive: true });
     const imagePath = join(imagesDir, 'test-image.png');
     writeFileSync(imagePath, Buffer.from('fake-image-data'));
 
-    console.log('Created sample MD and image.');
+    console.log('Created sample MD and image in sample directory.');
+
+    // 2. Create a ZIP archive of the sample directory
+    const zipPath = join(testDir, 'test.zip');
+    const zip = new AdmZip();
+    zip.addLocalFolder(sampleDir, '');
+    zip.writeZip(zipPath);
+    console.log(`Created ZIP archive: ${zipPath}`);
 
     // 3. Run Orchestrator
     console.log('Running orchestrator...');
-    const orchestrator = new GoogleDocsOrchestrator(mdPath);
+    const orchestrator = new GoogleDocsOrchestrator(zipPath);
     await orchestrator.run({ importPath: testDir, dryRun: false });
 
     // 4. Verify results in DB
