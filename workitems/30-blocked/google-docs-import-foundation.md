@@ -1,9 +1,9 @@
 ---
-retry_count: 0
+retry_count: 2
 id: google-docs-import-foundation
 chat_jid: web:worker-google-docs-import-foundation
 title: 01- google-docs-import-foundation
-status: doing
+status: escalated
 priority: critical
 created: 2026-06-08
 updated: 2026-06-12
@@ -70,6 +70,8 @@ Prepare the environment for the Google Docs Import feature by resolving existing
 
 ## 📓 Notes
 - This is the prerequisite for all subsequent phases.
+- **[Janitor Runbook Note] Task escalated to 30-blocked due to inability to retrieve chat history for error diagnosis.**
+- **Escalation Summary:** Failed to retrieve chat history via `messages` tool, indicating a potential context loss or tool limitation. The task is moved to the blocked queue for manual review.
 
 ## 🔗 Links
 - [Master Plan](src/design_docs/google-docs-import.md)
