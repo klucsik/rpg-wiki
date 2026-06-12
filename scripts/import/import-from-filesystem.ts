@@ -20,7 +20,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
 import { join, extname, relative, basename, dirname } from 'path';
-import { prisma } from '../src/db';
+import { prisma } from '../../../../src/src/lib/db/db';
 
 interface ImportOptions {
   skipExisting: boolean;
