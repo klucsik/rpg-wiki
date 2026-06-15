@@ -1,3 +1,19 @@
+---
+id: google-docs-import-metadata-alignment-audit
+title: Google Docs Import — Metadata Alignment Audit Report
+status: doing
+retry_count: 0
+priority: medium
+created: 2026-06-15
+updated: 2026-06-15T12:00:00Z
+completed: 
+target_release: next
+estimate: M
+risk: low
+tags: [audit, google-docs]
+owner: pi
+---
+
 # Google Docs Import — Metadata Alignment Audit Report
 
 **Date**: 2026-06-13  
