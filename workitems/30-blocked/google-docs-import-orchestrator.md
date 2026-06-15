@@ -1,7 +1,8 @@
 ---
 id: google-docs-import-orchestrator
 title: 02- google-docs-import-orchestrator
-status: doing
+status: blocked
+retry_count: 1
 priority: high
 created: 2026-06-06
 updated: 2026-06-13T07:55:00Z
@@ -27,10 +28,10 @@ owner: pi
 - Strictly avoid content alteration by the LLM.
 
 ## 📝 Summary
-The Orchestrator is the central engine that coordinates the entire import process. It manages the workflow: receiving the user's uploaded files (or ZIP), triggering the `google-docs-parser` to split the document, coordinating the `google-docs-image-importer` to handle media, and finally creating the resulting Wiki pages.
+The Orchestrator is the central engine that coordinates the entire import process. It manages the workflow: receiving the user's uploaded file (Markdown or HTML), triggering the `google-docs-parser` to split the document, coordinating the `google-docs-image-importer` to handle media, and finally creating the resulting Wiki pages.
 
 ## 🚧 Blockers
-[No blockers]
+Error: No associated chat history found for this workitem in 'doing' status. The task was moved to blocked without a worker assignment or conversation log.
 
 ## ✅ Acceptance Criteria
 - [ ] Coordinates the full end-to-end flow: File Upload/Extraction -> Parsing & Splitting -> Image Import -> Page Creation.
@@ -49,7 +50,6 @@ The Orchestrator is the central engine that coordinates the entire import proces
 ## 🧪 Test Plan
 - [ ] Integration test: One uploaded Markdown file with H1/H2 structure results in multiple correctly nested Wiki pages.
 - [ ] Verify images are correctly embedded in the new pages.
-- [ ] Test with a large ZIP archive to ensure no timeouts.
 
 ## 🏁 Definition of Done
 - A complete, automated import process from a single uploaded file/archive to a set of Wiki pages.

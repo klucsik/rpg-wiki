@@ -110,7 +110,7 @@ interface LLMSliceOutput {
     
     // Optional but recommended:
     sourceDocTitle?: string;  // for provenance tracking  
-    originalPath?: string;    // where the file came from (ZIP entry path)
+    sourceFile?: string;      // name of the uploaded source file
     
     // Slicing metadata — content fidelity verification:
     sliceIndex?: number;      // which page in document this represents

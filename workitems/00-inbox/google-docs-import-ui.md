@@ -27,14 +27,14 @@ owner: pi
 - Strictly avoid content alteration by the LLM.
 
 ## 📝 Summary
-Provide a user-friendly way for users to trigger the Google Docs import. This will be a UI component (modal or dedicated page) in the Wiki where users can upload their exported files (Markdown, HTML, or ZIP).
+Provide a user-friendly way for users to trigger the Google Docs import. This will be a UI component (modal or dedicated page) in the Wiki where users can upload their exported Markdown or HTML file.
 
 ## 🚧 Blockers
 [No blockers]
 
 ## ✅ Acceptance Criteria
 - [ ] A UI element (file upload area) exists in the Wiki.
-- [ ] User can upload a file (Markdown, HTML) or a ZIP archive.
+- [ ] User can upload an exported Markdown or HTML file.
 - [ ] The UI provides feedback (e.g., "Uploading...", "Importing...", "Success!", or error messages).
 - [ ] Progress indicators are shown if possible for larger imports.
 

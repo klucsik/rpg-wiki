@@ -35,8 +35,7 @@ The Google Docs import feature has a partially implemented codebase in `src/scri
 ## ✅ Acceptance Criteria
 - [ ] The import script runs without `PrismaClientInitializationError`.
 - [ ] All existing implementation tests pass.
-- [ ] A test import with a ZIP file containing a Markdown file and an `images/` folder succeeds.
-- [ ] The parsed Wiki pages have correct hierarchical paths (H1/H2).
+
 - [ ] Images are correctly uploaded to the Wiki and their URLs are updated in the content.
 
 ## 🚀 Implementation Paths

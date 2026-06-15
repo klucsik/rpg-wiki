@@ -27,14 +27,14 @@ owner: pi
 - Strictly avoid content alteration by the LLM.
 
 ## 📝 Summary
-Implement a pipeline to handle images found within the imported files (Markdown or HTML). This involves identifying image references, retrieving the image data (from the uploaded ZIP/folder or via URLs), uploading it to the Wiki's internal media storage, and updating the HTML content with the new local media URLs.
+Implement a pipeline to handle images found within the imported files (Markdown or HTML). This involves identifying image references, retrieving the image data (locally from extracted folder contents or via remote URL), uploading it to the Wiki's internal media storage, and updating the HTML content with the new local media URLs.
 
 ## 🚧 Blockers
 [No blockers]
 
 ## ✅ Acceptance Criteria
 - [ ] Detects all image elements within the parsed content.
-- [ ] For Markdown: Resolves local file paths from the uploaded archive/folder.
+- [ ] For Markdown: Resolves relative image paths next to the extracted document.
 - [ ] For HTML: Resolves relative paths or handles remote URLs.
 - [ ] Uploads the image bytes to the Wiki's `Media` table.
 - [ ] Replaces the original image source in the HTML with the new `/api/images/[id]` URL.
