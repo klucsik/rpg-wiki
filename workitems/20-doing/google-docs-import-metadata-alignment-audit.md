@@ -2,10 +2,10 @@
 id: google-docs-import-metadata-alignment-audit
 title: Google Docs Import — Metadata Alignment Audit Report
 status: doing
-retry_count: 1
+retry_count: 2
 priority: medium
 created: 2026-06-15
-updated: 2026-06-16T00:00:00Z
+updated: 2026-06-16T13:55:00Z
 completed: 
 target_release: next
 estimate: M
