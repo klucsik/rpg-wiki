@@ -1,8 +1,8 @@
 ---
 id: google-docs-import-metadata-alignment-audit
 title: Google Docs Import — Metadata Alignment Audit Report
-status: doing
-retry_count: 3
+status: done
+retry_count: 0
 priority: medium
 created: 2026-06-15
 updated: 2026-06-17T09:30:00Z
@@ -287,3 +287,11 @@ This schema ensures:
 ---
 
 *Audit complete. All findings traceable to specific files: `schema.prisma`, `src/scripts/import/google-docs/orchestrator.ts`, `parser.ts`, `types.ts`, `image-importer.ts`.*
+
+---
+## ✅ Completed 2026-06-17
+Audit delivered as this document. Actionable findings split into follow-up workitems:
+- [google-docs-import-page-access-defaults](../30-blocked/google-docs-import-page-access-defaults.md) — 🔴 Critical: fix edit_groups/view_groups defaults on page creation
+- [google-docs-import-path-collision-handling](../10-next/google-docs-import-path-collision-handling.md) — 🔴 Critical: add path collision detection + resolution
+- [google-docs-import-empty-path-fallback](../10-next/google-docs-import-empty-path-fallback.md) — 🟡 Important: handle documents without headings
+- [google-docs-import-llm-types-expansion](../10-next/google-docs-import-llm-types-expansion.md) — 🟡 Important: expand types.ts for LLM output readiness
