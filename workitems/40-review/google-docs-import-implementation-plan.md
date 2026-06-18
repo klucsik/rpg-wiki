@@ -1,7 +1,7 @@
 ---
-status: doing
+status: completed
 retry_count: 0
-updated: 2026-06-18T07:48:00Z
+updated: 2026-06-18T08:15:00Z
 chat_jid: web:worker-google-docs-import-implementation-plan
 ---
 # Google Docs Import — Implementation Plan  
@@ -19,7 +19,25 @@ chat_jid: web:worker-google-docs-import-implementation-plan
 | #3 Empty-path fallback from slugified title + timestamp | 🟡 Important | `path: string` required in interface, but parser emits empty strings for heading-less docs | ❌ **NOT IMPLEMENTED** — `splitHtml()` produces `path: ''` when no h1/h2 headings exist; also falls back to empty path in the post-loop push |
 | #4 types.ts metadata expansion (visibility/group fields) | 🟡 Important | ✅ Already done — interface has `visibility`, `targetGroups`, `edit_groups`, `view_groups`; `PageVisibility` type defined with `'public' \| 'owner'` enum and doc comments explaining group mapping | N/A — just a type change, no runtime logic needed yet |
 
-**Bottom line**: types.ts (Finding #4) is already done. The remaining 3 findings (#1 Critical, #2 Critical, #3 Important) all require changes to **orchestrator.ts**. Finding #3's parser-side fallback can optionally live in `parser.ts` but it's cleaner and more consistent with the collision detection logic if both are handled at import time (post-parse → pre-create).
+**Bottom line**: types.ts (Finding #4) is already done. The remaining 3 findings (#1 Critical, #2 Critical, #3 Important) have all been implemented in **orchestrator.ts**. All TypeScript compilation passes with zero errors.
+
+**Implementation status — ALL TASKS COMPLETE**
+| Task | Status | Key method(s) |
+|------|--------|---------------|
+| #1 Visibility-based group defaults | ✅ Done | `resolvePageGroups()` |
+| #2 Path collision detection + suffix resolution | ✅ Done | `ensureUniquePath()` |
+| #3 Empty-path fallback from slugified title + timestamp | ✅ Done | `generateFallbackPath()`, `slugifyTitle()` |
+| #4 types.ts metadata expansion | ✅ Done (pre-existing) | — |
+| #5 User existence check | ✅ Done | `ensureUserExists()` |
+
+**Fixed issues during implementation:**
+- Missing `import AdmZip from 'adm-zip'` in orchestrator.ts (would cause runtime crash)
+- Missing type imports for `GoogleDocsImageReference` and `ImageImportResult`
+- Static vs instance method access: `this.slugifyTitle()` → `GoogleDocsOrchestrator.slugifyTitle()`
+- Return type narrowing in `resolvePageGroups()` partial override path
+- Missing `await` on orchestrator `.run()` call in verify-edge-cases.ts testMetadataFieldsPresentOnAllPages()
+- Broken syntax in verify-implementation.test.ts (replaced placeholder with real tests)
+- Type mismatch: `media.id` (number) → `String(media.id)` in image-importer.ts
 
 ---
 
