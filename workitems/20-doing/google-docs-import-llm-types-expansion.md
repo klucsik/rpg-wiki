@@ -1,10 +1,11 @@
 ---
 id: google-docs-import-llm-types-expansion
 title: Google Docs Import — Expand types.ts for LLM output readiness
-status: next
+status: doing
+retry_count: 0
 priority: medium
 created: 2026-06-17
-updated: 2026-06-17T15:45:00Z
+updated: 2026-06-18T09:30:00Z
 completed: 
 target_release: next
 estimate: S
