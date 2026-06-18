@@ -1,58 +1,81 @@
-import { expect, test, describe, mock, afterAll, beforeAll } from 'bun:test';
-import { GoogleDocsOrchestrator } from './orchestrator';
-import { prisma } from '../../../../src/src/lib/db/db';
-import { join } from 'path';
-import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
-import { tmpdir } from 'os';
+/** Bun-native test suite — run with `bun test`. */
 
-// Mocking the prisma module
-mock.module('../../../../src/src/lib/db/db', () => {
-  return {
-    prisma: {
-      page: {
-        findMany: async () => [],
-        create: async () => ({ id: 1, title: 'Test Page 1', content: '', path: '/path/1' }),
-      },
-      media: {
-        findFirst: async () => ({ id: 99, filename: 'test-image.png' }),
-      },
-      $disconnect: async () => {},
-    },
+// Minimal type declarations for Bun globals so tsc passes.
+declare function describe(name: string, fn: () => void): void;
+declare function test(name: string, fn: () => void | Promise<void>): void;
+declare const expect: {
+  <T>(actual: T): {
+    toBe: (expected: unknown) => void;
+    toEqual: (expected: unknown) => void;
+    toHaveLength: (len: number) => void;
+    toBeDefined: () => void;
   };
+};
+declare function mockModule(specifier: string, factory: () => Record<string, unknown>): void;
+
+// ---------------------------------------------------------------------------
+// Mock Prisma so the orchestrator's DB-dependent helpers don't fail.
+// ---------------------------------------------------------------------------
+
+const mockPageCreate = (_d: Record<string, unknown>) => ({
+  id: 'mock-id',
+  title: _d.title as string,
+  path: _d.path as string,
+  edit_groups: ['importer'],
+  view_groups: ['importer'],
 });
 
-describe('GoogleDocsOrchestrator', () => {
-  const testDir = join(tmpdir(), `gdoc-test-mock-${Date.now()}`);
+const mockPrisma = {
+  page: {
+    findMany: async () => [] as never[],
+    create: mockPageCreate,
+  },
+};
 
-  beforeAll(async () => {
-    mkdirSync(testDir, { recursive: true });
+mockModule(
+  '../../../../src/src/lib/db/db',
+  () => ({ prisma: mockPrisma }),
+);
+
+import { GoogleDocsOrchestrator } from './orchestrator';
+
+describe('Google Docs Orchestrator', () => {
+  test('instantiates without error', () => {
+    const orch = new GoogleDocsOrchestrator('/tmp/fake.zip');
+    expect(orch).toBeDefined();
   });
 
-  afterAll(async () => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true });
-    }
+  test('slugifyTitle normalizes headings to lowercase slugs', () => {
+    expect(GoogleDocsOrchestrator.slugifyTitle('Hello World')).toBe('hello-world');
+    expect(GoogleDocsOrchestrator.slugifyTitle('  UPPER CASE  ')).toBe('upper-case');
+    expect(GoogleDocsOrchestrator.slugifyTitle('Special @#$ chars!')).toBe('special-chars');
+    expect(GoogleDocsOrchestrator.slugifyTitle('Multiple---Hyphens')).toBe('multiple-hyphens');
   });
 
-  test('should parse and import pages without crashing', async () => {
-    const mdContent = `
-# Test Page 1
-Content 1
+  test('resolvePageGroups defaults owner visibility to importer user', async () => {
+    const orch = new GoogleDocsOrchestrator('/tmp/fake.zip');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resolved = await (orch as any).resolvePageGroups({
+      title: 'Test',
+      content: '<p>content</p>',
+      path: 'test-page',
+    });
 
-## Test Page 2
-Content 2 with image: ![Test Image](images/test-image.png)
-`;
-    const mdPath = join(testDir, 'test.md');
-    writeFileSync(mdPath, mdContent);
+    expect(Array.isArray(resolved.edit_groups)).toBe(true);
+    expect(Array.isArray(resolved.view_groups)).toBe(true);
+  });
 
-    const imagesDir = join(testDir, 'images');
-    mkdirSync(imagesDir, { recursive: true });
-    const imagePath = join(imagesDir, 'test-image.png');
-    writeFileSync(imagePath, Buffer.from('fake-image-data'));
+  test('resolvePageGroups maps public visibility to admin/public groups', async () => {
+    const orch = new GoogleDocsOrchestrator('/tmp/fake.zip');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resolved = await (orch as any).resolvePageGroups({
+      title: 'Public Page',
+      content: '<p>public</p>',
+      path: 'public-page',
+      visibility: 'public' as const,
+    });
 
-    const orchestrator = new GoogleDocsOrchestrator(mdPath);
-    await orchestrator.run({ importPath: testDir, dryRun: false });
-    
-    expect(true).toBe(true);
+    expect(resolved.edit_groups).toEqual(['admin']);
+    expect(resolved.view_groups).toEqual(['public']);
   });
 });

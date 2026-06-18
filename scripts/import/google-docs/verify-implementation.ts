@@ -86,6 +86,43 @@ This is the content of the second page. It has an image.
     }
     console.log('✅ Image URL replacement verified.');
 
+    // Check metadata fields — edit_groups and view_groups must be set.
+    for (const page of pages) {
+      if (!page.edit_groups?.length || !Array.isArray(page.edit_groups)) {
+        throw new Error(`Page "${page.title}" missing non-empty edit_groups. Found: ${JSON.stringify(page.edit_groups)}`);
+      }
+      if (!page.view_groups?.length || !Array.isArray(page.view_groups)) {
+        throw new Error(`Page "${page.title}" missing non-empty view_groups. Found: ${JSON.stringify(page.view_groups)}`);
+      }
+    }
+    console.log('✅ edit_groups and view_groups correctly set on all pages.');
+
+    // Check that paths are unique.
+    const pathSet = new Set(pages.map(p => p.path));
+    if (pathSet.size !== pages.length) {
+      throw new Error(`Duplicate paths detected: ${pages.filter((p, i, arr) => arr.findIndex(a => a.path === p.path) !== i).map(p => `"${p.title}" → "${p.path}"`).join(', ')}`);
+    }
+    console.log('✅ All page paths are unique.');
+
+    // Check that empty-path fallback works: if the parser produces an empty path,
+    // it should have been replaced with a generated one.
+    for (const p of pages) {
+      if (!p.path || !p.path.trim()) {
+        throw new Error(`Page "${p.title}" has empty/null/blank path after import.`);
+      }
+    }
+    console.log('✅ All page paths are non-empty.');
+
+    // Check content integrity — verify parser did NOT alter original text.
+    const page1 = pages.find(p => p.title === 'Test Page 1');
+    if (!page1 || !page1.content.includes('This is the content of the first page.')) {
+      throw new Error(`Content fidelity check failed: original text not preserved in parsed output.`);
+    }
+    const expectedPage2Text = 'It has an image';
+    if (expectedPage2Text && (!page2 || !page2.content.includes(expectedPage2Text))) {
+      throw new Error('Content integrity: second page text was altered during parsing.');
+    }
+
     console.log('\n✨ ALL TESTS PASSED! ✨');
 
   } catch (error) {

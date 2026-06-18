@@ -3,9 +3,11 @@ import { parseMarkdown, parseHtml } from './parser';
 import { GoogleDocsImageImporter } from './image-importer';
 import * as cheerio from 'cheerio';
 import AdmZip from 'adm-zip';
-import { join, basename, extname, dirname } from 'path';
+import { join, extname, dirname } from 'path';
 import { existsSync, mkdirSync, rmSync, readFileSync, readdirSync, statSync } from 'fs';
 import { execSync } from 'child_process';
+import type { GoogleDocsImageReference, GoogleDocsPage, PageVisibility } from './types';
+import type { ImageImportResult } from './image-importer';
 import { GoogleDocsParsedResult } from './types';
 
 export interface OrchestratorOptions {
@@ -13,11 +15,100 @@ export interface OrchestratorOptions {
   dryRun?: boolean;
 }
 
+// ── shared slug normalization (mirrors parser.ts logic for consistency) ──
+
 export class GoogleDocsOrchestrator {
   private extractionDir: string;
 
   constructor(private filePath: string) {
     this.extractionDir = join('/tmp', `gdoc-import-${Date.now()}`);
+  }
+
+  // ── helpers for group resolution, path collision detection & fallbacks ─────────────
+
+  /** Resolve edit_groups / view_groups when not explicitly set by LLM/frontmatter. */
+  private async resolvePageGroups(page: GoogleDocsPage): Promise<{ title: string; content: string; path: string; edit_groups: string[]; view_groups: string[] }> {
+    // Normalize optional arrays so downstream logic is safe.
+    if (!page.edit_groups) page.edit_groups = [];
+    if (!page.view_groups)  page.view_groups  = [];
+
+    const visibility: PageVisibility | undefined = (page.visibility as PageVisibility | undefined);
+    const importerUser = await this.resolveImporterUsername();
+
+    switch (visibility || 'owner') {
+      case 'public':
+        return { ...page, edit_groups: ['admin'], view_groups: ['public'] };
+
+      default:
+        // owner — or any future enum value. Default to the importing user.
+        if (!page.edit_groups.length && !page.view_groups.length) {
+          return { ...page, edit_groups: [importerUser], view_groups: [importerUser] };
+        }
+    }
+
+    // Partial override — at least ensure owner can always view.
+    const vis = visibility || 'owner';
+    if (vis === 'public' || vis === 'owner') {
+      if (!page.view_groups.length) page.view_groups.push(importerUser);
+      if (!page.edit_groups.length)  page.edit_groups.push('admin');   // safe fallback.
+    }
+
+    return { title: page.title, content: page.content, path: page.path,
+             edit_groups: page.edit_groups ?? [], view_groups: page.view_groups ?? [] };
+  }
+
+  /** Resolve the importing user as a string identifier for group membership. */
+  private async resolveImporterUsername(): Promise<string> {
+    try {
+      const firstUser = await prisma.user.findFirst({ select: { id: true, name: true, username: true } });
+      if (firstUser) return String(firstUser.username ?? firstUser.name ?? `user-${firstUser.id}`);
+    } catch {}
+    // Deterministic fallback so page creation never fails even without a real user.
+    return 'importer';   
+  }
+
+  /** Ensures a path is unique among existing pages — appends -1, -2 … on collision. */
+  private async ensureUniquePath(proposed: string): Promise<string> {
+    if (!proposed || !proposed.trim()) return '';   // defer to empty-path fallback.
+
+    const candidate = proposed.replace(/\/\/+/, '/').replace(/^\//, '').trim();
+    if (!/[a-z0-9]/.test(candidate)) return '';  // already invalid — caller will generate a slug.
+
+    let uniqueCandidate = candidate;
+
+    try {
+      const existing = await prisma.page.findMany({ select: { path: true } });
+      const usedPaths = new Set(existing.map(p => p.path));
+
+      if (!usedPaths.has(uniqueCandidate)) return uniqueCandidate;   // no collision.
+
+      for (let counter = 1; counter < 50; counter++) {
+        const suffixed = `${candidate}-${counter}`;
+        if (!usedPaths.has(suffixed) && /[a-z0-9]/.test(suffixed)) return suffixed;
+      }
+    } catch { /* DB unavailable during dry-run or test — fall through to slug fallback */ }
+
+    // Safety: couldn't check uniqueness; caller will generate a fresh slug.
+    console.warn(`Collision detection failed for "${proposed}" — generating new path.`);
+    return '';
+  }
+
+  /** Generate a unique fallback when no heading structure provides a path. */
+  private async generateFallbackPath(title: string): Promise<string> {
+    const slug = GoogleDocsOrchestrator.slugifyTitle(title) || 'untitled';
+    let candidate = `${slug}-${Date.now().toString(36)}`;
+
+    return await this.ensureUniquePath(candidate);
+  }
+
+  /** Normalize a title into a lowercase-slug string (same rules as parser.ts). */
+  static slugifyTitle(text: string): string {
+    return text.toString()
+      .toLowerCase().trim()
+      .replace(/\s+/g, '-')                // spaces → hyphens
+      .replace(/[^a-z0-9\-]+/g, '')       // remove chars not in a-z / 0-9 or hyphen
+      .replace(/-+/g, '-');             // normalize: collapse consecutive hyphens
+
   }
 
   private async prepareExtractionDir() {
@@ -120,14 +211,39 @@ export class GoogleDocsOrchestrator {
   }
 
   private async createWikiPages(pages: GoogleDocsPage[]): Promise<void> {
-    for (const page of pages) {
-      console.log(`Creating page: ${page.title} at ${page.path}`);
-      console.log(`Content to save: ${page.content.substring(0, 100)}...`);
+    for (const raw of pages) {
+      // ── Task #1: resolve visibility → edit_groups / view_groups.
+      const resolved = await this.resolvePageGroups(raw);
+
+      let finalPath = resolved.path?.trim() ?? '';
+
+      if (!finalPath || !/[a-z0-9]/.test(finalPath)) {
+        // ── Task #3: empty-path fallback from slugified title + timestamp.
+        console.warn(`Empty path for page "${raw.title}" — generating fallback.`);
+        finalPath = await this.generateFallbackPath(raw.title);
+      } else {
+        // ── Task #2: ensure uniqueness (collision detection + suffix resolution).
+        const uniqueCandidate = await this.ensureUniquePath(resolved.path);
+        if (!uniqueCandidate || !/[a-z0-9]/.test(uniqueCandidate)) {
+          console.warn(`Collision or invalid path for "${raw.title}" — generating fallback.`);
+          finalPath = await this.generateFallbackPath(raw.title);   // double-fallback safety net.
+        } else {
+          finalPath = uniqueCandidate;
+        }
+      }
+
+      if (!finalPath) throw new Error(`Failed to resolve a valid path for page "${raw.title}" after all fallbacks.`);
+
+      console.log(`Creating page: ${resolved.title} at ${finalPath}`);
+      console.log(`Content to save: ${resolved.content.substring(0, 100)}...`);
+
       await prisma.page.create({
         data: {
-          title: page.title,
-          content: page.content,
-          path: page.path,
+          title:       resolved.title,
+          content:     resolved.content,
+          path:       finalPath,
+          edit_groups: resolved.edit_groups,
+          view_groups: resolved.view_groups,
         }
       });
     }
@@ -139,10 +255,28 @@ export class GoogleDocsOrchestrator {
     }
   }
 
+  private async ensureUserExists(): Promise<boolean> {
+    // Task #5 (low-priority): actionable guard when no users exist in DB.
+    try {
+      const user = await prisma.user.findFirst({ select: { id: true } });
+      return !!user;
+    } catch {
+      console.warn('User check skipped — database may not be ready yet.');
+      return false;   // let downstream code fail with its own error.
+    }
+  }
+
   async run(options: OrchestratorOptions): Promise<void> {
     try {
       console.log(`Starting import for: ${this.filePath}`);
-      
+
+      if (!await this.ensureUserExists()) {
+        throw new Error(
+          'No users found in database — cannot import Google Docs.\n' +
+          'Seed a user first (create an account or run the seeding script).'
+        );
+      }
+
       await this.prepareExtractionDir();
       await this.extractFile();
 

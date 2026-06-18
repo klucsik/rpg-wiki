@@ -69,7 +69,7 @@ export class GoogleDocsImageImporter {
 
     return {
       newUrl,
-      mediaId: media.id
+      mediaId: String(media.id)
     };
   }
 
