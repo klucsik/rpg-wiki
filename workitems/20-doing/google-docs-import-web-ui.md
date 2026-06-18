@@ -1,7 +1,7 @@
 ---
 id: google-docs-import-web-ui
 title: 04- google-docs-import-web-ui
-status: inbox
+status: doing
 priority: medium
 created: 2026-06-08
 updated: 2026-06-08

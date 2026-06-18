@@ -1,11 +1,16 @@
 import { PrismaClient } from '../../generated/prisma';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
-
-// Use global to persist across module reloads in dev mode
+// Singleton pattern — all imports share the SAME PrismaClient instance
+// regardless of how Bun resolves the module path.
 declare global {
+  var __prisma__: PrismaClient | undefined;
   var __seedingComplete: boolean | undefined;
+}
+
+const prisma = globalThis.__prisma__ || new PrismaClient();
+if (!globalThis.__prisma__) {
+  globalThis.__prisma__ = prisma;
 }
 
 /**

@@ -1,7 +1,7 @@
 ---
 id: google-docs-import-empty-path-fallback
 title: Google Docs Import — Handle empty paths for headingless documents
-status: next
+status: review
 priority: medium
 created: 2026-06-17
 updated: 2026-06-17T13:58:00Z

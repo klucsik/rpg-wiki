@@ -1,7 +1,7 @@
 ---
 id: google-docs-import-path-collision-handling
 title: Google Docs Import — Path collision detection and resolution
-status: next
+status: review
 priority: critical
 created: 2026-06-17
 updated: 2026-06-17T13:58:00Z

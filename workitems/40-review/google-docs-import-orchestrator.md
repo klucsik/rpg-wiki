@@ -1,7 +1,7 @@
 ---
 id: google-docs-import-orchestrator
 title: 02- google-docs-import-orchestrator
-status: blocked
+status: review
 retry_count: 1
 priority: high
 created: 2026-06-06

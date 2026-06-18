@@ -1,7 +1,7 @@
 ---
 id: google-docs-import-page-access-defaults
 title: Google Docs Import — Fix page edit_groups/view_groups defaults
-status: next
+status: review
 priority: critical
 created: 2026-06-17
 updated: 2026-06-17T13:58:00Z

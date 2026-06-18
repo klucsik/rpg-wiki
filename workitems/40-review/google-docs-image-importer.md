@@ -1,7 +1,7 @@
 ---
 id: google-docs-image-importer
 title: 08- google-docs-image-importer
-status: inbox
+status: review
 priority: medium
 created: 2026-06-06
 updated: 2026-06-08

@@ -7,6 +7,7 @@ import React from "react";
 import GroupsAdminPage from "../groups/page";
 import UsersAdminPage from "../users/UsersAdminPage";
 import { BackupSettingsPage } from "../../features/backup";
+import ImportDashboard from "../../features/import-dashboard/ImportDashboard";
 import SiteSettingsPage from "../../components/admin/SiteSettings";
 
 function AdminSidebar() {
@@ -18,6 +19,7 @@ function AdminSidebar() {
         <a href="#groups" className="AdminSidebar-groupsLink text-indigo-300 hover:text-indigo-100 transition font-medium">Group Management</a>
         <a href="#backup" className="AdminSidebar-backupLink text-indigo-300 hover:text-indigo-100 transition font-medium">Git Backup Settings</a>
         <a href="#settings" className="AdminSidebar-settingsLink text-indigo-300 hover:text-indigo-100 transition font-medium">Site Settings</a>
+        <a href="#imports" className="AdminSidebar-importsLink text-indigo-300 hover:text-indigo-100 transition font-medium">Google Docs Imports</a>
         <a href="#session-info" className="AdminSidebar-sessionLink text-indigo-300 hover:text-indigo-100 transition font-medium">Session Info</a>
         {/* Add more admin options here as needed */}
       </nav>
@@ -110,6 +112,10 @@ export default function AdminPage() {
         <section id="settings" className="AdminPage-settingsSection mb-12">
           <h1 className="text-3xl font-bold text-indigo-200 mb-6">Site Settings</h1>
           <SiteSettingsPage />
+        </section>
+        <section id="imports" className="AdminPage-importsSection mb-12">
+          <h1 className="text-3xl font-bold text-indigo-200 mb-6">Google Docs Imports</h1>
+          <ImportDashboard />
         </section>
         
         <section id="session-info" className="AdminPage-sessionSection mb-12">

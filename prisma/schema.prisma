@@ -190,3 +190,21 @@ model BackupJob {
   triggeredBy String   // user ID who triggered the backup
   jobType     String   @default("auto") // 'auto', 'manual'
 }
+
+model ImportJob {
+  id             Int      @id @default(autoincrement())
+  status         String   @default("pending") // 'pending', 'running', 'completed', 'failed', 'archived'
+  sourceFileName String?
+  fileType       String?  // 'markdown', 'html', 'zip'
+  fileSizeBytes  Int?     // original file size
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+  error          String?  @db.Text
+  log            String?  @db.Text   // JSON array of progress entries or freeform text
+  pagesCreated   Int      @default(0)
+  imagesImported Int      @default(0)
+  manifestPageId Int?     // link to the generated manifest wiki page
+  triggeredBy    String   // user ID who triggered the import
+
+  @@index([status])
+}

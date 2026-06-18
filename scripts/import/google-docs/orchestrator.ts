@@ -1,4 +1,5 @@
-import { prisma } from '../../../../src/src/lib/db/db';
+// Shared Prisma client - same path as run-import-job.ts
+import { prisma } from '../../../src/lib/db/db';
 import { parseMarkdown, parseHtml } from './parser';
 import { GoogleDocsImageImporter } from './image-importer';
 import * as cheerio from 'cheerio';
