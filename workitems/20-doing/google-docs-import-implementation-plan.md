@@ -1,3 +1,9 @@
+---
+status: doing
+retry_count: 0
+updated: 2026-06-18T07:48:00Z
+chat_jid: web:worker-google-docs-import-implementation-plan
+---
 # Google Docs Import — Implementation Plan  
 **Based on**: `google-docs-import-metadata-alignment-audit.md` (CRITICAL + IMPORTANT findings)  
 **Date**: 2026-06-16  
