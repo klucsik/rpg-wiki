@@ -75,26 +75,48 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function JobRow({ job, onDelete, onArchive }: {
+// Calculate progress percentage from log entries
+function calcProgress(job: ImportJob): number {
+  if (job.status === 'completed') return 100;
+  if (job.status === 'failed' || job.status === 'archived') return -1;
+  if (job.status === 'pending') return 0;
+  // For running jobs, estimate from log entries
+  let logs: Array<{ ts: string; msg: string }> = [];
+  try { if (job.log) logs = JSON.parse(job.log); } catch {}
+  if (logs.length === 0) return 10; // minimal progress
+  const knownSteps = ['File uploaded', 'Starting import', 'Parsing', 'Importing images', 'Creating pages', 'Completed'];
+  let completedSteps = 0;
+  for (const step of knownSteps) {
+    if (logs.some(e => e.msg.toLowerCase().includes(step.toLowerCase()))) {
+      completedSteps++;
+    }
+  }
+  return Math.min(95, Math.round((completedSteps / knownSteps.length) * 100));
+}
+
+function JobRow({ job, onDelete, onArchive, onRerun }: {
   job: ImportJob;
   onDelete: (id: number) => void;
   onArchive: (id: number) => void;
+  onRerun: (id: number) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   let logs: Array<{ ts: string; msg: string }> = [];
   try {
     if (job.log) logs = JSON.parse(job.log);
   } catch {}
 
+  const progress = calcProgress(job);
+
   return (
     <div className="border border-gray-700/50 rounded-lg overflow-hidden bg-gray-800/30">
-      <div 
+      <div
         className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-700/20 transition"
         onClick={() => setExpanded(!expanded)}
       >
         <span className="text-xs text-gray-500 font-mono w-12 shrink-0">#{job.id}</span>
-        
+
         <div className="flex-1 min-w-0">
           <p className="text-indigo-100 truncate text-sm font-medium">
             {job.sourceFileName || 'Unknown file'}
@@ -102,14 +124,25 @@ function JobRow({ job, onDelete, onArchive }: {
           <p className="text-gray-500 text-xs">
             {formatDate(job.startedAt)} · {formatSize(job.fileSizeBytes)} · {job.fileType}
           </p>
+          {/* Progress bar for running/pending jobs */}
+          {job.status === 'running' && (
+            <div className="mt-1.5 w-full bg-gray-700 rounded-full h-1 overflow-hidden">
+              <div
+                className="h-full bg-orange-500 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
         </div>
 
         <StatusBadge status={job.status} />
 
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-gray-400">
-            📄{job.pagesCreated} · 🖼️{job.imagesImported}
-          </span>
+          {job.pagesCreated > 0 && (
+            <span className="text-xs text-gray-400">
+              📄{job.pagesCreated} · 🖼️{job.imagesImported}
+            </span>
+          )}
           {expanded ? (
             <span className="text-gray-500">▴</span>
           ) : (
@@ -143,17 +176,25 @@ function JobRow({ job, onDelete, onArchive }: {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {job.manifestPageId && (
               <a
                 href={`/pages/imports/manifest-${job.id}`}
                 className="text-xs px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white transition"
                 onClick={(e) => e.stopPropagation()}
               >
-                View Manifest
+                📋 View Manifest
               </a>
             )}
-            {job.status !== 'archived' && (
+            {(job.status === 'failed' || job.status === 'pending') && (
+              <button
+                className="text-xs px-3 py-1.5 rounded bg-blue-700 hover:bg-blue-600 text-blue-100 transition"
+                onClick={(e) => { e.stopPropagation(); onRerun(job.id); }}
+              >
+                🔄 Re-run
+              </button>
+            )}
+            {job.status !== 'archived' && job.status !== 'running' && (
               <button
                 className="text-xs px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 transition"
                 onClick={(e) => { e.stopPropagation(); onArchive(job.id); }}
@@ -284,6 +325,20 @@ export default function ImportDashboard() {
     }
   };
 
+  const handleRerun = async (id: number) => {
+    if (!confirm('Re-run this import? A new job will be created using the original file.')) return;
+    try {
+      const res = await fetch(`/api/admin/import/google-docs/${id}?action=re-run`, { method: 'PATCH' });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+      fetchJobs();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Re-run failed');
+    }
+  };
+
   // Count by status for header indicator
   const runningCount = jobs.filter(j => j.status === 'running').length;
   const completedCount = jobs.filter(j => j.status === 'completed').length;
@@ -365,7 +420,7 @@ export default function ImportDashboard() {
           </div>
         ) : (
           jobs.map(job => (
-            <JobRow key={job.id} job={job} onDelete={handleDelete} onArchive={handleArchive} />
+            <JobRow key={job.id} job={job} onDelete={handleDelete} onArchive={handleArchive} onRerun={handleRerun} />
           ))
         )}
       </div>

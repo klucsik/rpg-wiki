@@ -2,6 +2,7 @@ import Link from "next/link";
 import UserMenu from "./UserMenu";
 import { useUser } from "../../features/auth/userContext";
 import SearchBar from "../search/SearchBar";
+import ImportStatusIndicator from "./ImportStatusIndicator";
 
 interface HeaderNavProps {
   showSidebarToggle?: boolean;
@@ -67,6 +68,11 @@ export default function HeaderNav({
       <div className="HeaderNav-searchContainer flex-1 max-w-md mx-4 hidden md:block">
         <SearchBar placeholder="Search wiki..." />
       </div>
+
+      {/* Import Status Indicator (admin only) */}
+      {user?.groups?.includes("admin") && (
+        <ImportStatusIndicator />
+      )}
       
       <div className="HeaderNav-userArea flex-shrink-0 ml-2">
         <UserMenu />

@@ -63,17 +63,23 @@ async function postHandler(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Save file to temp location for the orchestrator
+    // Save file to temp AND persistent location for the orchestrator + re-run
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const tmpDir = '/tmp/gdoc-imports';
+    const uploadDir = path.join(process.cwd(), 'uploads', 'gdoc-imports');
     
     try { require('child_process').execSync(`mkdir -p ${tmpDir}`); } catch {}
+    try { require('child_process').execSync(`mkdir -p ${uploadDir}`); } catch {}
 
     const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const filePath = path.join(tmpDir, safeName);
     
     require('fs').writeFileSync(filePath, buffer);
+
+    // Also store persistently for re-run capability
+    const persistentPath = path.join(uploadDir, safeName);
+    require('fs').writeFileSync(persistentPath, buffer);
 
     // Create ImportJob record
     const fileType = ext === '.zip' ? 'zip' : ext === '.md' ? 'markdown' : 'html';
@@ -85,7 +91,10 @@ async function postHandler(req: NextRequest) {
         fileSizeBytes: buffer.length,
         triggeredBy: session.user.id,
         status: 'pending',
-        log: JSON.stringify([{ ts: new Date().toISOString(), msg: `File uploaded: ${file.name} (${(buffer.length / 1024).toFixed(1)} KB)` }]),
+        log: JSON.stringify([
+          { ts: new Date().toISOString(), msg: `File uploaded: ${file.name} (${(buffer.length / 1024).toFixed(1)} KB)` },
+          { ts: new Date().toISOString(), msg: `Persistent path: ${safeName}` }
+        ]),
       },
     });
 
@@ -129,7 +138,7 @@ function processImportJob(jobId: number, filePath: string): void {
   proc.stdout?.on('data', (chunk: Buffer) => { stdout += chunk.toString(); });
   proc.stderr?.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
 
-  proc.on('close', async (code) => {
+  proc.on('close', async (code: number) => {
     console.log(`[ImportJob ${jobId}] Exited with code ${code}`);
     if (stdout) console.log('[ImportJob stdout]', stdout.trim());
     if (stderr) console.error('[ImportJob stderr]', stderr.trim());
