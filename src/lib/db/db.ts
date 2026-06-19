@@ -14,8 +14,9 @@ if (!globalThis.__prisma__) {
 }
 
 /**
- * Seeds default data - runs once per server lifetime
- * Ensures admin user always has working credentials from ADMIN_PASSWORD env var
+ * Seeds default data - runs once on first connection.
+ * Groups are upserted immediately; admin user creation uses a retry loop
+ * because better-auth APIs may not be ready yet when Next.js is still compiling.
  */
 async function seedDefaults() {
   // Only seed once per server instance
@@ -25,30 +26,38 @@ async function seedDefaults() {
 
   // Mark as in progress immediately to prevent concurrent runs
   global.__seedingComplete = true;
-  
-  // Wait 10 seconds for better-auth APIs to be available
-  console.log('[DB] Waiting 10 seconds for server startup...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
-  
+
   console.log('[DB] Starting database seeding...');
-  
+
   try {
-    // Seed default groups if not present
+    // Seed default groups immediately (tables exist — migrations run before dev server)
     const adminGroup = await prisma.group.upsert({
       where: { name: 'admin' },
       update: {},
       create: { name: 'admin' },
     });
-      
+
     await prisma.group.upsert({
       where: { name: 'public' },
       update: {},
       create: { name: 'public' },
     });
 
-    // Ensure admin user exists with password from environment variable
-    await ensureAdminUser(adminGroup.id);
-    
+    // Ensure admin user exists with password from environment variable.
+    // better-auth APIs might not be ready yet, so retry a few times.
+    let retries = 5;
+    while (retries > 0) {
+      try {
+        await ensureAdminUser(adminGroup.id);
+        break; // success
+      } catch (err: any) {
+        retries--;
+        if (retries === 0) throw err;
+        console.log(`[DB] Admin user creation failed, retrying in 2s... (${retries} left)`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+
     console.log('[DB] Database seeding complete');
   } catch (error) {
     console.error('[DB] Seeding failed:', error);
@@ -60,7 +69,7 @@ async function seedDefaults() {
  * Ensures admin user exists with correct password from ADMIN_PASSWORD env var
  * Uses better-auth APIs to ensure password compatibility
  */
-async function ensureAdminUser(adminGroupId: string) {
+async function ensureAdminUser(adminGroupId: number) {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   const adminEmail = 'admin@localhost.local';
   const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -110,7 +119,7 @@ async function ensureAdminUser(adminGroupId: string) {
 /**
  * Creates admin user via better-auth sign-up API
  */
-async function createAdminViaBetterAuth(baseUrl: string, email: string, password: string, adminGroupId: string) {
+async function createAdminViaBetterAuth(baseUrl: string, email: string, password: string, adminGroupId: number) {
   const signUpResult = await fetch(`${baseUrl}/api/auth/sign-up/email`, {
     method: 'POST',
     headers: {
@@ -151,21 +160,18 @@ async function createAdminViaBetterAuth(baseUrl: string, email: string, password
   console.log('[DB] Admin user created successfully');
 }
 
-// Only connect and seed if running in a real server environment (not build)
+// Connect and seed on first server start (skip in test environments)
 if (
   typeof process !== 'undefined' &&
-  process.env.NODE_ENV !== 'test' &&
-  process.env.PRISMA_SKIP_DB_INIT !== '1'
+  process.env.NODE_ENV !== 'test'
 ) {
   (async () => {
     try {
       await prisma.$connect();
-      // Optionally, check a table exists (throws if not migrated)
-      await prisma.page.findFirst();
       await seedDefaults();
-      console.log('Database connection established, schema is up to date, and default groups are seeded.');
+      console.log('Database connection established and default groups are seeded.');
     } catch (err) {
-      console.error('Database connection or schema check failed at startup:', err);
+      console.error('Database connection or seeding failed at startup:', err);
       if (typeof process.exit === 'function') process.exit(1);
       throw err;
     }
