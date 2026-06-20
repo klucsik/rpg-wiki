@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "db:migrate": "prisma migrate deploy --skip-generate",
-    "dev": "prisma migrate deploy --skip-generate && next dev --turbopack",
+    "db:migrate": "prisma migrate deploy",
+    "dev": "prisma migrate deploy && next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
