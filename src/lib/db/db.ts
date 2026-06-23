@@ -66,22 +66,40 @@ async function seedDefaults() {
 
 /**
  * Ensures admin user exists with correct password from ADMIN_PASSWORD env var.
- * Always recreates via better-auth's sign-up API to guarantee hash compatibility.
+ * Uses the email as stable key (not username) so we don't thrash on re-imports.
  */
 async function ensureAdminUser(adminGroupId: number) {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   const adminEmail = 'admin@localhost.local';
   const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
-  // Check if admin user exists
-  let adminUser = await prisma.user.findUnique({ where: { username: 'admin' } });
+  // Check by email (stable) — user created via sign-up uses this as primary key
+  let adminUser = await prisma.user.findUnique({ where: { email: adminEmail } });
 
   if (adminUser) {
-    console.log('[DB] Admin user exists, deleting for password refresh...');
-    await prisma.user.delete({ where: { id: adminUser.id } });
+    console.log('[DB] Admin user already exists, skipping seed');
+    // Ensure username and group are set correctly even on re-imports
+    const needsUpdate = !adminUser.username || adminUser.username !== 'admin';
+    if (needsUpdate) {
+      await prisma.user.update({
+        where: { id: adminUser.id },
+        data: { username: 'admin', emailVerified: true },
+      });
+    }
+    // Ensure group membership
+    try {
+      await prisma.userGroup.upsert({
+        where: { userId_groupId: { userId: adminUser.id, groupId: adminGroupId } },
+        update: {},
+        create: { userId: adminUser.id, groupId: adminGroupId },
+      });
+    } catch {
+      // group assignment already exists
+    }
+    return;
   }
 
-  // Create admin user via better-auth API (handles all hashing correctly)
+  // Create via better-auth API (handles all hashing correctly)
   console.log('[DB] Creating admin user via better-auth...');
   const signUpResult = await fetch(`${baseUrl}/api/auth/sign-up/email`, {
     method: 'POST',
@@ -99,16 +117,16 @@ async function ensureAdminUser(adminGroupId: number) {
 
   const userData = await signUpResult.json();
 
-  // Update the user with username and verified email
-  const createdAdmin = await prisma.user.update({
+  // Update with username and verified email
+  await prisma.user.update({
     where: { id: userData.user.id },
     data: { username: 'admin', emailVerified: true },
   });
 
-  // Ensure admin is in admin group (may already exist from previous instance)
+  // Ensure admin is in admin group
   try {
     await prisma.userGroup.create({
-      data: { userId: createdAdmin.id, groupId: adminGroupId },
+      data: { userId: userData.user.id, groupId: adminGroupId },
     });
   } catch {
     // Already assigned to group — ignore
