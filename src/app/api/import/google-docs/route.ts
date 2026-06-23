@@ -4,11 +4,11 @@ import { prisma } from '@/lib/db/db';
 import { withMetrics } from '@/lib/metrics/withMetrics';
 import path from 'path';
 
-// ─── GET /api/admin/import/google-docs — list import jobs ──────────────
+// ─── GET /api/import/google-docs — list import jobs ──────────────
 async function getHandler(_req: NextRequest) {
   try {
     const session = await getServerAuth();
-    if (!session?.user?.groups?.includes('admin')) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,8 +17,13 @@ async function getHandler(_req: NextRequest) {
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
-    const where = statusFilter ? { status: statusFilter } : {};
-    
+    // Non-admins see only their own jobs; admins see all
+    const isAdmin = session.user.groups?.includes('admin');
+    const where: any = statusFilter ? { status: statusFilter } : {};
+    if (!isAdmin) {
+      where.triggeredBy = session.user.id;
+    }
+
     const [jobs, total] = await Promise.all([
       prisma.importJob.findMany({
         where,
@@ -39,11 +44,11 @@ async function getHandler(_req: NextRequest) {
   }
 }
 
-// ─── POST /api/admin/import/google-docs — trigger a new import ──────────
+// ─── POST /api/import/google-docs — trigger a new import ──────────
 async function postHandler(req: NextRequest) {
   try {
     const session = await getServerAuth();
-    if (!session?.user?.groups?.includes('admin')) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -151,5 +156,5 @@ function processImportJob(jobId: number, filePath: string): void {
   });
 }
 
-export const GET = withMetrics('/api/admin/import/google-docs', getHandler);
-export const POST = withMetrics('/api/admin/import/google-docs (POST)', postHandler);
+export const GET = withMetrics('/api/import/google-docs', getHandler);
+export const POST = withMetrics('/api/import/google-docs (POST)', postHandler);

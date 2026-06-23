@@ -249,7 +249,7 @@ export default function ImportDashboard() {
 
   const fetchJobs = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/import/google-docs');
+      const res = await fetch('/api/import/google-docs');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: ApiResponse = await res.json();
       setJobs(data.jobs);
@@ -275,7 +275,7 @@ export default function ImportDashboard() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/admin/import/google-docs', {
+      const res = await fetch('/api/import/google-docs', {
         method: 'POST',
         body: formData,
       });
@@ -309,7 +309,7 @@ export default function ImportDashboard() {
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this import job? This will NOT delete the created wiki pages.')) return;
     try {
-      await fetch(`/api/admin/import/google-docs/${id}`, { method: 'DELETE' });
+      await fetch(`/api/import/google-docs/${id}`, { method: 'DELETE' });
       fetchJobs();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed');
@@ -318,7 +318,7 @@ export default function ImportDashboard() {
 
   const handleArchive = async (id: number) => {
     try {
-      await fetch(`/api/admin/import/google-docs/${id}?action=archive`, { method: 'PATCH' });
+      await fetch(`/api/import/google-docs/${id}?action=archive`, { method: 'PATCH' });
       fetchJobs();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Archive failed');
@@ -328,7 +328,7 @@ export default function ImportDashboard() {
   const handleRerun = async (id: number) => {
     if (!confirm('Re-run this import? A new job will be created using the original file.')) return;
     try {
-      const res = await fetch(`/api/admin/import/google-docs/${id}?action=re-run`, { method: 'PATCH' });
+      const res = await fetch(`/api/import/google-docs/${id}?action=re-run`, { method: 'PATCH' });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || `HTTP ${res.status}`);

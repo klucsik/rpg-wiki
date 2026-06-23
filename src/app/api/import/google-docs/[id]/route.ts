@@ -4,14 +4,14 @@ import { getServerAuth } from '@/lib/better-auth';
 import { prisma } from '@/lib/db/db';
 import { withMetrics } from '@/lib/metrics/withMetrics';
 
-// ─── GET /api/admin/import/google-docs/[id] — single job query ──────────
+// ─── GET /api/import/google-docs/[id] — single job query ──────────
 async function getHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerAuth();
-    if (!session?.user?.groups?.includes('admin')) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -24,6 +24,12 @@ async function getHandler(
     const job = await prisma.importJob.findUnique({ where: { id: jobId } });
     if (!job) {
       return NextResponse.json({ error: 'Import job not found' }, { status: 404 });
+    }
+
+    // Non-admins can only view their own jobs
+    const isAdmin = session.user.groups?.includes('admin');
+    if (!isAdmin && job.triggeredBy !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     return NextResponse.json({ job });
@@ -36,14 +42,14 @@ async function getHandler(
   }
 }
 
-// ─── DELETE /api/admin/import/google-docs/[id] — delete import + pages ──
+// ─── DELETE /api/import/google-docs/[id] — delete import + pages ──
 async function deleteHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerAuth();
-    if (!session?.user?.groups?.includes('admin')) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -56,6 +62,12 @@ async function deleteHandler(
     const job = await prisma.importJob.findUnique({ where: { id: jobId } });
     if (!job) {
       return NextResponse.json({ error: 'Import job not found' }, { status: 404 });
+    }
+
+    // Non-admins can only manage their own jobs
+    const isAdmin = session.user.groups?.includes('admin');
+    if (!isAdmin && job.triggeredBy !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // If there's a manifest page, delete it too
@@ -81,14 +93,14 @@ async function deleteHandler(
   }
 }
 
-// ─── PATCH /api/admin/import/google-docs/[id] — archive or re-run import ──
+// ─── PATCH /api/import/google-docs/[id] — archive or re-run import ──
 async function patchHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerAuth();
-    if (!session?.user?.groups?.includes('admin')) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -103,6 +115,13 @@ async function patchHandler(
     const action = url.searchParams.get('action') || 'archive';
 
     if (action === 'archive') {
+      const job = await prisma.importJob.findUnique({ where: { id: jobId } });
+      if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 });
+      // Non-admins can only manage their own jobs
+      const isAdmin = session.user.groups?.includes('admin');
+      if (!isAdmin && job.triggeredBy !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
       const updated = await prisma.importJob.update({
         where: { id: jobId },
         data: { status: 'archived' },
@@ -114,6 +133,11 @@ async function patchHandler(
       const originalJob = await prisma.importJob.findUnique({ where: { id: jobId } });
       if (!originalJob) {
         return NextResponse.json({ error: 'Import job not found' }, { status: 404 });
+      }
+      // Non-admins can only manage their own jobs
+      const isAdmin = session.user.groups?.includes('admin');
+      if (!isAdmin && originalJob.triggeredBy !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
 
       // Find persistent file from log entries or uploads directory
@@ -225,6 +249,6 @@ function spawnImportJob(jobId: number, filePath: string): void {
   });
 }
 
-export const GET = withMetrics('/api/admin/import/google-docs/:id', getHandler);
-export const DELETE = withMetrics('/api/admin/import/google-docs/:id (DELETE)', deleteHandler);
-export const PATCH = withMetrics('/api/admin/import/google-docs/:id (PATCH)', patchHandler);
+export const GET = withMetrics('/api/import/google-docs/:id', getHandler);
+export const DELETE = withMetrics('/api/import/google-docs/:id (DELETE)', deleteHandler);
+export const PATCH = withMetrics('/api/import/google-docs/:id (PATCH)', patchHandler);

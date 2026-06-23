@@ -16,11 +16,11 @@ export default function ImportStatusIndicator() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!user?.groups?.includes("admin")) return;
+    if (!user) return;
 
     const pollJobs = async () => {
       try {
-        const response: Response = await globalThis.fetch("/api/admin/import/google-docs?limit=50");
+        const response: Response = await globalThis.fetch("/api/import/google-docs?limit=50");
         if (!response.ok) return;
         const data: any = await response.json();
         const jobs = data.jobs || [];
@@ -59,7 +59,7 @@ export default function ImportStatusIndicator() {
 
   return (
     <Link
-      href="/admin#imports"
+      href="/import"
       className="ImportStatusIndicator-root inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition hover:opacity-80"
       style={{ backgroundColor: bgColor, color: dotColor }}
       title={
