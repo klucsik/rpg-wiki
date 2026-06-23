@@ -1,5 +1,4 @@
 import { PrismaClient } from '../../generated/prisma';
-import bcrypt from 'bcryptjs';
 
 // Singleton pattern — all imports share the SAME PrismaClient instance
 // regardless of how Bun resolves the module path.
@@ -66,71 +65,31 @@ async function seedDefaults() {
 }
 
 /**
- * Ensures admin user exists with correct password from ADMIN_PASSWORD env var
- * Uses better-auth APIs to ensure password compatibility
+ * Ensures admin user exists with correct password from ADMIN_PASSWORD env var.
+ * Always recreates via better-auth's sign-up API to guarantee hash compatibility.
  */
 async function ensureAdminUser(adminGroupId: number) {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   const adminEmail = 'admin@localhost.local';
   const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  
+
   // Check if admin user exists
-  let adminUser = await prisma.user.findUnique({
-    where: { username: 'admin' },
-    include: { 
-      accounts: { 
-        where: { providerId: 'credential' } 
-      } 
-    },
-  });
+  let adminUser = await prisma.user.findUnique({ where: { username: 'admin' } });
 
-  if (!adminUser) {
-    // Create admin user via better-auth API
-    console.log('[DB] Creating admin user via better-auth...');
-    await createAdminViaBetterAuth(baseUrl, adminEmail, ADMIN_PASSWORD, adminGroupId);
-    return;
-  }
-
-  if (adminUser.accounts.length === 0) {
-    // Admin exists but has no credential account - recreate via better-auth
-    console.log('[DB] Admin user exists without credential account, recreating...');
+  if (adminUser) {
+    console.log('[DB] Admin user exists, deleting for password refresh...');
     await prisma.user.delete({ where: { id: adminUser.id } });
-    await createAdminViaBetterAuth(baseUrl, adminEmail, ADMIN_PASSWORD, adminGroupId);
-    return;
   }
 
-  // Admin exists with credential account - just ensure group membership
-  console.log('[DB] Admin user exists');
-  await prisma.userGroup.upsert({
-    where: {
-      userId_groupId: {
-        userId: adminUser.id,
-        groupId: adminGroupId,
-      }
-    },
-    update: {},
-    create: {
-      userId: adminUser.id,
-      groupId: adminGroupId,
-    }
-  });
-}
-
-/**
- * Creates admin user via better-auth sign-up API
- */
-async function createAdminViaBetterAuth(baseUrl: string, email: string, password: string, adminGroupId: number) {
+  // Create admin user via better-auth API (handles all hashing correctly)
+  console.log('[DB] Creating admin user via better-auth...');
   const signUpResult = await fetch(`${baseUrl}/api/auth/sign-up/email`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Origin': baseUrl,
     },
-    body: JSON.stringify({
-      email,
-      password,
-      name: 'Administrator',
-    }),
+    body: JSON.stringify({ email: adminEmail, password: ADMIN_PASSWORD, name: 'Administrator' }),
   });
 
   if (!signUpResult.ok) {
@@ -139,32 +98,27 @@ async function createAdminViaBetterAuth(baseUrl: string, email: string, password
   }
 
   const userData = await signUpResult.json();
-  
+
   // Update the user with username and verified email
   const createdAdmin = await prisma.user.update({
     where: { id: userData.user.id },
-    data: { 
-      username: 'admin',
-      emailVerified: true,
-    },
+    data: { username: 'admin', emailVerified: true },
   });
-  
-  // Ensure admin is in admin group
-  await prisma.userGroup.create({
-    data: {
-      userId: createdAdmin.id,
-      groupId: adminGroupId,
-    },
-  });
-  
+
+  // Ensure admin is in admin group (may already exist from previous instance)
+  try {
+    await prisma.userGroup.create({
+      data: { userId: createdAdmin.id, groupId: adminGroupId },
+    });
+  } catch {
+    // Already assigned to group — ignore
+  }
+
   console.log('[DB] Admin user created successfully');
 }
 
 // Connect and seed on first server start (skip in test environments)
-if (
-  typeof process !== 'undefined' &&
-  process.env.NODE_ENV !== 'test'
-) {
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
   (async () => {
     try {
       await prisma.$connect();

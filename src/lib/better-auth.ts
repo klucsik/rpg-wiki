@@ -13,6 +13,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignUpEmailVerified: true,
+    minPasswordLength: 4,
+    maxPasswordLength: 128,
   },
 
   // Secret for signing tokens
