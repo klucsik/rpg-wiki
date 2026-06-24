@@ -1,4 +1,7 @@
+import fs from 'fs';
 import path from 'path';
+import { execSync, spawn } from 'child_process';
+import type { Prisma } from '../../../../generated/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/better-auth';
 import { prisma } from '@/lib/db/db';
@@ -70,16 +73,21 @@ async function deleteHandler(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // If there's a manifest page, delete it too
+    // Delete manifest page and import job atomically
     if (job.manifestPageId) {
       try {
-        await prisma.page.delete({ where: { id: job.manifestPageId } });
-      } catch {
-        // Manifest may have been deleted manually already
+        await prisma.$transaction([
+          prisma.page.delete({ where: { id: job.manifestPageId } }),
+          prisma.importJob.delete({ where: { id: jobId } }),
+        ]);
+      } catch (err) {
+        // Manifest may have been deleted manually already — fall back to deleting just the job
+        console.warn(`[Import] Manifest page ${job.manifestPageId} likely already deleted; removing import job only`, err);
+        await prisma.importJob.delete({ where: { id: jobId } });
       }
+    } else {
+      await prisma.importJob.delete({ where: { id: jobId } });
     }
-
-    await prisma.importJob.delete({ where: { id: jobId } });
 
     return NextResponse.json({ 
       message: `Import job ${jobId} deleted`,
@@ -141,7 +149,6 @@ async function patchHandler(
       }
 
       // Find persistent file from log entries or uploads directory
-      const fs = require('fs');
       const uploadDir = path.join(process.cwd(), 'uploads', 'gdoc-imports');
       let persistentFile: string | null = null;
 
@@ -191,7 +198,11 @@ async function patchHandler(
 
       // Start import asynchronously (same logic as POST handler)
       const tmpDir = '/tmp/gdoc-imports';
-      try { require('child_process').execSync(`mkdir -p ${tmpDir}`); } catch {}
+      try {
+        execSync(`mkdir -p ${tmpDir}`);
+      } catch (err) {
+        console.error('[Import] Failed to create temp dir for re-run:', err);
+      }
       const safeName = `${Date.now()}-rerun-${path.basename(persistentFile)}`;
       const copyPath = path.join(tmpDir, safeName);
       fs.copyFileSync(persistentFile, copyPath);
@@ -222,7 +233,7 @@ function spawnImportJob(jobId: number, filePath: string): void {
 
   console.log(`[ImportJob] Spawning job ${jobId} for file: ${filePath}`);
 
-  const proc = require('child_process').spawn('bun', [
+  const proc = spawn('bun', [
     'run', wrapperScript, String(jobId), filePath
   ], {
     env: { ...process.env },
@@ -243,9 +254,10 @@ function spawnImportJob(jobId: number, filePath: string): void {
 
     // Cleanup temp copy on exit
     try {
-      const fs = require('fs');
       if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    } catch {}
+    } catch (err) {
+      console.error(`[ImportJob ${jobId}] Failed to cleanup temp file:`, err);
+    }
   });
 }
 

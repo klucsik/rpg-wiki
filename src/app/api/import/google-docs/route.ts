@@ -1,8 +1,11 @@
+import { spawn, execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import type { Prisma } from '../../../generated/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/better-auth';
 import { prisma } from '@/lib/db/db';
 import { withMetrics } from '@/lib/metrics/withMetrics';
-import path from 'path';
 
 // ─── GET /api/import/google-docs — list import jobs ──────────────
 async function getHandler(_req: NextRequest) {
@@ -19,7 +22,7 @@ async function getHandler(_req: NextRequest) {
 
     // Non-admins see only their own jobs; admins see all
     const isAdmin = session.user.groups?.includes('admin');
-    const where: any = statusFilter ? { status: statusFilter } : {};
+    const where: Prisma.ImportJobWhereInput = statusFilter ? { status: statusFilter } : {};
     if (!isAdmin) {
       where.triggeredBy = session.user.id;
     }
@@ -74,17 +77,25 @@ async function postHandler(req: NextRequest) {
     const tmpDir = '/tmp/gdoc-imports';
     const uploadDir = path.join(process.cwd(), 'uploads', 'gdoc-imports');
     
-    try { require('child_process').execSync(`mkdir -p ${tmpDir}`); } catch {}
-    try { require('child_process').execSync(`mkdir -p ${uploadDir}`); } catch {}
+    try {
+      execSync(`mkdir -p ${tmpDir}`);
+    } catch (err) {
+      console.error('[Import] Failed to create temp dir:', err);
+    }
+    try {
+      execSync(`mkdir -p ${uploadDir}`);
+    } catch (err) {
+      console.error('[Import] Failed to create upload dir:', err);
+    }
 
     const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const filePath = path.join(tmpDir, safeName);
-    
-    require('fs').writeFileSync(filePath, buffer);
+
+    fs.writeFileSync(filePath, buffer);
 
     // Also store persistently for re-run capability
     const persistentPath = path.join(uploadDir, safeName);
-    require('fs').writeFileSync(persistentPath, buffer);
+    fs.writeFileSync(persistentPath, buffer);
 
     // Create ImportJob record
     const fileType = ext === '.zip' ? 'zip' : ext === '.md' ? 'markdown' : 'html';
@@ -129,7 +140,7 @@ function processImportJob(jobId: number, filePath: string): void {
 
   console.log(`[ImportJob] Spawning job ${jobId} for file: ${filePath}`);
 
-  const proc = require('child_process').spawn('bun', [
+  const proc = spawn('bun', [
     'run', wrapperScript, String(jobId), filePath
   ], {
     env: { ...process.env },
@@ -150,9 +161,10 @@ function processImportJob(jobId: number, filePath: string): void {
 
     // Cleanup temp file on exit
     try {
-      const fs = require('fs');
       if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    } catch {}
+    } catch (err) {
+      console.error(`[ImportJob ${jobId}] Failed to cleanup temp file:`, err);
+    }
   });
 }
 
