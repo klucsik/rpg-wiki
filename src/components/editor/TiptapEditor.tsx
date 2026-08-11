@@ -16,6 +16,7 @@ import { FontSize, FontWeight } from "./FontExtensions";
 import { useUser } from "../../features/auth/userContext";
 import { MermaidNode } from "./MermaidExtension";
 import { DrawioNode } from "./DrawioExtension";
+import { DhAdversaryNode } from "./DhAdversaryExtension";
 import RestrictedBlock from "./RestrictedBlock";
 import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
 import { ResizableVideo } from "./VideoExtension";
@@ -83,6 +84,8 @@ const ResizableImage = Image.extend({
 
 export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const { user } = useUser();
+  const lastTextSelectionRef = React.useRef<{ from: number; to: number } | null>(null);
+  const [isDhAdversaryFormFocused, setIsDhAdversaryFormFocused] = React.useState(false);
   
   // Link modal state
   const [showLinkModal, setShowLinkModal] = React.useState(false);
@@ -129,6 +132,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       TableCell,
       MermaidNode, // Include Mermaid extension
       DrawioNode, // Include Drawio extension
+      DhAdversaryNode,
       Underline,
     ],
     content: value,
@@ -149,6 +153,48 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     }
   }, [value, editor]);
 
+  // Keep track of the most recent text selection so toolbar actions can
+  // recover from atomic/embed node selections (image, drawio, dhAdversary, etc.).
+  React.useEffect(() => {
+    if (!editor) return;
+
+    const captureTextSelection = () => {
+      const { selection } = editor.state;
+      const fromParent = selection.$from.parent;
+      const toParent = selection.$to.parent;
+      const isTextContext = fromParent.isTextblock && toParent.isTextblock;
+
+      if (isTextContext) {
+        lastTextSelectionRef.current = { from: selection.from, to: selection.to };
+      }
+    };
+
+    captureTextSelection();
+    editor.on('selectionUpdate', captureTextSelection);
+    editor.on('transaction', captureTextSelection);
+
+    return () => {
+      editor.off('selectionUpdate', captureTextSelection);
+      editor.off('transaction', captureTextSelection);
+    };
+  }, [editor]);
+
+  // Track whether focus is currently inside a DH adversary form input.
+  React.useEffect(() => {
+    const updateFocusState = () => {
+      const active = document.activeElement as HTMLElement | null;
+      setIsDhAdversaryFormFocused(Boolean(active?.closest('.DhAdversaryEditor-root')));
+    };
+
+    document.addEventListener('focusin', updateFocusState);
+    document.addEventListener('focusout', updateFocusState);
+
+    return () => {
+      document.removeEventListener('focusin', updateFocusState);
+      document.removeEventListener('focusout', updateFocusState);
+    };
+  }, []);
+
   // Dropdown for block type selection
   const [blockType, setBlockType] = React.useState('paragraph');
   const blockOptions: Array<{ label: string; value: string; level?: number; disabled?: boolean }> = [
@@ -161,6 +207,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     { label: 'Heading 5', value: 'heading', level: 5 },
     { label: 'Heading 6', value: 'heading', level: 6 },
     { label: 'Restricted Block', value: 'restricted' },
+    { label: 'DH Adversary', value: 'dh-adversary' },
     { label: 'Mermaid Diagram', value: 'mermaid' },
     { label: 'Draw.io Diagram', value: 'drawio' },
   ];
@@ -187,6 +234,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               blockTypes.add('paragraph');
             } else if (node.type.name === 'restrictedBlock') {
               blockTypes.add('restricted');
+            } else if (node.type.name === 'dhAdversary') {
+              blockTypes.add('dh-adversary');
             } else if (node.type.name === 'mermaid') {
               blockTypes.add('mermaid');
             } else if (node.type.name === 'drawio') {
@@ -206,16 +255,26 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       }
       
       // Single cursor position or empty selection
-      const parent = $from.node($from.depth);
-      if (parent.type.name === 'heading') {
-        setBlockType(`heading-${parent.attrs.level}`);
-      } else if (parent.type.name === 'paragraph') {
+      let activeAncestor: { type: { name: string }; attrs: Record<string, unknown> } | null = null;
+      for (let depth = $from.depth; depth >= 0; depth -= 1) {
+        const nodeAtDepth = $from.node(depth);
+        if (['heading', 'restrictedBlock', 'dhAdversary', 'drawio', 'mermaid', 'paragraph'].includes(nodeAtDepth.type.name)) {
+          activeAncestor = nodeAtDepth as { type: { name: string }; attrs: Record<string, unknown> };
+          break;
+        }
+      }
+
+      if (!activeAncestor) {
         setBlockType('paragraph');
-      } else if (parent.type.name === 'restrictedBlock') {
+      } else if (activeAncestor.type.name === 'heading') {
+        setBlockType(`heading-${activeAncestor.attrs.level as number}`);
+      } else if (activeAncestor.type.name === 'restrictedBlock') {
         setBlockType('restricted');
-      } else if (parent.type.name === 'drawio') {
+      } else if (activeAncestor.type.name === 'dhAdversary') {
+        setBlockType('dh-adversary');
+      } else if (activeAncestor.type.name === 'drawio') {
         setBlockType('drawio');
-      } else if (parent.type.name === 'mermaid') {
+      } else if (activeAncestor.type.name === 'mermaid') {
         setBlockType('mermaid');
       } else {
         setBlockType('paragraph'); // fallback
@@ -277,6 +336,34 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       // Insert a new Mermaid diagram
       editor.chain().focus().insertMermaid({
         code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
+      }).run();
+      setBlockType('paragraph');
+    } else if (selected === 'dh-adversary') {
+      const { state } = editor;
+      const { selection } = state;
+      const selectedText = selection.empty ? '' : state.doc.textBetween(selection.from, selection.to, '\n');
+
+      editor.chain().focus().insertContent({
+        type: 'dhAdversary',
+        attrs: {
+          name: 'New Adversary',
+          tier: 'Tier 1 Minion',
+          role: 'Humanoid',
+          flavor: 'A dangerous foe with a story to tell.',
+          motivesTactics: 'Motives & Tactics: Add concise behavior cues here.',
+          difficulty: '10',
+          thresholds: 'None',
+          hp: '1',
+          stress: '1',
+          atk: '+0 | Strike: Melee | 1d6 phy',
+          experience: 'bonking PCs in da head +2',
+          featuresHtml: selectedText.trim()
+            ? `<p>${selectedText}</p>`
+            : '<p>Feature Name - <em>Passive</em>: Describe effect here.</p>',
+          width: '620px',
+          align: 'center',
+          wrap: 'none',
+        },
       }).run();
       setBlockType('paragraph');
     } else if (selected === 'drawio') {
@@ -343,6 +430,38 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     if (node && node.type.name === nodeType) {
       editor.chain().focus().updateAttributes(nodeType, { wrap }).run();
     }
+  }
+
+  function getFormattingChain(): any {
+    if (!editor) return null;
+
+    let chain = editor.chain().focus();
+    const { selection } = editor.state;
+    const fromParent = selection.$from.parent;
+    const toParent = selection.$to.parent;
+    const isTextContext = fromParent.isTextblock && toParent.isTextblock;
+
+    if (!isTextContext && lastTextSelectionRef.current) {
+      chain = chain.setTextSelection(lastTextSelectionRef.current);
+    }
+
+    return chain;
+  }
+
+  function canRunWithTextFallback(command: (chain: any) => { run: () => boolean }) {
+    if (!editor) return false;
+
+    let chain = editor.can().chain().focus();
+    const { selection } = editor.state;
+    const fromParent = selection.$from.parent;
+    const toParent = selection.$to.parent;
+    const isTextContext = fromParent.isTextblock && toParent.isTextblock;
+
+    if (!isTextContext && lastTextSelectionRef.current) {
+      chain = chain.setTextSelection(lastTextSelectionRef.current);
+    }
+
+    return command(chain).run();
   }
 
   // Link modal functions
@@ -451,13 +570,23 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
 
   if (!editor) return null;
 
-  // Check which embed node is selected (image, video, mermaid, drawio)
+  // Check which embed node is selected (image, video, mermaid, drawio, dhAdversary)
   const isImageSelected = editor.isActive('image');
   const isVideoSelected = editor.isActive('video');
   const isMermaidSelected = editor.isActive('mermaid');
   const isDrawioSelected = editor.isActive('drawio');
-  const isEmbedSelected = isImageSelected || isVideoSelected || isMermaidSelected || isDrawioSelected;
-  const embedType = isImageSelected ? 'image' : isVideoSelected ? 'video' : isMermaidSelected ? 'mermaid' : 'drawio';
+  const isDhAdversarySelected = editor.isActive('dhAdversary');
+  const isFormattingDisabled = isDhAdversarySelected || blockType === 'dh-adversary' || isDhAdversaryFormFocused;
+  const isEmbedSelected = isImageSelected || isVideoSelected || isMermaidSelected || isDrawioSelected || isDhAdversarySelected;
+  const embedType = isImageSelected
+    ? 'image'
+    : isVideoSelected
+      ? 'video'
+      : isMermaidSelected
+        ? 'mermaid'
+        : isDrawioSelected
+          ? 'drawio'
+          : 'dhAdversary';
 
   // Get selected embed node's attributes
   let embedNode: { attrs?: { width?: string; align?: string; wrap?: string } } = {};
@@ -465,13 +594,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
-    if (node && ['image', 'video', 'mermaid', 'drawio'].includes(node.type.name)) {
+    if (node && ['image', 'video', 'mermaid', 'drawio', 'dhAdversary'].includes(node.type.name)) {
       embedNode = node as { attrs?: { width?: string; align?: string; wrap?: string } };
     }
   }
   const currentEmbedAttrs = embedNode.attrs || {};
   // Default width per embed type
-  const defaultWidth = embedType === 'video' ? '640' : embedType === 'image' ? '300' : '400';
+  const defaultWidth = embedType === 'video' ? '640' : embedType === 'image' ? '300' : embedType === 'dhAdversary' ? '620' : '400';
 
   return (
     <div className="TiptapEditor-root flex flex-col h-full w-full min-h-0">
@@ -490,10 +619,10 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
             )
           )}
         </select>
-        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} className={cn("TiptapEditor-boldBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 font-bold", editor.isActive('bold') && "bg-indigo-600 text-white")}>B</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} className={cn("TiptapEditor-italicBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 italic", editor.isActive('italic') && "bg-indigo-600 text-white")}>I</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} disabled={!editor.can().chain().focus().toggleStrike().run()} className={cn("TiptapEditor-strikeBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 line-through", editor.isActive('strike') && "bg-indigo-600 text-white")}>S</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} className={cn("TiptapEditor-underlineBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 underline", editor.isActive('underline') && "bg-indigo-600 text-white")}>U</button>
+        <button type="button" onClick={() => getFormattingChain()?.toggleBold().run()} disabled={isFormattingDisabled || !canRunWithTextFallback((chain) => chain.toggleBold())} className={cn("TiptapEditor-boldBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 font-bold", editor.isActive('bold') && "bg-indigo-600 text-white")}>B</button>
+        <button type="button" onClick={() => getFormattingChain()?.toggleItalic().run()} disabled={isFormattingDisabled || !canRunWithTextFallback((chain) => chain.toggleItalic())} className={cn("TiptapEditor-italicBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 italic", editor.isActive('italic') && "bg-indigo-600 text-white")}>I</button>
+        <button type="button" onClick={() => getFormattingChain()?.toggleStrike().run()} disabled={isFormattingDisabled || !canRunWithTextFallback((chain) => chain.toggleStrike())} className={cn("TiptapEditor-strikeBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 line-through", editor.isActive('strike') && "bg-indigo-600 text-white")}>S</button>
+        <button type="button" onClick={() => getFormattingChain()?.toggleUnderline().run()} disabled={isFormattingDisabled || !canRunWithTextFallback((chain) => chain.toggleUnderline())} className={cn("TiptapEditor-underlineBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 underline", editor.isActive('underline') && "bg-indigo-600 text-white")}>U</button>
         
         {/* Font Family Selector */}
         <select
@@ -505,7 +634,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               editor.chain().focus().setFontFamily(e.target.value).run();
             }
           }}
-          className="TiptapEditor-fontFamilySelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
+          disabled={isFormattingDisabled}
+          className="TiptapEditor-fontFamilySelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm disabled:opacity-45 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-400"
         >
           <option value="">Default Font</option>
           <option value="Arial, sans-serif">Arial</option>
@@ -527,7 +657,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               editor.chain().focus().setFontSize(e.target.value).run();
             }
           }}
-          className="TiptapEditor-fontSizeSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
+          disabled={isFormattingDisabled}
+          className="TiptapEditor-fontSizeSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm disabled:opacity-45 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-400"
         >
           <option value="">Default Size</option>
           <option value="10px">10px</option>
@@ -553,7 +684,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               editor.chain().focus().setFontWeight(e.target.value).run();
             }
           }}
-          className="TiptapEditor-fontWeightSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
+          disabled={isFormattingDisabled}
+          className="TiptapEditor-fontWeightSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm disabled:opacity-45 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-400"
         >
           <option value="">Default Weight</option>
           <option value="100">Thin (100)</option>
@@ -578,7 +710,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           onChange={(e) => {
             editor.chain().focus().setTextAlign(e.target.value).run();
           }}
-          className="TiptapEditor-alignSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm"
+          disabled={isFormattingDisabled}
+          className="TiptapEditor-alignSelect min-w-[120px] px-2 py-1 rounded bg-gray-900 text-indigo-200 border border-gray-700 outline-none text-sm disabled:opacity-45 disabled:cursor-not-allowed disabled:bg-gray-800 disabled:text-gray-400"
           style={{ minWidth: '90px' }}
           title="Text alignment"
         >
@@ -588,8 +721,8 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           <option value="justify">⬌ Justify</option>
         </select>
 
-        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} disabled={!editor.can().chain().focus().toggleBulletList().run()} className="TiptapEditor-bulletListBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">• List</button>
-        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} disabled={!editor.can().chain().focus().toggleOrderedList().run()} className="TiptapEditor-orderedListBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">1. List</button>
+        <button type="button" onClick={() => getFormattingChain()?.toggleBulletList().run()} disabled={isFormattingDisabled || !canRunWithTextFallback((chain) => chain.toggleBulletList())} className="TiptapEditor-bulletListBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">• List</button>
+        <button type="button" onClick={() => getFormattingChain()?.toggleOrderedList().run()} disabled={isFormattingDisabled || !canRunWithTextFallback((chain) => chain.toggleOrderedList())} className="TiptapEditor-orderedListBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">1. List</button>
         <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className="TiptapEditor-hrBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">―</button>
         <button type="button" onClick={() => fileInputRef.current?.click()} className="TiptapEditor-mediaBtn px-2 py-1 rounded bg-gray-700 text-indigo-200 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600">Img/Vid</button>
         <input

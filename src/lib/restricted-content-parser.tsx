@@ -3,6 +3,7 @@ import React from "react";
 import RestrictedBlockView from "../components/editor/RestrictedBlockView";
 import PlaceholderContentView from "../features/pages/PlaceholderContentView";
 import MermaidView from "../components/editor/MermaidView";
+import { getEmbedStyleObject } from "../components/editor/embedFormatting";
 
 interface User {
   groups: string[];
@@ -80,6 +81,54 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
       if (el.dataset.type === 'mermaid') {
         const code = el.getAttribute('data-code') || '';
         return <MermaidView key={`mermaid-${nodeCounter++}`} code={code} />;
+      }
+
+      // Handle DH adversary blocks
+      if (el.dataset.blockType === 'dh-adversary') {
+        const name = el.getAttribute('data-name') || 'New Adversary';
+        const tier = el.getAttribute('data-tier') || 'Tier 1 Minion';
+        const role = el.getAttribute('data-role') || 'Humanoid';
+        const flavor = el.getAttribute('data-flavor') || '';
+        const motivesTactics = el.getAttribute('data-motives-tactics') || '';
+        const difficulty = el.getAttribute('data-difficulty') || '';
+        const thresholds = el.getAttribute('data-thresholds') || '';
+        const hp = el.getAttribute('data-hp') || '';
+        const stress = el.getAttribute('data-stress') || '';
+        const atk = el.getAttribute('data-atk') || '';
+        const experience = el.getAttribute('data-experience') || '';
+        const featuresHtml = el.getAttribute('data-features-html') || '';
+        const featuresText = el.getAttribute('data-features-text') || '';
+        const width = el.getAttribute('data-width') || undefined;
+        const align = el.getAttribute('data-align') || undefined;
+        const wrap = el.getAttribute('data-wrap') || undefined;
+
+        return (
+          <div
+            key={`dh-adversary-${nodeCounter++}`}
+            className="dh-adversary-html"
+            data-block-type="dh-adversary"
+            style={getEmbedStyleObject({ width, align, wrap })}
+          >
+            <div className="dh-adversary-name">{name}</div>
+            <div className="dh-adversary-tier-role">{tier}{role ? ` | ${role}` : ''}</div>
+            {flavor && <div className="dh-adversary-flavor">{flavor}</div>}
+            {motivesTactics && <div className="dh-adversary-motives">{motivesTactics}</div>}
+            <div className="dh-adversary-stats">
+              <span className="dh-adversary-stat">Difficulty: {difficulty}</span>
+              <span className="dh-adversary-stat">Thresholds: {thresholds}</span>
+              <span className="dh-adversary-stat">HP: {hp}</span>
+              <span className="dh-adversary-stat">Stress: {stress}</span>
+            </div>
+            {atk && <div className="dh-adversary-atk">ATK: {atk}</div>}
+            <div className="dh-adversary-experience-title">EXPERIENCES</div>
+            {experience && <div className="dh-adversary-experience">{experience}</div>}
+            <div className="dh-adversary-features-title">FEATURES</div>
+            <div
+              className="dh-adversary-features-text"
+              dangerouslySetInnerHTML={{ __html: featuresHtml || `<p>${featuresText}</p>` }}
+            />
+          </div>
+        );
       }
       
       // Handle Draw.io diagrams - render the server-generated content

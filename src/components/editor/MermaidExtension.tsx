@@ -142,7 +142,10 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   }
 
   return (
-    <NodeViewWrapper style={{ ...getEmbedStyleObject({ width: node.attrs.width, align: node.attrs.align, wrap: node.attrs.wrap }), position: 'relative' }}>
+    <NodeViewWrapper
+      style={{ ...getEmbedStyleObject({ width: node.attrs.width, align: node.attrs.align, wrap: node.attrs.wrap }), position: 'relative' }}
+      className={`EmbedNode-root EmbedNode-mermaid ${selected ? 'is-selected' : ''}`}
+    >
       <EmbedDragHandle />
       <div 
         className={`MermaidNode-preview mermaid-diagram ${selected ? 'ring-2 ring-blue-500' : ''} rounded-lg p-4 bg-gray-900 my-4 cursor-pointer transition-all`}

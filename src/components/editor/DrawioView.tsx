@@ -121,7 +121,7 @@ export const DrawioView: React.FC<NodeViewProps> = ({ node, updateAttributes, se
   return (
     <>
       <NodeViewWrapper
-        className={`DrawioView-root drawio-diagram-wrapper ${selected ? 'ProseMirror-selectednode' : ''}`}
+        className={`DrawioView-root drawio-diagram-wrapper EmbedNode-root EmbedNode-drawio ${selected ? 'ProseMirror-selectednode is-selected' : ''}`}
         style={{
           ...getEmbedStyleObject({
             width: node.attrs.width,

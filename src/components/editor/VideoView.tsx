@@ -30,7 +30,11 @@ export const VideoView: React.FC<NodeViewProps> = ({ node, selected }) => {
   }
 
   return (
-    <NodeViewWrapper style={outerStyle} as="span">
+    <NodeViewWrapper
+      style={outerStyle}
+      as="span"
+      className={`EmbedNode-root EmbedNode-video ${selected ? 'is-selected' : ''}`}
+    >
       <EmbedDragHandle />
       <video src={src} controls style={videoStyle} draggable={false} />
     </NodeViewWrapper>

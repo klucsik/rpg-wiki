@@ -509,6 +509,14 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
     outline: none;
   }
 
+  .tiptap-content .EmbedNode-root.is-selected,
+  .tiptap-content .EmbedNode-root.ProseMirror-selectednode {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+    border-radius: 6px;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  }
+
   .tiptap-content table {
     border-collapse: collapse;
     table-layout: fixed;
@@ -594,6 +602,197 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
   }
 
   .tiptap-content.resize-cursor { cursor: col-resize; }
+
+  /* =========================
+     DH adversary block
+     ========================= */
+  .prose .dh-adversary-html,
+  .tiptap-content .dh-adversary-html {
+    background: linear-gradient(180deg, #141922 0%, #10141c 100%);
+    border: 1px solid #374151;
+    border-radius: 10px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+    padding: 12px;
+    margin: 12px 0;
+    color: #e5e7eb;
+  }
+
+  .prose .dh-adversary-name,
+  .tiptap-content .dh-adversary-name {
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: #f3f4f6;
+    margin-bottom: 6px;
+  }
+
+  .prose .dh-adversary-tier-role,
+  .tiptap-content .dh-adversary-tier-role {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #d1d5db;
+    margin-bottom: 8px;
+  }
+
+  .prose .dh-adversary-flavor,
+  .tiptap-content .dh-adversary-flavor,
+  .prose .dh-adversary-motives,
+  .tiptap-content .dh-adversary-motives,
+  .prose .dh-adversary-atk,
+  .tiptap-content .dh-adversary-atk,
+  .prose .dh-adversary-experience,
+  .tiptap-content .dh-adversary-experience {
+    border-top: 1px solid #2d3748;
+    padding-top: 6px;
+    margin-top: 6px;
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  .prose .dh-adversary-flavor,
+  .tiptap-content .dh-adversary-flavor,
+  .DhAdversaryEditor-flavorInput {
+    font-style: italic;
+  }
+
+  .prose .dh-adversary-stats,
+  .tiptap-content .dh-adversary-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top: 1px solid #2d3748;
+    border-bottom: 1px solid #2d3748;
+    padding: 8px 0;
+    margin: 8px 0;
+    font-size: 0.92rem;
+  }
+
+  .prose .dh-adversary-stat,
+  .tiptap-content .dh-adversary-stat {
+    font-weight: 600;
+    color: #e5e7eb;
+  }
+
+  .prose .dh-adversary-features-title,
+  .prose .dh-adversary-experience-title,
+  .tiptap-content .dh-adversary-features-title,
+  .tiptap-content .dh-adversary-experience-title {
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: #f9fafb;
+  }
+
+  .prose .dh-adversary-features-text,
+  .tiptap-content .dh-adversary-features-text {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #e5e7eb;
+    border-top: 1px solid #2d3748;
+    padding-top: 8px;
+  }
+
+  .prose .dh-adversary-features-text p,
+  .tiptap-content .dh-adversary-features-text p {
+    margin: 0.25rem 0;
+  }
+
+  .prose .dh-adversary-features-text ul,
+  .prose .dh-adversary-features-text ol,
+  .tiptap-content .dh-adversary-features-text ul,
+  .tiptap-content .dh-adversary-features-text ol {
+    margin: 0.35rem 0 0.35rem 1.1rem;
+  }
+
+  .DhAdversaryEditor-nameInput,
+  .DhAdversaryEditor-tierInput,
+  .DhAdversaryEditor-roleInput,
+  .DhAdversaryEditor-statInput,
+  .DhAdversaryEditor-experienceInput,
+  .DhAdversaryEditor-flavorInput,
+  .DhAdversaryEditor-motivesInput,
+  .DhAdversaryEditor-featuresRichText {
+    width: 100%;
+    border: 1px solid #4b5563;
+    background: #0f172a;
+    color: #e5e7eb;
+    border-radius: 6px;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .DhAdversaryEditor-featuresRichText {
+    min-height: 14rem;
+    background: #0f172a;
+    border: 1px solid #4b5563;
+    border-radius: 0 0 8px 8px;
+    padding: 0.65rem 0.7rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .DhAdversaryEditor-featuresRichText:focus {
+    outline: none;
+    border-color: #64748b;
+    box-shadow: 0 0 0 1px rgba(100, 116, 139, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .DhAdversaryEditor-featuresPanel {
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #111827;
+    overflow: hidden;
+  }
+
+  .DhAdversaryEditor-featuresToolbar {
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid #334155;
+    background: #1f2937;
+  }
+
+  .DhAdversaryEditor-featureBtn {
+    border: 1px solid #4b5563;
+    background: #1f2937;
+    color: #e5e7eb;
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  .DhAdversaryEditor-featureBtn:hover {
+    background: #374151;
+  }
+
+  .DhAdversaryEditor-nameInput {
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .DhAdversaryEditor-featuresLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #d1d5db;
+  }
+
+  .DhAdversaryEditor-statLabel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 0.22rem;
+    padding-left: 0.1rem;
+  }
 
   /* =========================
      Restricted block (serialised HTML from parser)

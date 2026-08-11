@@ -32,7 +32,11 @@ export const ImageView: React.FC<NodeViewProps> = ({ node, selected }) => {
   }
 
   return (
-    <NodeViewWrapper style={outerStyle} as="span">
+    <NodeViewWrapper
+      style={outerStyle}
+      as="span"
+      className={`EmbedNode-root EmbedNode-image ${selected ? 'is-selected' : ''}`}
+    >
       <EmbedDragHandle />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt || ''} title={title} style={imgStyle} draggable={false} />

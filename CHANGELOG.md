@@ -1,4 +1,9 @@
 # Changelog
+### Version 20260811
+- Added new editor block type: dh-adversary for quick DaggerHeart adversary statblock authoring.
+- Added consistent selected-state highlighting for embedded blocks in the editor (images/videos/diagrams/adversary cards).
+
+
 ### Version 20260305
 - Add per-page request count metrics
 - Make the editor server unreachable detection include 502-504 errors.

@@ -21,6 +21,9 @@ export function getEmbedCssStyle(attrs: EmbedAttrs): string {
 
   if (width && width !== 'auto') {
     style += `width:${width};`;
+  } else {
+    // Keep auto-width embeds tight around their content to avoid full-line drag ghosts.
+    style += 'width:fit-content;max-width:100%;';
   }
 
   if (wrap === 'left') {
@@ -53,6 +56,10 @@ export function getEmbedStyleObject(attrs: EmbedAttrs): Record<string, string> {
 
   if (width && width !== 'auto') {
     style['width'] = width;
+  } else {
+    // Keep auto-width embeds tight around their content to avoid full-line drag ghosts.
+    style['width'] = 'fit-content';
+    style['maxWidth'] = '100%';
   }
 
   if (wrap === 'left') {
