@@ -1,6 +1,6 @@
 # Prisma client generation stage
-FROM node:20-alpine AS prisma
-RUN apk add --no-cache libc6-compat openssl
+FROM node:20-bookworm-slim AS prisma
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
@@ -12,7 +12,7 @@ ENV PRISMA_SKIP_DB_INIT=1
 RUN npx prisma generate --generator client
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 # Builder stage only needs JS packages to compile Next.js output.
@@ -35,17 +35,17 @@ ENV PRISMA_SKIP_DB_INIT=1
 # Build the Next.js app with standalone output
 RUN npm run build
 
-# Production image - minimal Alpine
-FROM node:20-alpine AS runner
+# Production image - minimal Debian
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install only essential runtime dependencies including git for backup functionality
-RUN apk add --no-cache libc6-compat openssl git openssh-client && \
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates git openssh-client && rm -rf /var/lib/apt/lists/* && \
     addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
 # Only install Prisma CLI needed by entrypoint migrations; runtime app deps come from standalone output.
 ARG PRISMA_CLI_VERSION=6.19.1

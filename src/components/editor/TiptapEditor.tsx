@@ -17,6 +17,7 @@ import { useUser } from "../../features/auth/userContext";
 import { MermaidNode } from "./MermaidExtension";
 import { DrawioNode } from "./DrawioExtension";
 import { DhAdversaryNode } from "./DhAdversaryExtension";
+import { DhEnvironmentNode } from "./DhEnvironmentExtension";
 import RestrictedBlock from "./RestrictedBlock";
 import RestrictedBlockPlaceholder from "./RestrictedBlockPlaceholder";
 import { ResizableVideo } from "./VideoExtension";
@@ -24,6 +25,7 @@ import LinkSearchModal from "../search/LinkSearchModal";
 import { cn } from "../../lib/cn";
 import { getEmbedCssStyle } from './embedFormatting';
 import { ImageView } from './ImageView';
+import { BLOCK_TYPES, NODE_TYPES, isDhBlockType } from '../../lib/block-types';
 
 interface TiptapEditorProps {
   value: string;
@@ -85,7 +87,7 @@ const ResizableImage = Image.extend({
 export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const { user } = useUser();
   const lastTextSelectionRef = React.useRef<{ from: number; to: number } | null>(null);
-  const [isDhAdversaryFormFocused, setIsDhAdversaryFormFocused] = React.useState(false);
+  const [isDhFormFocused, setIsDhFormFocused] = React.useState(false);
   
   // Link modal state
   const [showLinkModal, setShowLinkModal] = React.useState(false);
@@ -133,6 +135,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       MermaidNode, // Include Mermaid extension
       DrawioNode, // Include Drawio extension
       DhAdversaryNode,
+      DhEnvironmentNode,
       Underline,
     ],
     content: value,
@@ -179,11 +182,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     };
   }, [editor]);
 
-  // Track whether focus is currently inside a DH adversary form input.
+  // Track whether focus is currently inside any DH form input.
   React.useEffect(() => {
     const updateFocusState = () => {
       const active = document.activeElement as HTMLElement | null;
-      setIsDhAdversaryFormFocused(Boolean(active?.closest('.DhAdversaryEditor-root')));
+      setIsDhFormFocused(Boolean(active?.closest('.DhForm-root')));
     };
 
     document.addEventListener('focusin', updateFocusState);
@@ -206,8 +209,9 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     { label: 'Heading 4', value: 'heading', level: 4 },
     { label: 'Heading 5', value: 'heading', level: 5 },
     { label: 'Heading 6', value: 'heading', level: 6 },
-    { label: 'Restricted Block', value: 'restricted' },
-    { label: 'DH Adversary', value: 'dh-adversary' },
+    { label: 'Restricted Block', value: BLOCK_TYPES.RESTRICTED },
+    { label: 'DH Adversary', value: BLOCK_TYPES.DH_ADVERSARY },
+    { label: 'DH Environment', value: BLOCK_TYPES.DH_ENVIRONMENT },
     { label: 'Mermaid Diagram', value: 'mermaid' },
     { label: 'Draw.io Diagram', value: 'drawio' },
   ];
@@ -232,10 +236,12 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
               blockTypes.add(`heading-${node.attrs.level}`);
             } else if (node.type.name === 'paragraph') {
               blockTypes.add('paragraph');
-            } else if (node.type.name === 'restrictedBlock') {
-              blockTypes.add('restricted');
-            } else if (node.type.name === 'dhAdversary') {
-              blockTypes.add('dh-adversary');
+            } else if (node.type.name === NODE_TYPES.RESTRICTED) {
+              blockTypes.add(BLOCK_TYPES.RESTRICTED);
+            } else if (node.type.name === NODE_TYPES.DH_ADVERSARY) {
+              blockTypes.add(BLOCK_TYPES.DH_ADVERSARY);
+            } else if (node.type.name === NODE_TYPES.DH_ENVIRONMENT) {
+              blockTypes.add(BLOCK_TYPES.DH_ENVIRONMENT);
             } else if (node.type.name === 'mermaid') {
               blockTypes.add('mermaid');
             } else if (node.type.name === 'drawio') {
@@ -258,7 +264,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       let activeAncestor: { type: { name: string }; attrs: Record<string, unknown> } | null = null;
       for (let depth = $from.depth; depth >= 0; depth -= 1) {
         const nodeAtDepth = $from.node(depth);
-        if (['heading', 'restrictedBlock', 'dhAdversary', 'drawio', 'mermaid', 'paragraph'].includes(nodeAtDepth.type.name)) {
+        if (['heading', NODE_TYPES.RESTRICTED, NODE_TYPES.DH_ADVERSARY, NODE_TYPES.DH_ENVIRONMENT, NODE_TYPES.DRAWIO, NODE_TYPES.MERMAID, 'paragraph'].includes(nodeAtDepth.type.name)) {
           activeAncestor = nodeAtDepth as { type: { name: string }; attrs: Record<string, unknown> };
           break;
         }
@@ -268,14 +274,16 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         setBlockType('paragraph');
       } else if (activeAncestor.type.name === 'heading') {
         setBlockType(`heading-${activeAncestor.attrs.level as number}`);
-      } else if (activeAncestor.type.name === 'restrictedBlock') {
-        setBlockType('restricted');
-      } else if (activeAncestor.type.name === 'dhAdversary') {
-        setBlockType('dh-adversary');
-      } else if (activeAncestor.type.name === 'drawio') {
-        setBlockType('drawio');
-      } else if (activeAncestor.type.name === 'mermaid') {
-        setBlockType('mermaid');
+      } else if (activeAncestor.type.name === NODE_TYPES.RESTRICTED) {
+        setBlockType(BLOCK_TYPES.RESTRICTED);
+      } else if (activeAncestor.type.name === NODE_TYPES.DH_ADVERSARY) {
+        setBlockType(BLOCK_TYPES.DH_ADVERSARY);
+      } else if (activeAncestor.type.name === NODE_TYPES.DH_ENVIRONMENT) {
+        setBlockType(BLOCK_TYPES.DH_ENVIRONMENT);
+      } else if (activeAncestor.type.name === NODE_TYPES.DRAWIO) {
+        setBlockType(NODE_TYPES.DRAWIO);
+      } else if (activeAncestor.type.name === NODE_TYPES.MERMAID) {
+        setBlockType(NODE_TYPES.MERMAID);
       } else {
         setBlockType('paragraph'); // fallback
       }
@@ -313,7 +321,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     } else if (selected.startsWith('heading-')) {
       const level = Number(selected.split('-')[1]) as 1|2|3|4|5|6;
       editor.chain().focus().setHeading({ level }).run();
-    } else if (selected === 'restricted') {
+    } else if (selected === BLOCK_TYPES.RESTRICTED) {
       // Get the current selection and extract content
       const { state } = editor;
       const { selection } = state;
@@ -332,13 +340,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         content: selectedContent,
       }).run();
       setBlockType('paragraph');
-    } else if (selected === 'mermaid') {
+    } else if (selected === NODE_TYPES.MERMAID) {
       // Insert a new Mermaid diagram
       editor.chain().focus().insertMermaid({
         code: 'graph TD\n    A[Start] --> B[Process]\n    B --> C[End]'
       }).run();
       setBlockType('paragraph');
-    } else if (selected === 'dh-adversary') {
+    } else if (selected === BLOCK_TYPES.DH_ADVERSARY) {
       const { state } = editor;
       const { selection } = state;
       const selectedText = selection.empty ? '' : state.doc.textBetween(selection.from, selection.to, '\n');
@@ -366,7 +374,30 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         },
       }).run();
       setBlockType('paragraph');
-    } else if (selected === 'drawio') {
+    } else if (selected === BLOCK_TYPES.DH_ENVIRONMENT) {
+      const { state } = editor;
+      const { selection } = state;
+      const selectedText = selection.empty ? '' : state.doc.textBetween(selection.from, selection.to, '\n');
+
+      editor.chain().focus().insertContent({
+        type: 'dhEnvironment',
+        attrs: {
+          name: 'Abandoned Mine',
+          tierType: 'Tier 1 Exploration',
+          flavor: 'A dangerous location filled with history and hazards.',
+          impulses: 'Impulses: Pressure intruders, reveal hidden danger, drain resources.',
+          difficulty: '11',
+          potentialAdversaries: 'Any undead, giant rats, toxic flora',
+          featuresHtml: selectedText.trim()
+            ? `<p>${selectedText}</p>`
+            : '<p>Feature Name - <em>Passive</em>: Describe effect here.</p>',
+          width: '720px',
+          align: 'center',
+          wrap: 'none',
+        },
+      }).run();
+      setBlockType('paragraph');
+    } else if (selected === NODE_TYPES.DRAWIO) {
       // Insert a new Draw.io diagram
       editor.chain().focus().insertDrawio().run();
       setBlockType('paragraph');
@@ -575,9 +606,10 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const isVideoSelected = editor.isActive('video');
   const isMermaidSelected = editor.isActive('mermaid');
   const isDrawioSelected = editor.isActive('drawio');
-  const isDhAdversarySelected = editor.isActive('dhAdversary');
-  const isFormattingDisabled = isDhAdversarySelected || blockType === 'dh-adversary' || isDhAdversaryFormFocused;
-  const isEmbedSelected = isImageSelected || isVideoSelected || isMermaidSelected || isDrawioSelected || isDhAdversarySelected;
+  const isDhAdversarySelected = editor.isActive(NODE_TYPES.DH_ADVERSARY);
+  const isDhEnvironmentSelected = editor.isActive(NODE_TYPES.DH_ENVIRONMENT);
+  const isFormattingDisabled = isDhAdversarySelected || isDhEnvironmentSelected || isDhBlockType(blockType) || isDhFormFocused;
+  const isEmbedSelected = isImageSelected || isVideoSelected || isMermaidSelected || isDrawioSelected || isDhAdversarySelected || isDhEnvironmentSelected;
   const embedType = isImageSelected
     ? 'image'
     : isVideoSelected
@@ -586,7 +618,9 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         ? 'mermaid'
         : isDrawioSelected
           ? 'drawio'
-          : 'dhAdversary';
+          : isDhAdversarySelected
+            ? 'dhAdversary'
+            : 'dhEnvironment';
 
   // Get selected embed node's attributes
   let embedNode: { attrs?: { width?: string; align?: string; wrap?: string } } = {};
@@ -594,13 +628,13 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     const { state } = editor;
     const { selection } = state;
     const node = state.doc.nodeAt(selection.from);
-    if (node && ['image', 'video', 'mermaid', 'drawio', 'dhAdversary'].includes(node.type.name)) {
+    if (node && ['image', 'video', NODE_TYPES.MERMAID, NODE_TYPES.DRAWIO, NODE_TYPES.DH_ADVERSARY, NODE_TYPES.DH_ENVIRONMENT].includes(node.type.name)) {
       embedNode = node as { attrs?: { width?: string; align?: string; wrap?: string } };
     }
   }
   const currentEmbedAttrs = embedNode.attrs || {};
   // Default width per embed type
-  const defaultWidth = embedType === 'video' ? '640' : embedType === 'image' ? '300' : embedType === 'dhAdversary' ? '620' : '400';
+  const defaultWidth = embedType === 'video' ? '640' : embedType === 'image' ? '300' : embedType === 'dhAdversary' ? '620' : embedType === 'dhEnvironment' ? '720' : '400';
 
   return (
     <div className="TiptapEditor-root flex flex-col h-full w-full min-h-0">

@@ -214,7 +214,7 @@ export const DrawioEditorDialog: React.FC<DrawioEditorDialogProps> = ({
       <iframe
         ref={iframeRef}
         className="DrawioEditorDialog-iframe"
-        src="/drawio/index.html?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1&dark=1"
+        src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1&dark=1"
         style={{
           flex: 1,
           border: 'none',

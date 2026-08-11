@@ -4,6 +4,7 @@ import RestrictedBlockView from "../components/editor/RestrictedBlockView";
 import PlaceholderContentView from "../features/pages/PlaceholderContentView";
 import MermaidView from "../components/editor/MermaidView";
 import { getEmbedStyleObject } from "../components/editor/embedFormatting";
+import { BLOCK_TYPES } from "./block-types";
 
 interface User {
   groups: string[];
@@ -51,7 +52,7 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
       const el = node as HTMLElement;
       
       // Handle restricted blocks
-      if (el.dataset.blockType === 'restricted') {
+      if (el.dataset.blockType === BLOCK_TYPES.RESTRICTED) {
         const allowedGroups = JSON.parse(el.dataset.usergroups || '[]');
         const title = el.getAttribute('data-title') || 'Restricted Block';
         return (
@@ -64,7 +65,7 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
       }
       
       // Handle restricted block placeholders
-      if (el.dataset.blockType === 'restricted-placeholder') {
+      if (el.dataset.blockType === BLOCK_TYPES.RESTRICTED_PLACEHOLDER) {
         return (
           <PlaceholderContentView 
             key={`placeholder-${el.getAttribute('data-block-id')}`}
@@ -84,7 +85,7 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
       }
 
       // Handle DH adversary blocks
-      if (el.dataset.blockType === 'dh-adversary') {
+      if (el.dataset.blockType === BLOCK_TYPES.DH_ADVERSARY) {
         const name = el.getAttribute('data-name') || 'New Adversary';
         const tier = el.getAttribute('data-tier') || 'Tier 1 Minion';
         const role = el.getAttribute('data-role') || 'Humanoid';
@@ -106,7 +107,7 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
           <div
             key={`dh-adversary-${nodeCounter++}`}
             className="dh-adversary-html"
-            data-block-type="dh-adversary"
+            data-block-type={BLOCK_TYPES.DH_ADVERSARY}
             style={getEmbedStyleObject({ width, align, wrap })}
           >
             <div className="dh-adversary-name">{name}</div>
@@ -125,6 +126,42 @@ export function parseWikiContentWithRestrictedBlocks(html: string, user?: User |
             <div className="dh-adversary-features-title">FEATURES</div>
             <div
               className="dh-adversary-features-text"
+              dangerouslySetInnerHTML={{ __html: featuresHtml || `<p>${featuresText}</p>` }}
+            />
+          </div>
+        );
+      }
+
+      // Handle DH environment blocks
+      if (el.dataset.blockType === BLOCK_TYPES.DH_ENVIRONMENT) {
+        const name = el.getAttribute('data-name') || 'Abandoned Mine';
+        const tierType = el.getAttribute('data-tier-type') || 'Tier 1 Exploration';
+        const flavor = el.getAttribute('data-flavor') || '';
+        const impulses = el.getAttribute('data-impulses') || '';
+        const difficulty = el.getAttribute('data-difficulty') || '';
+        const potentialAdversaries = el.getAttribute('data-potential-adversaries') || '';
+        const featuresHtml = el.getAttribute('data-features-html') || '';
+        const featuresText = el.getAttribute('data-features-text') || '';
+        const width = el.getAttribute('data-width') || undefined;
+        const align = el.getAttribute('data-align') || undefined;
+        const wrap = el.getAttribute('data-wrap') || undefined;
+
+        return (
+          <div
+            key={`dh-environment-${nodeCounter++}`}
+            className="dh-environment-html"
+            data-block-type={BLOCK_TYPES.DH_ENVIRONMENT}
+            style={getEmbedStyleObject({ width, align, wrap })}
+          >
+            <div className="dh-environment-name">{name}</div>
+            <div className="dh-environment-tier-type">{tierType}</div>
+            {flavor && <div className="dh-environment-flavor">{flavor}</div>}
+            {impulses && <div className="dh-environment-impulses">{impulses}</div>}
+            <div className="dh-environment-core"><span className="dh-environment-core-label">Difficulty: </span><span className="dh-environment-core-value">{difficulty}</span></div>
+            <div className="dh-environment-core"><span className="dh-environment-core-label">Potential Adversaries: </span><span className="dh-environment-core-value">{potentialAdversaries}</span></div>
+            <div className="dh-environment-features-title">FEATURES</div>
+            <div
+              className="dh-environment-features-text"
               dangerouslySetInnerHTML={{ __html: featuresHtml || `<p>${featuresText}</p>` }}
             />
           </div>

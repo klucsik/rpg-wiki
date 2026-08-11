@@ -2,6 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import DhAdversaryEditorView from './DhAdversaryEditorView';
 import { getEmbedCssStyle, sharedEmbedAttributes } from './embedFormatting';
+import { BLOCK_TYPES } from '../../lib/block-types';
 
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -94,7 +95,7 @@ export const DhAdversaryNode = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'div[data-block-type="dh-adversary"]',
+        tag: `div[data-block-type="${BLOCK_TYPES.DH_ADVERSARY}"]`,
       },
     ];
   },
@@ -109,7 +110,7 @@ export const DhAdversaryNode = Node.create({
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
-        'data-block-type': 'dh-adversary',
+        'data-block-type': BLOCK_TYPES.DH_ADVERSARY,
         class: 'dh-adversary-html',
         style,
         'data-name': node.attrs.name,

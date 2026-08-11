@@ -2,10 +2,11 @@ import React from 'react';
 import { NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import { getEmbedStyleObject } from './embedFormatting';
 import { EmbedDragHandle } from './EmbedDragHandle';
+import { DhRichTextField } from './DhRichTextField';
+import { BLOCK_TYPES } from '../../lib/block-types';
 
 const DhAdversaryEditorView = ({ node, updateAttributes, selected }: ReactNodeViewProps) => {
   const attrs = node.attrs as Record<string, string>;
-  const featuresRef = React.useRef<HTMLDivElement>(null);
 
   const updateField = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     updateAttributes?.({ [field]: e.target.value });
@@ -13,22 +14,11 @@ const DhAdversaryEditorView = ({ node, updateAttributes, selected }: ReactNodeVi
 
   const currentFeaturesHtml = attrs.featuresHtml || '<p>Feature Name - <em>Passive</em>: Describe effect here.</p>';
 
-  const syncFeaturesHtml = React.useCallback(() => {
-    if (!featuresRef.current) return;
-    updateAttributes?.({ featuresHtml: featuresRef.current.innerHTML });
-  }, [updateAttributes]);
-
-  const applyFeatureCommand = (command: 'bold' | 'italic' | 'insertUnorderedList' | 'insertOrderedList') => {
-    featuresRef.current?.focus();
-    document.execCommand(command);
-    // Defer persistence until blur to avoid caret jumps while editing.
-  };
-
   return (
     <NodeViewWrapper
       as="div"
-      className={`DhAdversaryEditor-root dh-adversary-html EmbedNode-root EmbedNode-dhAdversary my-4 ${selected ? 'ring-2 ring-blue-500 is-selected' : ''}`}
-      data-block-type="dh-adversary"
+      className={`DhAdversaryEditor-root DhForm-root dh-adversary-html EmbedNode-root EmbedNode-dhAdversary my-4 ${selected ? 'ring-2 ring-blue-500 is-selected' : ''}`}
+      data-block-type={BLOCK_TYPES.DH_ADVERSARY}
       style={{ ...getEmbedStyleObject({ width: attrs.width, align: attrs.align, wrap: attrs.wrap }), position: 'relative' }}
       data-name={attrs.name || ''}
       data-tier={attrs.tier || ''}
@@ -150,29 +140,17 @@ const DhAdversaryEditorView = ({ node, updateAttributes, selected }: ReactNodeVi
         className="DhAdversaryEditor-experienceInput w-full mb-3"
       />
 
-      <div className="DhAdversaryEditor-featuresLabel">Features</div>
-      <div className="DhAdversaryEditor-featuresPanel mt-1">
-        <div className="DhAdversaryEditor-featuresToolbar flex items-center gap-2">
-          <button type="button" onClick={() => applyFeatureCommand('bold')} className="DhAdversaryEditor-featureBtn">B</button>
-          <button type="button" onClick={() => applyFeatureCommand('italic')} className="DhAdversaryEditor-featureBtn italic">I</button>
-          <button type="button" onClick={() => applyFeatureCommand('insertUnorderedList')} className="DhAdversaryEditor-featureBtn">• List</button>
-          <button type="button" onClick={() => applyFeatureCommand('insertOrderedList')} className="DhAdversaryEditor-featureBtn">1. List</button>
-        </div>
-        <div
-          ref={featuresRef}
-          className="DhAdversaryEditor-featuresRichText"
-          contentEditable
-          suppressContentEditableWarning
-          dangerouslySetInnerHTML={{ __html: currentFeaturesHtml }}
-          onInput={() => {
-            // Keep editing local DOM content; persist on blur.
-          }}
-          onBlur={syncFeaturesHtml}
-        />
-      </div>
-      <div className="text-xs text-gray-400 mt-2">
-        Use the mini toolbar above for feature formatting.
-      </div>
+      <DhRichTextField
+        label="Features"
+        valueHtml={currentFeaturesHtml}
+        onChange={(html) => {
+          if (html !== (attrs.featuresHtml || '')) {
+            updateAttributes?.({ featuresHtml: html });
+          }
+        }}
+        classNamePrefix="DhAdversaryEditor"
+        helpText="Use the mini toolbar above for feature formatting."
+      />
     </NodeViewWrapper>
   );
 };

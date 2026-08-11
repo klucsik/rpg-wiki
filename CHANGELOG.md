@@ -1,7 +1,11 @@
 # Changelog
 ### Version 20260811
 - Added new editor block type: dh-adversary for quick DaggerHeart adversary statblock authoring.
-- Added consistent selected-state highlighting for embedded blocks in the editor (images/videos/diagrams/adversary cards).
+- Added new editor block type: dh-environment for quick DaggerHeart environment card authoring.
+- Extracted reusable rich text form field component to support future block types.
+- Added block family conventions design doc and centralized block type constants for reusable multi-system statblock architecture.
+- Added consistent selected-state highlighting for embedded blocks in the editor (images/videos/diagrams/statblock cards).
+- Fixed draw.io editor loading 404 by switching embed URL from missing local `/drawio/index.html` to hosted diagrams.net embed endpoint.
 
 
 ### Version 20260305

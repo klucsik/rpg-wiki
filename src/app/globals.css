@@ -710,13 +710,19 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
   }
 
   .DhAdversaryEditor-nameInput,
+  .DhEnvironmentEditor-nameInput,
   .DhAdversaryEditor-tierInput,
+  .DhEnvironmentEditor-tierTypeInput,
   .DhAdversaryEditor-roleInput,
+  .DhEnvironmentEditor-statInput,
   .DhAdversaryEditor-statInput,
   .DhAdversaryEditor-experienceInput,
   .DhAdversaryEditor-flavorInput,
+  .DhEnvironmentEditor-flavorInput,
+  .DhEnvironmentEditor-impulsesInput,
   .DhAdversaryEditor-motivesInput,
-  .DhAdversaryEditor-featuresRichText {
+  .DhAdversaryEditor-featuresRichText,
+  .DhEnvironmentEditor-featuresRichText {
     width: 100%;
     border: 1px solid #4b5563;
     background: #0f172a;
@@ -736,26 +742,44 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
   }
 
+  .DhEnvironmentEditor-featuresRichText {
+    min-height: 16rem;
+    background: #0f172a;
+    border: 1px solid #4b5563;
+    border-radius: 0 0 8px 8px;
+    padding: 0.65rem 0.7rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
   .DhAdversaryEditor-featuresRichText:focus {
     outline: none;
     border-color: #64748b;
     box-shadow: 0 0 0 1px rgba(100, 116, 139, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.02);
   }
 
-  .DhAdversaryEditor-featuresPanel {
+  .DhEnvironmentEditor-featuresRichText:focus {
+    outline: none;
+    border-color: #64748b;
+    box-shadow: 0 0 0 1px rgba(100, 116, 139, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .DhAdversaryEditor-featuresPanel,
+  .DhEnvironmentEditor-featuresPanel {
     border: 1px solid #334155;
     border-radius: 8px;
     background: #111827;
     overflow: hidden;
   }
 
-  .DhAdversaryEditor-featuresToolbar {
+  .DhAdversaryEditor-featuresToolbar,
+  .DhEnvironmentEditor-featuresToolbar {
     padding: 0.4rem 0.5rem;
     border-bottom: 1px solid #334155;
     background: #1f2937;
   }
 
-  .DhAdversaryEditor-featureBtn {
+  .DhAdversaryEditor-featureBtn,
+  .DhEnvironmentEditor-featureBtn {
     border: 1px solid #4b5563;
     background: #1f2937;
     color: #e5e7eb;
@@ -765,7 +789,8 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
     cursor: pointer;
   }
 
-  .DhAdversaryEditor-featureBtn:hover {
+  .DhAdversaryEditor-featureBtn:hover,
+  .DhEnvironmentEditor-featureBtn:hover {
     background: #374151;
   }
 
@@ -784,6 +809,14 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
     color: #d1d5db;
   }
 
+  .DhEnvironmentEditor-featuresLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #d1d5db;
+  }
+
   .DhAdversaryEditor-statLabel {
     font-size: 0.7rem;
     font-weight: 600;
@@ -792,6 +825,101 @@ img[data-align="right"]  { display: block; margin-left: auto; margin-right: 0;  
     color: #9ca3af;
     margin-bottom: 0.22rem;
     padding-left: 0.1rem;
+  }
+
+  .DhEnvironmentEditor-statLabel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 0.22rem;
+    padding-left: 0.1rem;
+  }
+
+  .prose .dh-environment-html,
+  .tiptap-content .dh-environment-html {
+    background: linear-gradient(180deg, #131a22 0%, #0f141b 100%);
+    border: 1px solid #374151;
+    border-radius: 10px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+    padding: 12px;
+    margin: 12px 0;
+    color: #e5e7eb;
+  }
+
+  .prose .dh-environment-name,
+  .tiptap-content .dh-environment-name {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #f3f4f6;
+    line-height: 1.05;
+    margin-bottom: 4px;
+  }
+
+  .prose .dh-environment-tier-type,
+  .tiptap-content .dh-environment-tier-type {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #d1d5db;
+    margin-bottom: 8px;
+  }
+
+  .prose .dh-environment-flavor,
+  .tiptap-content .dh-environment-flavor {
+    font-style: italic;
+    color: #d1d5db;
+    margin-bottom: 8px;
+  }
+
+  .prose .dh-environment-impulses,
+  .tiptap-content .dh-environment-impulses,
+  .prose .dh-environment-core,
+  .tiptap-content .dh-environment-core {
+    border-top: 1px solid #2d3748;
+    padding-top: 6px;
+    margin-top: 6px;
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  .prose .dh-environment-core-label,
+  .tiptap-content .dh-environment-core-label {
+    font-weight: 700;
+  }
+
+  .prose .dh-environment-features-title,
+  .tiptap-content .dh-environment-features-title {
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: #f9fafb;
+  }
+
+  .prose .dh-environment-features-text,
+  .tiptap-content .dh-environment-features-text {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #e5e7eb;
+    border-top: 1px solid #2d3748;
+    padding-top: 8px;
+  }
+
+  .prose .dh-environment-features-text p,
+  .tiptap-content .dh-environment-features-text p {
+    margin: 0.25rem 0;
+  }
+
+  .prose .dh-environment-features-text ul,
+  .prose .dh-environment-features-text ol,
+  .tiptap-content .dh-environment-features-text ul,
+  .tiptap-content .dh-environment-features-text ol {
+    margin: 0.35rem 0 0.35rem 1.1rem;
   }
 
   /* =========================
