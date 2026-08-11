@@ -1,17 +1,10 @@
-# Use Alpine-based Node.js image for smaller size
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
 # Prisma client generation stage
 FROM node:20-alpine AS prisma
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 # Set a dummy DATABASE_URL for Prisma generate
 ENV DATABASE_URL="postgresql://user:password@prisma-dummy-host:5432/dbname"
 ENV PRISMA_SKIP_DB_INIT=1
@@ -22,7 +15,11 @@ RUN npx prisma generate --generator client
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# Builder stage only needs JS packages to compile Next.js output.
+# Skip browser downloads here to avoid long/stuck installs (runtime deps come from deps stage).
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+RUN npm ci --no-audit --no-fund
 COPY . .
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
 
@@ -50,6 +47,10 @@ RUN apk add --no-cache libc6-compat openssl git openssh-client && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# Only install Prisma CLI needed by entrypoint migrations; runtime app deps come from standalone output.
+ARG PRISMA_CLI_VERSION=6.19.1
+RUN npm install --no-save --omit=dev --no-audit --no-fund prisma@${PRISMA_CLI_VERSION} && npm cache clean --force
+
 # Copy entrypoint script with execute permissions and proper ownership
 COPY --chmod=744 --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 
@@ -60,7 +61,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/CHANGELOG.md ./CHANGELOG.md
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=prisma --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Switch to non-root user
 USER nextjs
