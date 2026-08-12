@@ -1,4 +1,7 @@
 # Changelog
+### Version 20260812
+Fixed prisma setup issues
+
 ### Version 20260811
 - Added new editor block type: dh-adversary for quick DaggerHeart adversary statblock authoring.
 - Added new editor block type: dh-environment for quick DaggerHeart environment card authoring.

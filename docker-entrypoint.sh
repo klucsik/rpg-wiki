@@ -1,21 +1,23 @@
 #!/bin/sh
 set -e
 
-# Wait for the database to be ready
-until npx prisma db push || npx prisma migrate deploy; do
+PRISMA="./node_modules/.bin/prisma"
+
+# Wait for DB to be reachable; --skip-generate avoids runtime npm install
+echo "Waiting for database..."
+until $PRISMA db push --skip-generate; do
   echo "Database is unavailable - sleeping"
   sleep 3
 done
+echo "Database is ready."
 
-echo "Database is ready. Running migrations..."
-# Run migrations (prefer migrate deploy, fallback to db push)
-if npx prisma migrate deploy; then
+# Prefer migration-history tracking; fall back to db push for P3005 (no migration history)
+if $PRISMA migrate deploy --skip-generate; then
   echo "Migrations applied."
 else
-  echo "migrate deploy failed, trying db push..."
-  npx prisma db push
+  echo "migrate deploy failed (no migration history), applying with db push..."
+  $PRISMA db push --skip-generate
 fi
 
 echo "Starting Next.js server..."
-# Use standalone server for smaller footprint
 exec node server.js
